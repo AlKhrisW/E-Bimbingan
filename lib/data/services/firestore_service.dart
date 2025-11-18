@@ -28,7 +28,7 @@ class FirestoreService {
         .get();
     return snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
   }
-  
+
   // Mengambil daftar Mahasiswa (untuk Admin)
   Future<List<UserModel>> fetchMahasiswaList() async {
     final snapshot = await _firestore
@@ -37,4 +37,42 @@ class FirestoreService {
         .get();
     return snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
   }
+
+  // Mengambil semua pengguna untuk Admin (Dosen, Mahasiswa, Admin)
+  Future<List<UserModel>> fetchAllUsers() async {
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          // HAPUS .orderBy('role') — INI YANG MEMBUNUH!
+          // .orderBy('role')
+          .get(); // ← query paling sederhana = paling aman
+
+      final List<UserModel> users = snapshot.docs
+          .map((doc) => UserModel.fromMap(doc.data()))
+          .toList();
+
+      // Sorting dilakukan di client-side — AMAN 100% dan CEPAT
+      users.sort((a, b) {
+        const roleOrder = {'admin': 0, 'dosen': 1, 'mahasiswa': 2};
+        final aOrder = roleOrder[a.role] ?? 99;
+        final bOrder = roleOrder[b.role] ?? 99;
+        return aOrder.compareTo(bOrder);
+      });
+
+      return users;
+    } catch (e) {
+      print('Error fetchAllUsers: $e');
+      rethrow;
+    }
+  }
+
+      // Fungsi Update User Metadata
+      Future<void>updateUserMetadata(UserModel user)  async {
+        await _firestore.collection('users').doc(user.uid).update(user.toMap());
+      }
+
+      // Fungsi Delete User Metadata
+      Future<void> deleteUserMetadata(String uid) async {
+        await _firestore.collection('users').doc(uid).delete();
+      }
 }

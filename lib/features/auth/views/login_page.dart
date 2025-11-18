@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../data/models/user_model.dart';
 import '../../../../core/themes/app_theme.dart';
-// Import Placeholder Dashboards (akan dibuat sebentar lagi)
-import '../../admin/views/admin_dashboard.dart';
-import '../../dosen/views/dosen_dashboard.dart';
-import '../../mahasiswa/views/mahasiswa_dashboard.dart';
+import '../../admin/views/admin_main_screen.dart'; // FIX: Import Main Screen
+import '../../dosen/views/dosen_dashboard.dart'; // Placeholder
+import '../../mahasiswa/views/mahasiswa_dashboard.dart'; // Placeholder
 import '../viewmodels/auth_viewmodel.dart';
 
 class LoginPage extends StatefulWidget {
@@ -22,13 +21,26 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController(text: 'passwordadmin123');
   final _formKey = GlobalKey<FormState>();
 
-  // Custom decoration style (Style kapsul dari AppTheme sudah digunakan secara implisit)
   InputDecoration _kapsulInputDecoration(String hint, IconData icon) {
     return InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+      filled: true,
       fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
       prefixIcon: Icon(icon, color: Colors.grey.shade500),
+      border: OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+        borderRadius: const BorderRadius.all(Radius.circular(50)), 
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+        borderRadius: const BorderRadius.all(Radius.circular(50)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: AppTheme.primaryColor, width: 2.0),
+        borderRadius: const BorderRadius.all(Radius.circular(50)),
+      ),
     );
   }
   
@@ -43,8 +55,9 @@ class _LoginPageState extends State<LoginPage> {
 
   void _navigateToDashboard(BuildContext context, UserModel user) {
     Widget destination;
+    
     if (user.role == 'admin') {
-      destination = AdminDashboard(user: user);
+      destination = AdminMainScreen(user: user); // FIX UTAMA: Arahkan ke MainScreen
     } else if (user.role == 'dosen') {
       destination = DosenDashboard(user: user);
     } else if (user.role == 'mahasiswa') {
@@ -93,7 +106,6 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 
-                // --- LOGO ---
                 SizedBox(
                   width: double.infinity,
                   child: Image.asset(
@@ -105,7 +117,6 @@ class _LoginPageState extends State<LoginPage> {
                 
                 const SizedBox(height: 50), 
 
-                // --- TEKS SELAMAT DATANG ---
                 Text(
                   'Selamat Datang',
                   textAlign: TextAlign.center, 
@@ -116,7 +127,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 5),
                 
-                // --- TEKS SUBTITLE ---
                 Text(
                   'Masuk ke akun Anda yang sudah ada',
                   textAlign: TextAlign.center, 
@@ -126,7 +136,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 40),
                 
-                // --- INPUT NAMA PENGGUNA (Email Logic) ---
                 TextFormField(
                   controller: _emailController,
                   decoration: _kapsulInputDecoration('Nama Pengguna', Icons.person_outline),
@@ -136,7 +145,6 @@ class _LoginPageState extends State<LoginPage> {
                 
                 const SizedBox(height: 18),
                 
-                // --- INPUT KATA SANDI ---
                 TextFormField(
                   controller: _passwordController,
                   decoration: _kapsulInputDecoration('Kata Sandi', Icons.lock_outline),
@@ -144,37 +152,32 @@ class _LoginPageState extends State<LoginPage> {
                   validator: (value) => (value == null || value.length < 6) ? 'Kata sandi minimal 6 karakter.' : null,
                 ),
                 
-                // --- LUPA KATA SANDI ---
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                         // TODO: Panggil reset password logic
                          _showSnackbar(context, 'Fitur reset password belum aktif.', isError: false);
                       }, 
                       child: const Text(
                         'Lupa Kata Sandi?',
-                        style: TextStyle(color: AppTheme.errorColor, fontWeight: FontWeight.w600), // Merah Cerah
+                        style: TextStyle(color: AppTheme.errorColor, fontWeight: FontWeight.w600), 
                       ),
                     ),
                   ),
                 ),
 
-                // --- TOMBOL MASUK (Utama) ---
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 32.0),
                   child: ElevatedButton(
                     onPressed: viewModel.isLoading ? null : () => _submitLogin(context), 
-                    // Style diambil dari AppTheme.lightTheme.elevatedButtonTheme
                     child: viewModel.isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text("Masuk"),
                   ),
                 ),
                 
-                // --- Pesan Keamanan ---
                 const Padding(
                   padding: EdgeInsets.only(top: 10.0),
                   child: Text(
