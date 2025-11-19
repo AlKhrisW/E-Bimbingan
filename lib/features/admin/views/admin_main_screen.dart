@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
 import '../admin_navbar_config.dart'; 
 import '../../../core/widgets/custom_bottom_nav_shell.dart';
-// Hapus import AdminViewModel
+
 
 class AdminMainScreen extends StatelessWidget {
   final UserModel user;
@@ -13,7 +13,7 @@ class AdminMainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // FIX: Langsung build CustomBottomNavShell tanpa Provider wrapper
+  
     final List<NavItem> navItems = buildAdminNavItems(user); 
 
     return CustomBottomNavShell(

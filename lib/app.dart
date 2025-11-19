@@ -15,7 +15,6 @@ class App extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
-        // FIX: Tambahkan AdminViewModel secara GLOBAL di sini
         ChangeNotifierProvider(create: (_) => AdminViewModel()),
       ],
       child: MaterialApp(

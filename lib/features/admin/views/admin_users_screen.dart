@@ -2,12 +2,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/services.dart'; // Untuk Haptic Feedback
+import 'package:flutter/services.dart'; 
 import '../../../../data/models/user_model.dart';
 import '../../../core/themes/app_theme.dart';
 import '../viewmodels/admin_viewmodel.dart'; 
 // Import screen Registrasi User
 import 'register_user_screen.dart'; 
+// import 'user_detail_screen.dart';
+// FIX: Import Widget Lokal yang baru
+import '../widgets/user_list_tile.dart'; 
 
 class AdminUsersScreen extends StatefulWidget {
   final UserModel user;
@@ -71,19 +74,6 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     });
   }
 
-  // Helper untuk mendapatkan detail subtitle
-  String _getUserSubtitle(UserModel user) {
-    if (user.role == 'mahasiswa') {
-      final String prodi = user.programStudi ?? 'Sistem Informasi'; 
-      return 'Mahasiswa - $prodi';
-    } else if (user.role == 'dosen') {
-      return 'Dosen - ${user.jabatan ?? 'N/A'}';
-    } else if (user.role == 'admin') {
-      return 'Admin - Utama';
-    }
-    return 'Role Tidak Dikenal';
-  }
-
   // Widget Helper: Tombol Filter Kategori (Bubble)
   Widget _buildRoleFilterButton(String role) {
     final isActive = _selectedRole == role;
@@ -116,7 +106,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     );
   }
   
-  // FUNGSI NAVIGASI KE REGISTER USER
+  // FUNGSI NAVIGASI KE REGISTER USER (MODE CREATE)
   void _navigateToRegisterUser(BuildContext context) {
     HapticFeedback.lightImpact();
     // Navigasi ke RegisterUserScreen sebagai modal
@@ -130,118 +120,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     });
   }
 
-  // --- LOGIC BARU: KONFIRMASI DELETE ---
-  Future<void> _confirmAndDelete(BuildContext context, UserModel user) async {
-    HapticFeedback.lightImpact();
-    
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Hapus Pengguna'),
-          content: Text('Anda yakin ingin menghapus akun ${user.name} (${user.role}) secara permanen?'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text('Batal', style: TextStyle(color: Colors.grey.shade600)),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Hapus', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result == true) {
-      final viewModel = Provider.of<AdminViewModel>(context, listen: false);
-      final success = await viewModel.deleteUser(user.uid);
-      
-      if (success) {
-        // Tampilkan notifikasi modern setelah berhasil
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${user.name} berhasil dihapus!'),
-            backgroundColor: Colors.red.shade600, // Warna merah sesuai permintaan
-          ),
-        );
-        // Refresh list
-        setState(() {
-          _usersFuture = _loadUsers();
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(viewModel.errorMessage!)));
-      }
-    }
-  }
-
-
-  // Widget untuk menampilkan data User dalam ListTile (styling sama)
-  Widget _buildUserListTile(BuildContext context, UserModel user) {
-    final subtitle = _getUserSubtitle(user);
-    
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      elevation: 4, 
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15), 
-        side: BorderSide(color: Colors.grey.shade100, width: 1),
-      ),
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.lightImpact(); 
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Detail ${user.name}')));
-          // TODO: Navigasi ke Edit User
-        },
-        borderRadius: BorderRadius.circular(15),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), 
-          tileColor: Colors.grey.shade50, 
-          
-          leading: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppTheme.primaryColor, width: 1.5),
-              color: Colors.blue.shade50.withOpacity(0.3) 
-            ),
-            child: const Icon(Icons.person_outline, color: AppTheme.primaryColor, size: 28),
-          ),
-          
-          title: Text(
-            user.name, 
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              color: AppTheme.primaryColor 
-            )
-          ),
-          subtitle: Text(subtitle, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-          
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Tombol Edit
-              IconButton(
-                icon: const Icon(Icons.edit, color: AppTheme.primaryColor),
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Menuju halaman Edit User...')));
-                },
-              ),
-              // Tombol Delete (Panggil fungsi konfirmasi)
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () => _confirmAndDelete(context, user), // Panggil method delete
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  // --- FUNGSI REFRESH LIST (DIPANGGIL DARI USER LIST TILE) ---
+  void _refreshUserList() {
+    setState(() {
+      _usersFuture = _loadUsers();
+    });
   }
 
 
@@ -323,7 +206,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   itemCount: _filteredUsers.length,
                   itemBuilder: (context, index) {
                     final user = _filteredUsers[index];
-                    return _buildUserListTile(context, user);
+                    // FIX: Menggunakan Widget Lokal yang baru
+                    return UserListTile(
+                      user: user,
+                      onRefresh: _refreshUserList, // Memberikan callback untuk refresh
+                    );
                   },
                 );
               },

@@ -49,62 +49,108 @@ class AdminViewModel with ChangeNotifier {
     }
   }
 
-  // --- LOGIC PENDAFTARAN UNIVERSAL (FIX SYNTAX ERROR) ---
-  Future<bool> registerUserUniversal({
-    required String email,
-    required String name,
-    required String role,
-    required String programStudi,
-    required String phoneNumber,
-    // Mahasiswa Specific
-    String? placement,
-    DateTime? startDate,
-    String? dosenUid,
-    // Dosen Specific
-    String? nip,
-    String? jabatan,
-  }) async {
-    _setLoading(true);
-    _setMessage(error: null, success: null); // Reset pesan
+  // --- LOGIC PENDAFTARAN UNIVERSAL (TAMBAH PARAMETER NIM) ---
+Future<bool> registerUserUniversal({
+  required String email,
+  required String name,
+  required String role,
+  required String programStudi,
+  required String phoneNumber,
+  // Mahasiswa Specific
+  String? nim,           // ← TAMBAHKAN INI
+  String? placement,
+  DateTime? startDate,
+  String? dosenUid,
+  // Dosen Specific
+  String? nip,
+  String? jabatan,
+}) async {
+  _setLoading(true);
+  _setMessage(error: null, success: null);
 
-    try {
-      await _authService.registerUser(
-        email: email,
-        password: 'password',
-        name: name,
-        role: role,
-        programStudi: programStudi,
-        phoneNumber: phoneNumber,
-        placement: placement,
-        startDate: startDate,
-        dosenUid: dosenUid,
-        nip: nip,
-        jabatan: jabatan,
-      );
+  try {
+    await _authService.registerUser(
+      email: email,
+      password: 'password',
+      name: name,
+      role: role,
+      programStudi: programStudi,
+      phoneNumber: phoneNumber,
+      nim: nim,           // ← TAMBAHKAN INI
+      placement: placement,
+      startDate: startDate,
+      dosenUid: dosenUid,
+      nip: nip,
+      jabatan: jabatan,
+    );
 
-      // FIX: Ensure success message is set correctly
-      _setMessage(
-        success:
-            'Akun ${name} berhasil didaftarkan! Password default: password.',
-      );
-      await Future.delayed(const Duration(milliseconds: 500));
+    _setMessage(
+      success: 'Akun $name berhasil didaftarkan! Password default: password.',
+    );
+    await Future.delayed(const Duration(milliseconds: 500));
 
-      _setLoading(false);
-      return true;
-    } catch (e) {
-      // FIX SYNTAX: Memanggil _setMessage untuk menetapkan error string
-      _setMessage(error: e.toString());
-      _setLoading(false);
-      return false;
-    }
+    _setLoading(false);
+    return true;
+  } catch (e) {
+    _setMessage(error: e.toString());
+    _setLoading(false);
+    return false;
   }
+}
 
-    // Logic delete user (dipanggil dari UI)
-    Future<bool> deleteUser(String uid) async {
+// --- LOGIC UPDATE USER UNIVERSAL (TAMBAH PARAMETER NIM) ---
+Future<bool> updateUserUniversal({
+  required String uid,
+  required String email,
+  required String name,
+  required String role,
+  required String programStudi,
+  required String phoneNumber,
+  // Mahasiswa Specific
+  String? nim,           // ← TAMBAHKAN INI
+  String? placement,
+  DateTime? startDate,
+  String? dosenUid,
+  // Dosen Specific
+  String? nip,
+  String? jabatan,
+}) async {
+  _setLoading(true);
+  _setMessage(error: null, success: null);
+
+  try {
+    final updatedUser = UserModel(
+      uid: uid,
+      email: email,
+      name: name,
+      role: role,
+      programStudi: programStudi,
+      phoneNumber: phoneNumber,
+      nim: nim,           // ← TAMBAHKAN INI
+      placement: placement,
+      startDate: startDate,
+      dosenUid: dosenUid,
+      nip: nip,
+      jabatan: jabatan,
+    );
+
+    await _firestoreService.updateUserMetadata(updatedUser);
+
+    _setMessage(success: 'Data $name berhasil diperbarui!');
+    _setLoading(false);
+    return true;
+  } catch (e) {
+    _setMessage(error: 'Gagal memperbarui data: $e');
+    _setLoading(false);
+    return false;
+  }
+}
+  // Logic delete user (dipanggil dari UI)
+  Future<bool> deleteUser(String uid) async {
     _setMessage(error: null, success: null);
     try {
       // Panggil Service Layer untuk menghapus (Service Layer akan handle Firestore/Auth complexity)
-      await _authService.deleteUser(uid); 
+      await _authService.deleteUser(uid);
       _setMessage(success: 'Pengguna berhasil dihapus!');
       return true;
     } catch (e) {
@@ -113,7 +159,7 @@ class AdminViewModel with ChangeNotifier {
     }
   }
 
-    // Logic update user (dipanggil dari ui)
+  // Logic update user (dipanggil dari ui)
   Future<bool> updateUserData(UserModel user) async {
     _setMessage(error: null, success: null);
     try {

@@ -43,15 +43,13 @@ class FirestoreService {
     try {
       final snapshot = await _firestore
           .collection('users')
-          // HAPUS .orderBy('role') — INI YANG MEMBUNUH!
-          // .orderBy('role')
           .get(); // ← query paling sederhana = paling aman
 
       final List<UserModel> users = snapshot.docs
           .map((doc) => UserModel.fromMap(doc.data()))
           .toList();
 
-      // Sorting dilakukan di client-side — AMAN 100% dan CEPAT
+      // Sorting dilakukan di client-side
       users.sort((a, b) {
         const roleOrder = {'admin': 0, 'dosen': 1, 'mahasiswa': 2};
         final aOrder = roleOrder[a.role] ?? 99;
@@ -66,13 +64,13 @@ class FirestoreService {
     }
   }
 
-      // Fungsi Update User Metadata
-      Future<void>updateUserMetadata(UserModel user)  async {
-        await _firestore.collection('users').doc(user.uid).update(user.toMap());
-      }
+  // Fungsi Update User Metadata
+  Future<void> updateUserMetadata(UserModel user) async {
+    await _firestore.collection('users').doc(user.uid).update(user.toMap());
+  }
 
-      // Fungsi Delete User Metadata
-      Future<void> deleteUserMetadata(String uid) async {
-        await _firestore.collection('users').doc(uid).delete();
-      }
+  // Fungsi Delete User Metadata
+  Future<void> deleteUserMetadata(String uid) async {
+    await _firestore.collection('users').doc(uid).delete();
+  }
 }
