@@ -1,5 +1,5 @@
 // lib/features/auth/views/onboarding_screen.dart
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'login_page.dart'; 
 import '../../../../core/themes/app_theme.dart'; 
@@ -182,8 +182,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       
                       // Tombol Masuk (ElevatedButton)
                       ElevatedButton(
-                        onPressed: _goToNextPage,
-                        child: const Text('Masuk'), 
+                        onPressed: () async {
+                          // Tandai bahwa onboarding sudah selesai
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool('has_seen_onboarding', true);
+
+                          // Pindah ke Login
+                          if (mounted) {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (_) => const LoginPage()),
+                            );
+                          }
+                        },
+                        child: const Text('Masuk'),
                       ),
                     ],
                   )
