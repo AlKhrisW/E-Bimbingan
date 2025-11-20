@@ -6,11 +6,9 @@ import 'package:flutter/services.dart';
 import '../../../../data/models/user_model.dart';
 import '../../../core/themes/app_theme.dart';
 import '../viewmodels/admin_viewmodel.dart'; 
-// Import screen Registrasi User
 import 'register_user_screen.dart'; 
-// import 'user_detail_screen.dart';
-// FIX: Import Widget Lokal yang baru
 import '../widgets/user_list_tile.dart'; 
+import '../../../core/widgets/custom_button_back.dart'; 
 
 class AdminUsersScreen extends StatefulWidget {
   final UserModel user;
@@ -72,6 +70,19 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         return roleMatch && queryMatch;
       }).toList();
     });
+  }
+
+  // Helper untuk mendapatkan detail subtitle
+  String _getUserSubtitle(UserModel user) {
+    if (user.role == 'mahasiswa') {
+      final String prodi = user.programStudi ?? 'Sistem Informasi'; 
+      return 'Mahasiswa - $prodi';
+    } else if (user.role == 'dosen') {
+      return 'Dosen - ${user.jabatan ?? 'N/A'}';
+    } else if (user.role == 'admin') {
+      return 'Admin - Utama';
+    }
+    return 'Role Tidak Dikenal';
   }
 
   // Widget Helper: Tombol Filter Kategori (Bubble)
@@ -136,10 +147,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         title: const Text('Users', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black54),
-          onPressed: () => Navigator.of(context).pop(), 
-        ),
+        // FIX UTAMA: Mengganti IconButton dengan CustomBackButton
+        leading: const CustomBackButton(color: AppTheme.primaryColor),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

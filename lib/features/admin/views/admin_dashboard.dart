@@ -148,7 +148,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Beranda Admin', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        // title: const Text('Beranda Admin', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [

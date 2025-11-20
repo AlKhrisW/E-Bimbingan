@@ -1,12 +1,10 @@
-// lib/features/auth/views/login_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../data/models/user_model.dart';
 import '../../../../core/themes/app_theme.dart';
-import '../../admin/views/admin_main_screen.dart'; // FIX: Import Main Screen
-import '../../dosen/views/dosen_dashboard.dart'; // Placeholder
-import '../../mahasiswa/views/mahasiswa_dashboard.dart'; // Placeholder
+import '../../admin/views/admin_main_screen.dart';
+import '../../dosen/views/dosen_dashboard.dart';
+import '../../mahasiswa/views/mahasiswa_dashboard.dart';
 import '../viewmodels/auth_viewmodel.dart';
 
 class LoginPage extends StatefulWidget {
@@ -16,60 +14,89 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController(text: 'adminjur1@gmail.com');
-  final _passwordController = TextEditingController(text: 'passwordadmin123');
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
+
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  InputDecoration _kapsulInputDecoration(String hint, IconData icon) {
+  late AnimationController _animationController;
+  late Animation<double> _fadeIn;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+
+    _fadeIn = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  InputDecoration _modernInput(String hint, IconData icon) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 16),
       filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-      prefixIcon: Icon(icon, color: Colors.grey.shade500),
+      fillColor: Colors.grey.shade100,
+      prefixIcon: Icon(icon, color: Colors.grey.shade600),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       border: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
-        borderRadius: const BorderRadius.all(Radius.circular(50)), 
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
-        borderRadius: const BorderRadius.all(Radius.circular(50)),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: AppTheme.primaryColor, width: 2.0),
-        borderRadius: const BorderRadius.all(Radius.circular(50)),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
       ),
     );
   }
-  
-  void _showSnackbar(BuildContext context, String message, {bool isError = true}) {
+
+  void _showSnackbar(BuildContext context, String message,
+      {bool isError = true}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
+        backgroundColor:
+            isError ? Colors.red.shade700 : Colors.green.shade700,
       ),
     );
   }
 
   void _navigateToDashboard(BuildContext context, UserModel user) {
     Widget destination;
-    
-    if (user.role == 'admin') {
-      destination = AdminMainScreen(user: user); // FIX UTAMA: Arahkan ke MainScreen
-    } else if (user.role == 'dosen') {
-      destination = DosenDashboard(user: user);
-    } else if (user.role == 'mahasiswa') {
-      destination = MahasiswaDashboard(user: user);
-    } else {
-      _showSnackbar(context, 'Peran pengguna tidak dikenali.', isError: true);
-      return;
+
+    switch (user.role) {
+      case 'admin':
+        destination = AdminMainScreen(user: user);
+        break;
+      case 'dosen':
+        destination = DosenDashboard(user: user);
+        break;
+      case 'mahasiswa':
+        destination = MahasiswaDashboard(user: user);
+        break;
+      default:
+        _showSnackbar(context, 'Peran pengguna tidak dikenali.');
+        return;
     }
 
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => destination),
-      (Route<dynamic> route) => false,
+      (_) => false,
     );
   }
 
@@ -85,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
       if (userModel != null) {
         _navigateToDashboard(context, userModel);
       } else if (viewModel.errorMessage != null) {
-        _showSnackbar(context, viewModel.errorMessage!, isError: true);
+        _showSnackbar(context, viewModel.errorMessage!);
       }
     }
   }
@@ -93,100 +120,120 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<AuthViewModel>(context);
-    
+
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                
-                SizedBox(
-                  width: double.infinity,
-                  child: Image.asset(
-                    'assets/images/login/logo_ebimbingan.png', 
-                    height: 150, 
-                    fit: BoxFit.contain, 
+      body: FadeTransition(
+        opacity: _fadeIn,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(32),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // LOGO
+                  AnimatedOpacity(
+                    opacity: 1,
+                    duration: const Duration(milliseconds: 800),
+                    child: Image.asset(
+                      'assets/images/login/logo_ebimbingan.png',
+                      height: 140,
+                    ),
                   ),
-                ),
-                
-                const SizedBox(height: 50), 
 
-                Text(
-                  'Selamat Datang',
-                  textAlign: TextAlign.center, 
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black, 
+                  const SizedBox(height: 40),
+
+                  Text(
+                    'Selamat Datang',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
                   ),
-                ),
-                const SizedBox(height: 5),
-                
-                Text(
-                  'Masuk ke akun Anda yang sudah ada',
-                  textAlign: TextAlign.center, 
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Colors.grey.shade600,
+
+                  const SizedBox(height: 6),
+
+                  Text(
+                    'Masuk ke akun Anda',
+                    style: TextStyle(
+                        color: Colors.grey.shade600, fontSize: 15),
                   ),
-                ),
-                const SizedBox(height: 40),
-                
-                TextFormField(
-                  controller: _emailController,
-                  decoration: _kapsulInputDecoration('Nama Pengguna', Icons.person_outline),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) => (value == null || value.isEmpty) ? 'Nama pengguna wajib diisi.' : null,
-                ),
-                
-                const SizedBox(height: 18),
-                
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: _kapsulInputDecoration('Kata Sandi', Icons.lock_outline),
-                  obscureText: true,
-                  validator: (value) => (value == null || value.length < 6) ? 'Kata sandi minimal 6 karakter.' : null,
-                ),
-                
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Align(
+
+                  const SizedBox(height: 35),
+
+                  // EMAIL INPUT
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: _modernInput('Email', Icons.person_outline),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Email wajib diisi' : null,
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  // PASSWORD INPUT
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration:
+                        _modernInput('Kata Sandi', Icons.lock_outline),
+                    obscureText: true,
+                    validator: (v) => (v == null || v.length < 6)
+                        ? 'Minimal 6 karakter'
+                        : null,
+                  ),
+
+                  Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                         _showSnackbar(context, 'Fitur reset password belum aktif.', isError: false);
-                      }, 
+                        _showSnackbar(context,
+                            'Fitur reset password belum aktif.',
+                            isError: false);
+                      },
                       child: const Text(
                         'Lupa Kata Sandi?',
-                        style: TextStyle(color: AppTheme.errorColor, fontWeight: FontWeight.w600), 
+                        style: TextStyle(
+                            color: AppTheme.errorColor,
+                            fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
-                ),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 32.0),
-                  child: ElevatedButton(
-                    onPressed: viewModel.isLoading ? null : () => _submitLogin(context), 
-                    child: viewModel.isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text("Masuk"),
+                  const SizedBox(height: 15),
+
+                  // LOGIN BUTTON
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed:
+                          viewModel.isLoading ? null : () => _submitLogin(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 5,
+                      ),
+                      child: viewModel.isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              "Masuk",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                    ),
                   ),
-                ),
-                
-                const Padding(
-                  padding: EdgeInsets.only(top: 10.0),
-                  child: Text(
+
+                  const SizedBox(height: 16),
+
+                  const Text(
                     'Akun dibuat oleh Admin Jurusan.',
-                    textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
