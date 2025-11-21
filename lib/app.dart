@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/themes/app_theme.dart';
-// import 'features/auth/views/login_page.dart';
+import 'core/utils/navigation/app_navigator.dart';
 import 'features/auth/views/splash_screen.dart';
 import 'features/auth/viewmodels/auth_viewmodel.dart';
 
@@ -19,6 +19,7 @@ class App extends StatelessWidget {
         // Provider lain akan ditambahkan di fitur masing-masing
       ],
       child: MaterialApp(
+        navigatorKey: appNavigatorKey,
         title: 'E-Bimbingan App',
         theme: AppTheme.lightTheme, // Menggunakan tema yang sudah didefinisikan
         home: const SplashScreen(),

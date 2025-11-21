@@ -6,7 +6,7 @@ import '../../../../data/models/user_model.dart';
 import '../../../../core/themes/app_theme.dart';
 // Import Placeholder Dashboards (akan dibuat sebentar lagi)
 import '../../admin/views/admin_dashboard.dart';
-import '../../dosen/views/dosen_dashboard.dart';
+import '../../dosen/views/dosen_main.dart';
 import '../../mahasiswa/views/mahasiswa_dashboard.dart';
 import '../viewmodels/auth_viewmodel.dart';
 
@@ -46,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
     if (user.role == 'admin') {
       destination = AdminDashboard(user: user);
     } else if (user.role == 'dosen') {
-      destination = DosenDashboard(user: user);
+      destination = DosenMain(user: user);
     } else if (user.role == 'mahasiswa') {
       destination = MahasiswaDashboard(user: user);
     } else {
