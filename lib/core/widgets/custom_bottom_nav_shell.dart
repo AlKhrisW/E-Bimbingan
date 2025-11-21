@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../themes/app_theme.dart';
 
+// Definisi Item Navigasi Universal (Fixes "NavItem isn't defined")
 class NavItem {
   final String label;
   final IconData icon;
