@@ -4,14 +4,15 @@ class AppTheme {
   static const Color primaryColor = Color(0xFF3461FF); // Warna Biru Utama (dari tombol Figma)
   static const Color secondaryColor = Color(0xFF42A5F5); 
   static const Color errorColor = Color(0xFFFF0000); // Merah untuk error/lupa password
+  static const Color backgroundColor = Colors.white; // Warna latar belakang aplikasi
 
   static final ThemeData lightTheme = ThemeData(
     primarySwatch: Colors.blue,
     primaryColor: primaryColor,
-    scaffoldBackgroundColor: Colors.white,
+    scaffoldBackgroundColor: backgroundColor,
     appBarTheme: AppBarTheme(
       backgroundColor: primaryColor,
-      foregroundColor: Colors.white,
+      foregroundColor: backgroundColor,
       elevation: 0,
     ),
     textTheme: const TextTheme(
@@ -21,7 +22,7 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        foregroundColor: backgroundColor,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(50)),
         ),
