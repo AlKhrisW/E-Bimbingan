@@ -1,0 +1,89 @@
+import 'package:flutter/material.dart';
+import '../themes/app_theme.dart';
+
+class DashboardPageAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String name;
+  final String placement;
+  final String? photoUrl;
+  final VoidCallback onNotificationTap;
+
+  const DashboardPageAppBar({
+    super.key,
+    required this.name,
+    required this.placement,
+    this.photoUrl,
+    required this.onNotificationTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final firstName = name.isNotEmpty ? name.split(" ")[0] : "User";
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : "U";
+
+    return AppBar(
+      backgroundColor: AppTheme.backgroundColor,
+      elevation: 0,
+      toolbarHeight: 80,
+      automaticallyImplyLeading: false,
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Profile
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 26,
+                backgroundColor: AppTheme.primaryColor,
+                backgroundImage:
+                    photoUrl != null ? NetworkImage(photoUrl!) : null,
+                child: photoUrl == null
+                    ? Text(
+                        initial,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 12),
+
+              // Name & Placement
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "$firstName 👋",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade900,
+                    ),
+                  ),
+                  Text(
+                    placement,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // Notification button
+          IconButton(
+            icon: const Icon(Icons.notifications_none),
+            color: Colors.grey.shade900,
+            onPressed: onNotificationTap,
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(80);
+}
