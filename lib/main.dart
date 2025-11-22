@@ -2,9 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-// Asumsi Anda sudah mengimpor FirebaseOptions yang benar
 import 'firebase_options.dart'; 
-import 'app.dart'; // Import class App yang baru
+import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +13,5 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform, 
   );
   
-  // Ganti runApp(const MyApp()) dengan runApp(const App())
   runApp(const App());
 }

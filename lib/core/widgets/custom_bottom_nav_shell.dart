@@ -1,4 +1,3 @@
-// TODO Implement this library.
 // lib/core/widgets/custom_bottom_nav_shell.dart
 
 import 'package:flutter/material.dart';
@@ -9,13 +8,19 @@ class NavItem {
   final String label;
   final IconData icon;
   final Widget screen;
+  final VoidCallback? onTap; // untuk modal/slider
 
-  NavItem({required this.label, required this.icon, required this.screen});
+  NavItem({
+    required this.label,
+    required this.icon,
+    required this.screen,
+    this.onTap,
+  });
 }
 
 class CustomBottomNavShell extends StatefulWidget {
   final List<NavItem> navItems;
-  final String heroTag; 
+  final String heroTag;
 
   const CustomBottomNavShell({
     super.key,
@@ -37,24 +42,23 @@ class _CustomBottomNavShellState extends State<CustomBottomNavShell> {
         index: _currentIndex,
         children: widget.navItems.map((item) => item.screen).toList(),
       ),
-      
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed, 
+        type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          final item = widget.navItems[index];
+          if (item.onTap != null) {
+            item.onTap!();
+          } else {
+            setState(() => _currentIndex = index);
+          }
         },
-        selectedItemColor: AppTheme.primaryColor, 
+        selectedItemColor: AppTheme.primaryColor,
         unselectedItemColor: Colors.grey.shade500,
         backgroundColor: Colors.white,
-        items: widget.navItems.map((item) => 
-          BottomNavigationBarItem(
-            icon: Icon(item.icon),
-            label: item.label,
-          )
-        ).toList(),
+        items: widget.navItems
+            .map((e) => BottomNavigationBarItem(icon: Icon(e.icon), label: e.label))
+            .toList(),
       ),
     );
   }
