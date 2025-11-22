@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../data/models/user_model.dart';
 import '../../../../core/themes/app_theme.dart';
 import '../../admin/views/admin_main_screen.dart';
+import '../../mahasiswa/views/mahasiswa_main_screen.dart';
 import '../../dosen/views/dosen_dashboard.dart';
 import '../../mahasiswa/views/mahasiswa_dashboard.dart';
 import '../viewmodels/auth_viewmodel.dart';
@@ -87,7 +88,7 @@ class _LoginPageState extends State<LoginPage>
         destination = DosenDashboard(user: user);
         break;
       case 'mahasiswa':
-        destination = MahasiswaDashboard(user: user);
+        destination = MahasiswaMainScreen(user: user);
         break;
       default:
         _showSnackbar(context, 'Peran pengguna tidak dikenali.');
