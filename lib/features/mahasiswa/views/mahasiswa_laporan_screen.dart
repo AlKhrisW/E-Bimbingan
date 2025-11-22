@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
 
-class MahasiswaBimbinganScreen extends StatelessWidget {
+class MahasiswaLaporanScreen extends StatelessWidget {
   final UserModel user;
 
-  const MahasiswaBimbinganScreen({super.key, required this.user});
+  const MahasiswaLaporanScreen({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Bimbingan"),
-        centerTitle: true,
+        title: Text("Laporan Harian"),
       ),
-      body: const Center(
+      body: Center(
         child: Text(
-          "Halaman Bimbingan Mahasiswa",
+          "Halaman Laporan Harian\nNama: ${user.name ?? '-'}",
+          textAlign: TextAlign.center,
           style: TextStyle(fontSize: 18),
         ),
       ),

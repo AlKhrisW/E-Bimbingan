@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/custom_bottom_nav_shell.dart';
 import '../../../data/models/user_model.dart';
 import '../views/mahasiswa_dashboard.dart';
-import '../views/mahasiswa_bimbingan_screen.dart';
+import '../widgets/mahasiswa_bimbingan_modal.dart';
 import '../views/mahasiswa_riwayat_screen.dart';
 import '../views/mahasiswa_profil_screen.dart';
 
@@ -19,7 +19,10 @@ List<NavItem> buildMahasiswaNavItems(UserModel user) {
     NavItem(
       label: "Bimbingan",
       icon: Icons.assignment,
-      screen: MahasiswaBimbinganScreen(user: user),
+      screen: Scaffold(body: SizedBox.shrink()),
+      onTap: () {
+        MahasiswaBimbinganModal.show(user);
+      },
     ),
     NavItem(
       label: "Riwayat",
