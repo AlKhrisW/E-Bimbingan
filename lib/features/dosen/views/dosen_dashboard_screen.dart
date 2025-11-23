@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/widgets/dashboard_page_appBar.dart';
 import '../../../data/models/user_model.dart';
+import 'dosen_notifikasi_screen.dart';
 
 class DosenDashboard extends StatelessWidget {
   final UserModel user; 
@@ -15,7 +16,14 @@ class DosenDashboard extends StatelessWidget {
         name: user.name,
         placement: user.jabatan ?? "Dosen",
         photoUrl: null,
-        onNotificationTap: () {},
+        onNotificationTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DosenNotifikasi(user: user),
+            ),
+          );
+        },
       ),
       body: const Center(child: Text("Dashboard Dosen")),
     );

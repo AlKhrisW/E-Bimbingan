@@ -148,7 +148,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         // FIX UTAMA: Mengganti IconButton dengan CustomBackButton
-        leading: const CustomBackButton(color: AppTheme.primaryColor),
+        leading: const CustomBackButton(),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
