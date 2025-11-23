@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'custom_button_back.dart';
 
-class NotificationAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const NotificationAppBar({super.key});
+class CustomUniversalAppbar extends StatelessWidget implements PreferredSizeWidget {
+  final String judul;
+  const CustomUniversalAppbar({super.key, required this.judul});
 
   @override
   Widget build(BuildContext context) {
@@ -11,8 +12,8 @@ class NotificationAppBar extends StatelessWidget implements PreferredSizeWidget 
       elevation: 0,
       centerTitle: true,
       leading: const CustomBackButton(),
-      title: const Text(
-        "Notifikasi",
+      title: Text(
+        judul,
         style: TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 18,

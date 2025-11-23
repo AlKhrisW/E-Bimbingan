@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
-import '../../../core/widgets/notification_page_appBar.dart';
+import '../../../core/widgets/custom_universal_back_appBar.dart';
 
 class DosenNotifikasi extends StatelessWidget {
   final UserModel user;
@@ -9,7 +9,7 @@ class DosenNotifikasi extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const NotificationAppBar(),
+      appBar: CustomUniversalAppbar(judul: "Notifikasi"),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
