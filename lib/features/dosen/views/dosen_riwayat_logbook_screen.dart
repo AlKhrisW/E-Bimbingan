@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
+import '../../../core/widgets/custom_universal_back_appBar.dart';
 
 class DosenRiwayatLogbook extends StatelessWidget {
   final UserModel user;
@@ -8,8 +9,15 @@ class DosenRiwayatLogbook extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Riwayat Logbook")),
-      body: Center(child: Text("Daftar Logbook tampil di sini")),
+      appBar: CustomUniversalAppbar(judul: "Logbook Bimbingan"),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: const [
+            Text("Halaman Logbook Bimbingan Mahasiswa"),
+          ],
+        ),
+      ),
     );
   }
 }

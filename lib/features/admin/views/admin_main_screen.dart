@@ -1,9 +1,8 @@
 // lib/features/admin/views/admin_main_screen.dart
 
 import 'package:flutter/material.dart';
-// Hapus import provider
 import '../../../data/models/user_model.dart';
-import '../admin_navbar_config.dart'; 
+import '../navigation/admin_navigation_config.dart'; 
 import '../../../core/widgets/custom_bottom_nav_shell.dart';
 
 
