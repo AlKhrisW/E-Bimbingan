@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
+import '../../../core/widgets/custom_universal_back_appBar.dart';
 
 class DosenRiwayatAjuan extends StatelessWidget {
   final UserModel user;
@@ -8,8 +9,15 @@ class DosenRiwayatAjuan extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Riwayat Pengajuan")),
-      body: Center(child: Text("Daftar Pengajuan tampil di sini")),
+      appBar: CustomUniversalAppbar(judul: "Riwayat Ajuan Bimbingan"),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: const [
+            Text("Halaman Riwayat Ajuan Bimbingan Mahasiswa"),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -11,27 +11,27 @@ import '../widgets/dosen_riwayat_modal.dart';
 
 class DosenNavigationConfig {
   static List<NavItem> items(UserModel user) => [
-        NavItem(
-          label: 'Beranda',
-          icon: Icons.home_outlined,
-          screen: DosenDashboard(user: user),
-        ),
-        NavItem(
-          label: 'Bimbingan',
-          icon: Icons.supervised_user_circle_outlined,
-          screen: const SizedBox(),
-          onTap: () => BimbinganModal.show(user),
-        ),
-        NavItem(
-          label: 'Riwayat',
-          icon: Icons.history_outlined,
-          screen: const SizedBox(),
-          onTap: () => RiwayatModal.show(user),
-        ),
-        NavItem(
-          label: 'Profil',
-          icon: Icons.person_outline,
-          screen: DosenProfil(user: user),
-        ),
-      ];
+    NavItem(
+      label: 'Beranda',
+      icon: Icons.home_filled,
+      screen: DosenDashboard(user: user),
+    ),
+    NavItem(
+      label: 'Bimbingan',
+      icon: Icons.pending_actions_outlined,
+      screen: const SizedBox(),
+      onTap: () => BimbinganModal.show(user),
+    ),
+    NavItem(
+      label: 'Riwayat',
+      icon: Icons.history_outlined,
+      screen: const SizedBox(),
+      onTap: () => RiwayatModal.show(user),
+    ),
+    NavItem(
+      label: 'Profil',
+      icon: Icons.person_outline,
+      screen: DosenProfil(user: user),
+    ),
+  ];
 }

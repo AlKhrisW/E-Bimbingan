@@ -38,4 +38,21 @@ class UserService {
   Future<void> updateUserMetadata(UserModel user) async {
     await _users.doc(user.uid).update(user.toMap());
   }
+
+  // ----------------------------------------------------------------------
+  // FETCH USER BY UID
+  // ----------------------------------------------------------------------
+  Future<UserModel> fetchUserByUid(String uid) async {
+    try {
+      final doc = await _users.doc(uid).get();
+
+      if (!doc.exists) {
+        throw 'User dengan UID $uid tidak ditemukan';
+      }
+
+      return UserModel.fromMap(doc.data() as Map<String, dynamic>);
+    } catch (e) {
+      throw 'Gagal mengambil data user: $e';
+    }
+  }
 }

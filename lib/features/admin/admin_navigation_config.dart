@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/widgets/custom_bottom_nav_shell.dart'; 
 import 'views/admin_dashboard.dart'; 
-// Asumsi screens placeholder Admin lainnya sudah dibuat (Users, Mapping, Account)
 import 'views/admin_users_screen.dart'; 
 import 'views/admin_mapping_screen.dart'; 
 import 'views/admin_account_screen.dart'; 
@@ -13,23 +12,23 @@ List<NavItem> buildAdminNavItems(UserModel user) {
   return [
     NavItem(
       label: 'Beranda',
-      icon: Icons.home,
+      icon: Icons.home_filled,
       screen: AdminDashboard(user: user), 
     ),
     NavItem(
       label: 'Users',
-      icon: Icons.people,
-      screen: AdminUsersScreen(user: user), // Akan diisi Manage Dosen/Mahasiswa
+      icon: Icons.manage_accounts_outlined,
+      screen: AdminUsersScreen(user: user),
     ),
     NavItem(
       label: 'Mapping',
-      icon: Icons.map,
+      icon: Icons.map_outlined,
       screen: AdminMappingScreen(user: user),
     ),
     NavItem(
       label: 'Akun',
-      icon: Icons.person,
-      screen: AdminAccountScreen(user: user), // Akan diisi Profil Admin
+      icon: Icons.person_outline,
+      screen: AdminAccountScreen(user: user),
     ),
   ];
 }
