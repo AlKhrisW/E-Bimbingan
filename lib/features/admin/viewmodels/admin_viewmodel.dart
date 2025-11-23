@@ -6,6 +6,7 @@ import 'dart:async';
 import '../../../data/models/user_model.dart';
 import '../../../data/services/user_service.dart';
 import '../../../data/services/firebase_auth_service.dart';
+import '../../auth/views/login_page.dart';
 
 class AdminViewModel with ChangeNotifier {
   // --- SERVICE LAYER ---
@@ -36,7 +37,7 @@ class AdminViewModel with ChangeNotifier {
   // FETCH DATA
   // ----------------------------------------------------------------------
 
-  /// Ambil seluruh user
+  // ambil semua user
   Future<List<UserModel>> fetchAllUsers() async {
     try {
       return _userService.fetchAllUsers();
@@ -53,6 +54,22 @@ class AdminViewModel with ChangeNotifier {
       throw 'Gagal memuat daftar dosen: $e';
     }
   }
+
+  Future<void> logout() async {
+  // kalau mau hapus token, tambahkan di sini
+  await Future.delayed(const Duration(milliseconds: 500));
+}
+
+Future<void> handleLogout(BuildContext context) async {
+  await logout();
+
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(builder: (_) => const LoginPage()),
+    (route) => false,
+  );
+}
+
+  
 
   // ----------------------------------------------------------------------
   // REGISTER USER UNIVERSAL
