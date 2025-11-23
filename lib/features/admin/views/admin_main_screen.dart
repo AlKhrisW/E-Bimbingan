@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
-import '../admin_navigation_config.dart'; 
+import '../navigation/admin_navigation_config.dart'; 
 import '../../../core/widgets/custom_bottom_nav_shell.dart';
 
 
