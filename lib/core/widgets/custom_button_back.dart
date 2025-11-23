@@ -5,22 +5,29 @@ import 'package:flutter/services.dart';
 import '../themes/app_theme.dart';
 
 class CustomBackButton extends StatelessWidget {
-  const CustomBackButton({super.key});
+  final double size;
+
+  const CustomBackButton({
+    super.key,
+    this.size = 24, // default size biar tidak error
+  });
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      padding: EdgeInsets.only(left: 16),
+      padding: const EdgeInsets.only(left: 16),
       icon: Container(
-        padding: EdgeInsets.all(3),
+        width: size + 10,
+        height: size + 10,
         decoration: BoxDecoration(
           color: AppTheme.primaryColor,
           shape: BoxShape.circle,
         ),
         child: Center(
           child: Icon(
-            Icons.chevron_left, 
-            color: Colors.white, 
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: size * 0.7,
           ),
         ),
       ),

@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../data/models/user_model.dart';
-import '../../auth/viewmodels/auth_viewmodel.dart';
-import '../../auth/views/login_page.dart';
+// import '../../auth/viewmodels/auth_viewmodel.dart';
+// import '../../auth/views/login_page.dart';
 import '../../../../core/themes/app_theme.dart';
 import '../viewmodels/admin_viewmodel.dart';
 import '../../../../core/widgets/dashboard_page_appBar.dart';
@@ -50,14 +50,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
     };
   }
 
-  void _handleLogout(BuildContext context) async {
-    final viewModel = Provider.of<AuthViewModel>(context, listen: false);
-    await viewModel.logout();
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const LoginPage()),
-      (Route<dynamic> route) => false,
-    );
-  }
+  // void _handleLogout(BuildContext context) async {
+  //   final viewModel = Provider.of<AuthViewModel>(context, listen: false);
+  //   await viewModel.logout();
+  //   Navigator.of(context).pushAndRemoveUntil(
+  //     MaterialPageRoute(builder: (context) => const LoginPage()),
+  //     (Route<dynamic> route) => false,
+  //   );
+  // }
 
   // Widget Helper untuk Card Jumlah (SAMA PERSIS, HANYA WARNA YANG BERBEDA)
   Widget _buildCountCard(String title, String count, Color bgColor, Color textColor) {
