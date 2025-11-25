@@ -10,6 +10,7 @@ import 'features/auth/views/splash_screen.dart';
 import 'features/auth/viewmodels/auth_viewmodel.dart';
 import 'features/admin/viewmodels/admin_viewmodel.dart';
 import 'features/dosen/viewmodels/dosen_viewmodel.dart';
+import 'features/mahasiswa/viewmodels/mahasiswa_viewmodel.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -21,6 +22,7 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => AdminViewModel()),
         ChangeNotifierProvider(create: (_) => DosenViewModel(authService: FirebaseAuthService(),userService: UserService(),)),
+        ChangeNotifierProvider(create: (_) => MahasiswaViewModel()),
       ],
       child: MaterialApp(
         navigatorKey: appNavigatorKey,

@@ -9,14 +9,32 @@ class MahasiswaRiwayatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Riwayat Bimbingan"),
-        centerTitle: true,
-      ),
-      body: const Center(
-        child: Text(
-          "Halaman Riwayat Bimbingan",
-          style: TextStyle(fontSize: 18),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+
+            // JUDUL DI TENGAH
+            Center(
+              child: Text(
+                "Riwayat Bimbingan",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Konten
+            const Text(
+              "Halaman Riwayat Bimbingan Mahasiswa",
+              style: TextStyle(fontSize: 16),
+            ),
+          ],
         ),
       ),
     );
