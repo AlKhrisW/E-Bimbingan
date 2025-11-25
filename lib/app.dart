@@ -1,5 +1,7 @@
 // lib/app.dart
 
+import 'package:ebimbingan/data/services/firebase_auth_service.dart';
+import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/themes/app_theme.dart';
@@ -18,7 +20,7 @@ class App extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => AdminViewModel()),
-        ChangeNotifierProvider(create: (_) => DosenViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenViewModel(authService: FirebaseAuthService(),userService: UserService(),)),
       ],
       child: MaterialApp(
         navigatorKey: appNavigatorKey,
