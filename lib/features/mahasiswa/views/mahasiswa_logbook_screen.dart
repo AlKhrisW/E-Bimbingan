@@ -23,7 +23,7 @@ class MahasiswaLogbookScreen extends StatelessWidget {
             const SizedBox(height: 12),
 
             Text(
-              "Nama: ${user.name ?? '-'}",
+              "Nama: ${user.name}",
               style: const TextStyle(fontSize: 16),
             ),
           ],

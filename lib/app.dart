@@ -21,8 +21,8 @@ class App extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => AdminViewModel()),
-        ChangeNotifierProvider(create: (_) => DosenViewModel(authService: FirebaseAuthService(),userService: UserService(),)),
-        ChangeNotifierProvider(create: (_) => MahasiswaViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenViewModel(authService: FirebaseAuthService(),userService: UserService())),
+        ChangeNotifierProvider(create: (_) => MahasiswaViewModel(authService: FirebaseAuthService(),userService: UserService())),
       ],
       child: MaterialApp(
         navigatorKey: appNavigatorKey,
