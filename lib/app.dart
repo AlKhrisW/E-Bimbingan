@@ -1,4 +1,7 @@
 // lib/app.dart
+
+import 'package:ebimbingan/data/services/firebase_auth_service.dart';
+import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -25,8 +28,8 @@ class App extends StatelessWidget {
 
         // Provider Umum (dipakai di banyak role)
         ChangeNotifierProvider(create: (_) => AdminViewModel()),
-        ChangeNotifierProvider(create: (_) => DosenViewModel()),
-        ChangeNotifierProvider(create: (_) => MahasiswaViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenViewModel(authService: FirebaseAuthService(),userService: UserService())),
+        ChangeNotifierProvider(create: (_) => MahasiswaViewModel(authService: FirebaseAuthService(),userService: UserService())),
 
         // Provider Khusus Admin
         ChangeNotifierProvider(create: (_) => AdminProfileViewModel()),

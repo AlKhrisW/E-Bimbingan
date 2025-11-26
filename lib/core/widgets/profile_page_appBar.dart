@@ -14,6 +14,7 @@ class ProfilePageAppbar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
       foregroundColor: Colors.black,
       centerTitle: true,
       elevation: 0,

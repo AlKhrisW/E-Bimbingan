@@ -32,7 +32,7 @@ List<NavItem> buildMahasiswaNavItems(UserModel user) {
     NavItem(
       label: "Profil",
       icon: Icons.person,
-      screen: MahasiswaProfilScreen(user: user),
+      screen: MahasiswaProfilScreen(),
     ),
   ];
 }

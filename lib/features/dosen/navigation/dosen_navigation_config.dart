@@ -31,7 +31,7 @@ class DosenNavigationConfig {
     NavItem(
       label: 'Profil',
       icon: Icons.person_outline,
-      screen: DosenProfil(user: user),
+      screen: DosenProfil(),
     ),
   ];
 }
