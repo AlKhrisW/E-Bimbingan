@@ -1,56 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../data/models/user_model.dart';
+import '../viewmodels/mahasiswa_viewmodel.dart';
+import '../../../core/widgets/profile_page_appBar.dart';
 
 class MahasiswaProfilScreen extends StatelessWidget {
   final UserModel user;
-
   const MahasiswaProfilScreen({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<MahasiswaViewModel>(context, listen: false);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Profil"),
-        centerTitle: true,
+      appBar: ProfilePageAppbar(
+        onLogout: viewModel.handleLogout,
       ),
+
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              user.name,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Text(
-              user.email,
-              style: const TextStyle(fontSize: 16),
-            ),
-
-            const SizedBox(height: 30),
-
-            ElevatedButton.icon(
-              onPressed: () {
-                // nanti diganti ke AuthViewModel.logout()
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  "/login",
-                  (route) => false,
-                );
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text("Logout"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-              ),
-            ),
+          children: const [
+            Text("Halaman Profil Mahasiswa"),
           ],
         ),
       ),
