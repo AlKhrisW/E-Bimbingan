@@ -5,7 +5,8 @@ class UserModel {
   final String uid;
   final String name;
   final String email;
-  final String role; // 'admin', 'dosen', atau 'mahasiswa'
+  final String role;
+  final String? photoBase64;  // new field for profile photo
   
   // Mahasiswa fields
   final String? dosenUid; 
@@ -17,7 +18,7 @@ class UserModel {
   final String? nip;
   final String? jabatan; 
   
-  // Global fields (semua role bisa punya)
+  // Global fields
   final String? programStudi; 
   final String? phoneNumber;
 
@@ -26,6 +27,7 @@ class UserModel {
     required this.name,
     required this.email,
     required this.role,
+    this.photoBase64, 
     this.dosenUid,
     this.nim,
     this.placement,
@@ -36,31 +38,27 @@ class UserModel {
     this.phoneNumber,
   });
 
-  /// Parse data dari Firestore ke Model
   factory UserModel.fromMap(Map<String, dynamic> data) {
     return UserModel(
       uid: data['uid'] ?? '',
       name: data['name'] ?? 'No Name',
       email: data['email'] ?? '',
       role: data['role'] ?? 'unknown',
+      photoBase64: data['photo_base64'], 
       
-      // Mahasiswa fields
       dosenUid: data['dosen_uid'], 
       nim: data['nim'],
       placement: data['placement'],
       startDate: _parseTimestamp(data['start_date']),
       
-      // Dosen fields
       nip: data['nip'],
       jabatan: data['jabatan'],
       
-      // Global fields (FIX: tambahkan parsing)
       programStudi: data['program_studi'],
       phoneNumber: data['phone_number'],
     );
   }
 
-  /// Helper: Parse Timestamp dengan aman
   static DateTime? _parseTimestamp(dynamic value) {
     if (value == null) return null;
     
@@ -77,7 +75,6 @@ class UserModel {
     return null;
   }
 
-  /// Convert Model ke Map untuk Firestore
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,
@@ -85,7 +82,8 @@ class UserModel {
       'email': email,
       'role': role,
       
-      // Global fields (semua role)
+      // Global fields
+      if (photoBase64 != null) 'photo_base64': photoBase64, 
       if (programStudi != null) 'program_studi': programStudi,
       if (phoneNumber != null) 'phone_number': phoneNumber,
       
@@ -105,10 +103,8 @@ class UserModel {
     };
   }
 
-  /// Helper: Display name untuk UI
   String get displayName => name;
 
-  /// Helper: Role label untuk UI
   String get roleLabel {
     switch (role) {
       case 'admin':
@@ -122,21 +118,16 @@ class UserModel {
     }
   }
 
-  /// Helper: Check apakah user adalah admin
   bool get isAdmin => role == 'admin';
-
-  /// Helper: Check apakah user adalah dosen
   bool get isDosen => role == 'dosen';
-
-  /// Helper: Check apakah user adalah mahasiswa
   bool get isMahasiswa => role == 'mahasiswa';
 
-  /// CopyWith untuk update data
   UserModel copyWith({
     String? uid,
     String? name,
     String? email,
     String? role,
+    String? photoBase64, 
     String? dosenUid,
     String? nim,
     String? placement,
@@ -151,6 +142,7 @@ class UserModel {
       name: name ?? this.name,
       email: email ?? this.email,
       role: role ?? this.role,
+      photoBase64: photoBase64 ?? this.photoBase64, 
       dosenUid: dosenUid ?? this.dosenUid,
       nim: nim ?? this.nim,
       placement: placement ?? this.placement,

@@ -1,12 +1,10 @@
 // lib/features/admin/views/admin_dashboard.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../data/models/user_model.dart';
-// import '../../auth/viewmodels/auth_viewmodel.dart';
-// import '../../auth/views/login_page.dart';
 import '../../../../core/themes/app_theme.dart';
-import '../viewmodels/admin_viewmodel.dart';
+import '../viewmodels/admin_dashboard_viewmodel.dart';
 import '../../../../core/widgets/dashboard_page_appBar.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -18,8 +16,7 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
-  late Future<Map<String, int>> _userCountsFuture;
-
+  // Data statis untuk Status Kegiatan (masih dummy)
   final List<Map<String, dynamic>> _statusData = [
     {'label': 'Disetujui', 'value': 45, 'color': Colors.green},
     {'label': 'Dalam Proses', 'value': 25, 'color': Colors.yellow},
@@ -30,36 +27,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   void initState() {
     super.initState();
-    _userCountsFuture = _fetchDashboardCounts();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AdminDashboardViewModel>(context, listen: false)
+          .loadStatistics();
+    });
   }
 
-  Future<Map<String, int>> _fetchDashboardCounts() async {
-    final viewModel = Provider.of<AdminViewModel>(context, listen: false);
-    final allUsers = await viewModel.fetchAllUsers();
-
-    final totalAdmin = allUsers.where((u) => u.role == 'admin').length;
-    final totalDosen = allUsers.where((u) => u.role == 'dosen').length;
-    final totalMahasiswa = allUsers.where((u) => u.role == 'mahasiswa').length;
-    final totalUser = allUsers.length;
-
-    return {
-      'total': totalUser,
-      'mahasiswa': totalMahasiswa,
-      'dosen': totalDosen,
-      'admin': totalAdmin,
-    };
-  }
-
-  // void _handleLogout(BuildContext context) async {
-  //   final viewModel = Provider.of<AuthViewModel>(context, listen: false);
-  //   await viewModel.logout();
-  //   Navigator.of(context).pushAndRemoveUntil(
-  //     MaterialPageRoute(builder: (context) => const LoginPage()),
-  //     (Route<dynamic> route) => false,
-  //   );
-  // }
-
-  // Widget Helper untuk Card Jumlah (SAMA PERSIS, HANYA WARNA YANG BERBEDA)
+  // Card jumlah user
   Widget _buildCountCard(String title, String count, Color bgColor, Color textColor) {
     return Card(
       color: bgColor,
@@ -94,6 +68,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
+  // Chart lingkaran sederhana + legend
   Widget _buildActivityStatusChart(int percentage) {
     return Center(
       child: Column(
@@ -112,9 +87,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 children: [
                   Text(
                     '$percentage%',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryColor,
+                    ),
                   ),
-                  const Text('Aktivitas\nBimbingan', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  const Text(
+                    'Aktivitas\nBimbingan',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                 ],
               ),
             ),
@@ -123,7 +106,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
             spacing: 15,
             runSpacing: 10,
             alignment: WrapAlignment.center,
-            children: _statusData.map((item) => _buildLegend(item['label'], item['color'] as Color)).toList(),
+            children: _statusData
+                .map((item) => _buildLegend(item['label'] as String, item['color'] as Color))
+                .toList(),
           ),
         ],
       ),
@@ -134,17 +119,27 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+        ),
       ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final totalLogbooks = _statusData.fold<int>(0, (sum, item) => sum + item['value'] as int);
-    final completionPercentage = totalLogbooks == 0 ? 0 : ((_statusData[0]['value'] / totalLogbooks) * 100).toInt();
+    final totalLogbooks =
+        _statusData.fold<int>(0, (sum, item) => sum + (item['value'] as int));
+    final completionPercentage = totalLogbooks == 0
+        ? 0
+        : ((_statusData[0]['value'] as num) / totalLogbooks * 100).toInt();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -159,18 +154,34 @@ class _AdminDashboardState extends State<AdminDashboard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- CARD JUMLAH USER DENGAN WARNA BERBEDA ---
-            Text('Users', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            // ==== CARD JUMLAH USER ====
+            Text(
+              'Users',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 10),
 
-            FutureBuilder<Map<String, int>>(
-              future: _userCountsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+            Consumer<AdminDashboardViewModel>(
+              builder: (context, viewModel, child) {
+                if (viewModel.isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final data = snapshot.data ?? {'total': 0, 'mahasiswa': 0, 'dosen': 0, 'admin': 0};
+                if (viewModel.errorMessage != null) {
+                  return Center(
+                    child: Text(
+                      'Error: ${viewModel.errorMessage}',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  );
+                }
+
+                final totalUsers = viewModel.totalMahasiswa +
+                    viewModel.totalDosen +
+                    viewModel.totalAdmin;
 
                 return GridView.count(
                   crossAxisCount: 2,
@@ -178,38 +189,31 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   mainAxisSpacing: 10,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  childAspectRatio: 2.5, // TETAP DIPAKAI
+                  childAspectRatio: 2.5,
                   children: [
-                    // 1. Jumlah User - BIRU MUDA
                     _buildCountCard(
                       'Jumlah User',
-                      data['total'].toString(),
-                      const Color(0xFFE3F2FD), // #E3F2FD
-                      const Color(0xFF1976D2), // #1976D2
+                      totalUsers.toString(),
+                      const Color(0xFFE3F2FD),
+                      const Color(0xFF1976D2),
                     ),
-
-                    // 2. Jumlah Mahasiswa - HIJAU MUDA
                     _buildCountCard(
                       'Jumlah Mahasiswa',
-                      data['mahasiswa'].toString(),
-                      const Color(0xFFE8F5E9), // #E8F5E9
-                      const Color(0xFF388E3C), // #388E3C
+                      viewModel.totalMahasiswa.toString(),
+                      const Color(0xFFE8F5E9),
+                      const Color(0xFF388E3C),
                     ),
-
-                    // 3. Jumlah Dosen - KUNING/ORANYE MUDA
                     _buildCountCard(
                       'Jumlah Dosen',
-                      data['dosen'].toString(),
-                      const Color(0xFFFFF3E0), // #FFF3E0
-                      const Color(0xFFF57C00), // #F57C00
+                      viewModel.totalDosen.toString(),
+                      const Color(0xFFFFF3E0),
+                      const Color(0xFFF57C00),
                     ),
-
-                    // 4. Jumlah Admin - UNGU MUDA
                     _buildCountCard(
                       'Jumlah Admin',
-                      data['admin'].toString(),
-                      const Color(0xFFF3E5F5), // #F3E5F5
-                      const Color(0xFF7B1FA2), // #7B1FA2
+                      viewModel.totalAdmin.toString(),
+                      const Color(0xFFF3E5F5),
+                      const Color(0xFF7B1FA2),
                     ),
                   ],
                 );
@@ -218,15 +222,27 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
             const SizedBox(height: 30),
 
-            // --- STATUS KEGIATAN ---
-            Text('Status Kegiatan', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            // ==== STATUS KEGIATAN ====
+            Text(
+              'Status Kegiatan',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 10),
             _buildActivityStatusChart(completionPercentage),
 
             const SizedBox(height: 30),
 
-            // --- STATISTIK ---
-            Text('Statistik', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            // ==== STATISTIK (placeholder) ====
+            Text(
+              'Statistik',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const Divider(),
             Container(
               height: 150,
@@ -236,6 +252,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
               child: const Center(child: Text('Grafik Garis Placeholder')),
             ),
+
             const SizedBox(height: 80),
           ],
         ),

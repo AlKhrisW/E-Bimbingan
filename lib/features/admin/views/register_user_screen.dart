@@ -1,11 +1,15 @@
-// lib/features/admin/views/register_user_screen.dart
+// lib/features/admin/views/register_user_screen.dart (Final Version)
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
+// import 'package:intl/intl.dart';
+
 import '../../../../data/models/user_model.dart';
 import '../../../core/themes/app_theme.dart';
-import '../viewmodels/admin_viewmodel.dart';
+import '../viewmodels/admin_user_management_viewmodel.dart';
+import '../widgets/admin_text_field.dart';
+import '../widgets/register_user_widgets/register_user_widgets.dart';
+
 
 class RegisterUserScreen extends StatefulWidget {
   final UserModel? userToEdit;
@@ -33,17 +37,13 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
   bool _isDosenListLoading = true;
   DateTime? _startDate;
   String? _selectedJabatan;
-  bool _isEditMode = false; // Flag mode Edit
+  bool _isEditMode = false;
 
   final List<String> _roles = ['Mahasiswa', 'Dosen', 'Admin'];
   final List<String> _jabatanOptions = [
-    'Asisten Ahli',
-    'Lektor',
-    'Lektor Kepala',
-    'Guru Besar',
+    'Asisten Ahli', 'Lektor', 'Lektor Kepala', 'Guru Besar',
   ];
 
-  late Future<void> _fetchDosenFuture;
   bool _isFutureInitialized = false;
 
   @override
@@ -52,7 +52,14 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
     if (!_isFutureInitialized) {
       _isEditMode = widget.userToEdit != null;
       _initializeFields();
-      _fetchDosenFuture = _fetchDosenList();
+
+      Future.microtask(() {
+          if (mounted) {
+              _fetchDosenList(); 
+              // setState di sini tidak perlu karena _fetchDosenList akan memanggilnya
+          }
+      });
+      
       _isFutureInitialized = true;
     }
   }
@@ -75,9 +82,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
       _emailController.text = user.email;
       _phoneController.text = user.phoneNumber ?? '';
       _prodiController.text = user.programStudi ?? '';
-      // FIX: Set role dengan kapitalisasi yang benar
-      _selectedRole =
-          user.role.substring(0, 1).toUpperCase() + user.role.substring(1);
+      _selectedRole = user.role.substring(0, 1).toUpperCase() + user.role.substring(1);
 
       if (user.role == 'mahasiswa') {
         _nimNipController.text = user.nim ?? '';
@@ -91,45 +96,33 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
   }
 
   Future<void> _fetchDosenList() async {
-    final viewModel = Provider.of<AdminViewModel>(context, listen: false);
-    try {
-      final list = await viewModel.fetchDosenList();
-      if (!mounted) return;
+    final viewModel = Provider.of<AdminUserManagementViewModel>(context, listen: false); 
+    
+    await viewModel.loadDosenList(); 
+    
+    if (!mounted) return;
 
-      setState(() {
-        _dosenList = list.where((u) => u.role == 'dosen').toList();
-
-        // FIX UNTUK EDIT MODE: Set Dosen yang sudah ada
-        if (_isEditMode && widget.userToEdit!.dosenUid != null) {
-          _selectedDosen = _dosenList.firstWhere(
-            (d) => d.uid == widget.userToEdit!.dosenUid,
-            orElse: () => _dosenList.first,
-          );
-        } else if (_dosenList.isNotEmpty) {
-          _selectedDosen = _dosenList.first;
-        }
-        _isDosenListLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Gagal memuat daftar Dosen: $e')));
-      setState(() => _isDosenListLoading = false);
-    }
-  }
-
-  Future<void> _selectStartDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _startDate ?? DateTime.now(),
-      firstDate: DateTime(2023, 1),
-      lastDate: DateTime(2026, 12),
-    );
-    if (picked != null) {
-      setState(() {
-        _startDate = picked;
-      });
+    final list = viewModel.users; 
+    
+    setState(() {
+      _dosenList = list;
+      if (_isEditMode && widget.userToEdit!.dosenUid != null) {
+        _selectedDosen = _dosenList.firstWhere(
+          (d) => d.uid == widget.userToEdit!.dosenUid,
+          orElse: () => _dosenList.isNotEmpty ? _dosenList.first : null as UserModel, 
+        );
+      } else if (_dosenList.isNotEmpty) {
+        _selectedDosen = _dosenList.first; 
+      }
+      if (_dosenList.isEmpty) _selectedDosen = null;
+      _isDosenListLoading = false;
+    });
+    
+    if (viewModel.errorMessage != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat daftar Dosen: ${viewModel.errorMessage!}')),
+      );
+      viewModel.resetMessages(); 
     }
   }
 
@@ -139,61 +132,48 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
     if (_selectedRole == 'Mahasiswa' && _startDate == null) return;
     if (_selectedRole == 'Dosen' && _selectedJabatan == null) return;
 
-    final viewModel = Provider.of<AdminViewModel>(context, listen: false);
+    final viewModel = Provider.of<AdminUserManagementViewModel>(context, listen: false);
 
-    // Kumpulan Data Universal
+    // Kumpulan Data Universal (Data tetap di sini karena ini adalah Logic Layer)
     final data = {
       'email': _emailController.text.trim(),
       'name': _nameController.text.trim(),
       'role': _selectedRole.toLowerCase(),
       'programStudi': _prodiController.text.trim(),
       'phoneNumber': _phoneController.text.trim(),
-
-      // mahasiswa
-      'nim': _selectedRole == 'Mahasiswa'
-          ? _nimNipController.text.trim()
-          : null,
-      'placement': _selectedRole == 'Mahasiswa'
-          ? _placementController.text.trim()
-          : null,
+      'nim': _selectedRole == 'Mahasiswa' ? _nimNipController.text.trim() : null,
+      'placement': _selectedRole == 'Mahasiswa' ? _placementController.text.trim() : null,
       'startDate': _selectedRole == 'Mahasiswa' ? _startDate : null,
       'dosenUid': _selectedRole == 'Mahasiswa' ? _selectedDosen?.uid : null,
-
-      // dosen
       'nip': _selectedRole == 'Dosen' ? _nimNipController.text.trim() : null,
       'jabatan': _selectedRole == 'Dosen' ? _selectedJabatan : null,
     };
 
     bool success;
     if (_isEditMode) {
-      success = await viewModel.updateUserData(
-        UserModel(
-          uid: widget.userToEdit!.uid,
-          email: data['email'] as String,
-          name: data['name'] as String,
-          role: data['role'] as String,
-          programStudi: data['programStudi'] as String,
-          phoneNumber: data['phoneNumber'] as String,
-          placement: data['placement'] as String?,
-          startDate: data['startDate'] as DateTime?,
-          dosenUid: data['dosenUid'] as String?,
-          nip: data['nip'] as String?,
-          jabatan: data['jabatan'] as String?,
-        ),
+      // Panggil UPDATE
+      success = await viewModel.updateUserUniversal(
+        uid: widget.userToEdit!.uid,
+        email: data['email'] as String,
+        name: data['name'] as String,
+        role: data['role'] as String,
+        programStudi: data['programStudi'] as String,
+        phoneNumber: data['phoneNumber'] as String,
+        nim: data['nim'] as String?, placement: data['placement'] as String?,
+        startDate: data['startDate'] as DateTime?, dosenUid: data['dosenUid'] as String?,
+        nip: data['nip'] as String?, jabatan: data['jabatan'] as String?,
       );
     } else {
+      // Panggil REGISTER
       success = await viewModel.registerUserUniversal(
         email: data['email'] as String,
         name: data['name'] as String,
         role: data['role'] as String,
         programStudi: data['programStudi'] as String,
         phoneNumber: data['phoneNumber'] as String,
-        nim: data['nim'] as String?, 
-        placement: data['placement'] as String?,
-        startDate: data['startDate'] as DateTime?,
-        dosenUid: data['dosenUid'] as String?,
-        nip: data['nip'] as String?,
-        jabatan: data['jabatan'] as String?,
+        nim: data['nim'] as String?, placement: data['placement'] as String?,
+        startDate: data['startDate'] as DateTime?, dosenUid: data['dosenUid'] as String?,
+        nip: data['nip'] as String?, jabatan: data['jabatan'] as String?,
       );
     }
 
@@ -201,178 +181,28 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _isEditMode
-                ? 'Data berhasil diupdate!'
-                : 'User berhasil didaftarkan!',
-          ),
-        ),
+        SnackBar(content: Text(viewModel.successMessage ?? 'Operasi berhasil!')),
       );
-      Navigator.pop(context);
+      Navigator.pop(context); 
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(viewModel.errorMessage!)));
-    }
-  }
-
-  // --- HELPER WIDGETS DINAMIS ---
-  Widget _buildRoleSpecificFields() {
-    final bool isNimNipEnabled = !_isEditMode;
-
-    if (_selectedRole == 'Mahasiswa') {
-      return Column(
-        children: [
-          _buildTextField(
-            _nimNipController,
-            'NIM',
-            Icons.badge,
-            type: TextInputType.number,
-            enabled: isNimNipEnabled,
-          ), // NIM bisa diubah (HANYA CREATE)
-          _buildTextField(
-            _placementController,
-            'Penempatan Magang',
-            Icons.business,
-            enabled: true,
-          ), // Penempatan bisa diubah
-          _buildDateTile(),
-          _isDosenListLoading
-              ? const Center(child: LinearProgressIndicator())
-              : _buildDosenDropdown(),
-        ],
-      );
-    } else if (_selectedRole == 'Dosen') {
-      return Column(
-        children: [
-          _buildTextField(
-            _nimNipController,
-            'NIP',
-            Icons.badge,
-            type: TextInputType.number,
-            enabled: isNimNipEnabled,
-          ), // NIP bisa diubah (HANYA CREATE)
-          _buildJabatanDropdown(), // Dropdown Jabatan selalu bisa diubah
-        ],
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(viewModel.errorMessage ?? 'Operasi gagal, coba lagi.')),
       );
     }
-    return const SizedBox.shrink();
+    viewModel.resetMessages(); 
   }
 
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label,
-    IconData icon, {
-    TextInputType type = TextInputType.text,
-    bool enabled = true,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        controller: controller,
-        enabled: enabled,
-        decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
-        keyboardType: type,
-        // Validator hanya dijalankan jika field enabled
-        validator: enabled
-            ? (value) => (value == null || value.isEmpty)
-                  ? '$label wajib diisi.'
-                  : null
-            : null,
-      ),
-    );
-  }
-
-  Widget _buildDosenDropdown() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: DropdownButtonFormField<UserModel>(
-        decoration: const InputDecoration(
-          labelText: 'Dosen Pembimbing',
-          prefixIcon: Icon(Icons.people),
-        ),
-        value: _selectedDosen,
-        items: _dosenList.map((dosen) {
-          return DropdownMenuItem(value: dosen, child: Text(dosen.name));
-        }).toList(),
-        onChanged: (UserModel? newValue) {
-          setState(() {
-            _selectedDosen = newValue;
-          });
-        },
-        validator: (value) =>
-            value == null ? 'Dosen Pembimbing wajib dipilih.' : null,
-      ),
-    );
-  }
-
-  Widget _buildJabatanDropdown() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: DropdownButtonFormField<String>(
-        decoration: const InputDecoration(
-          labelText: 'Jabatan Fungsional',
-          prefixIcon: Icon(Icons.work),
-        ),
-        value: _selectedJabatan,
-        items: _jabatanOptions.map((jabatan) {
-          return DropdownMenuItem(value: jabatan, child: Text(jabatan));
-        }).toList(),
-        onChanged: (String? newValue) {
-          setState(() {
-            _selectedJabatan = newValue;
-          });
-        },
-        validator: (value) => value == null ? 'Jabatan wajib dipilih.' : null,
-      ),
-    );
-  }
-
-  Widget _buildDateTile() {
-    // Tanggal Mulai Magang hanya relevan dan bisa diubah jika Mahasiswa
-    final isEnabled = _selectedRole == 'Mahasiswa';
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(
-          Icons.calendar_month,
-          color: isEnabled ? AppTheme.primaryColor : Colors.grey,
-        ),
-        title: Text(
-          'Tanggal Mulai Magang: ${_startDate == null ? "Pilih Tanggal" : DateFormat('dd MMMM yyyy').format(_startDate!)}',
-          style: TextStyle(
-            color: isEnabled ? Colors.black87 : Colors.grey.shade600,
-          ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: isEnabled ? Colors.black87 : Colors.grey,
-        ),
-        onTap: isEnabled ? () => _selectStartDate(context) : null,
-      ),
-    );
-  }
-
+  // NOTE: Semua _build helper method telah dihapus dan diganti dengan widget
+  
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<AdminViewModel>(context);
-
-    // Pastikan _selectedRole yang disetel dari _initializeFields saat mode EDIT tidak menimbulkan error.
+    final viewModel = Provider.of<AdminUserManagementViewModel>(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.userToEdit == null
-              ? 'Tambah User'
-              : 'Edit User: ${widget.userToEdit?.name}',
-          style: const TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          widget.userToEdit == null ? 'Tambah User' : 'Edit User: ${widget.userToEdit?.name}',
+          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -384,111 +214,99 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- FIELD UMUM ---
-              _buildTextField(
-                _nameController,
-                'Nama Lengkap',
-                Icons.person,
-                enabled: true,
-              ), // Nama diaktifkan untuk edit
-              // --- FIELD ROLE DINAMIS ---
+              // --- FIELD UMUM MENGGUNAKAN WIDGET BARU ---
+              AdminTextField(controller: _nameController, label: 'Nama Lengkap', icon: Icons.person),
+              
               Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
                 child: DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Role',
-                    prefixIcon: Icon(Icons.assignment_ind),
-                  ),
+                  decoration: const InputDecoration(labelText: 'Role', prefixIcon: Icon(Icons.assignment_ind)),
                   value: _roles.contains(_selectedRole) ? _selectedRole : null,
-                  items: _roles.map((role) {
-                    return DropdownMenuItem(value: role, child: Text(role));
-                  }).toList(),
-                  // FIX: Menghilangkan duplikasi parameter onChanged
+                  items: _roles.map((role) => DropdownMenuItem(value: role, child: Text(role))).toList(),
                   onChanged: _isEditMode
                       ? null
                       : (String? newValue) {
-                          // Role tidak bisa diubah saat edit
                           setState(() {
                             _selectedRole = newValue!;
                             _nimNipController.clear();
                             _selectedJabatan = null;
                             _startDate = null;
                             _placementController.clear();
+                            _selectedDosen = _dosenList.isNotEmpty ? _dosenList.first : null;
                           });
                         },
                   isDense: true,
                   isExpanded: true,
-                  hint: !_isEditMode
-                      ? null
-                      : Text(
-                          _selectedRole,
-                          style: TextStyle(color: Colors.black),
-                        ),
-                  style: !_isEditMode ? null : TextStyle(color: Colors.black87),
+                  hint: !_isEditMode ? null : Text(_selectedRole, style: const TextStyle(color: Colors.black)),
+                  style: !_isEditMode ? null : const TextStyle(color: Colors.black87),
                 ),
               ),
 
-              _buildTextField(
-                _prodiController,
-                'Program Studi/Jurusan',
-                Icons.school,
-                enabled: true,
-              ), // Program Studi bisa diubah
-              _buildTextField(
-                _emailController,
-                'E-Mail',
-                Icons.email,
+              AdminTextField(controller: _prodiController, label: 'Program Studi/Jurusan', icon: Icons.school),
+              AdminTextField(
+                controller: _emailController,
+                label: 'E-Mail',
+                icon: Icons.email,
                 type: TextInputType.emailAddress,
-                enabled: !_isEditMode, // <-- Tambah user = true, Edit = false
+                enabled: !_isEditMode,
               ),
 
-              _buildTextField(
-                _phoneController,
-                'No - Telp',
-                Icons.phone,
+              AdminTextField(
+                controller: _phoneController,
+                label: 'No - Telp',
+                icon: Icons.phone,
                 type: TextInputType.phone,
-                enabled: true,
-              ), // Nomor telepon bisa diubah
+              ),
+
               // --- FIELD PASSWORD DEFAULT ---
-              if (!_isEditMode) // Hanya tampilkan password saat Tambah User
+              if (!_isEditMode) 
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: TextFormField(
                     initialValue: 'password',
-                    decoration: const InputDecoration(
-                      labelText: 'Password Default',
-                      prefixIcon: Icon(Icons.lock),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Password Default', prefixIcon: Icon(Icons.lock)),
                     obscureText: true,
                     readOnly: true,
                   ),
                 ),
 
-              // --- FIELD SPESIFIK ROLE (DINAMIS) ---
+              // --- FIELD SPESIFIK ROLE (MENGGUNAKAN WIDGET BARU) ---
               const SizedBox(height: 24),
-              _buildRoleSpecificFields(),
+              RegisterRoleFields(
+                selectedRole: _selectedRole,
+                isEditMode: _isEditMode,
+                isDosenListLoading: _isDosenListLoading,
+                nimNipController: _nimNipController,
+                placementController: _placementController,
+                startDate: _startDate,
+                selectedDosen: _selectedDosen,
+                dosenList: _dosenList,
+                jabatanOptions: _jabatanOptions,
+                selectedJabatan: _selectedJabatan,
+                // Passing Callbacks ke Widget Anak
+                onDateSelected: (picked) {
+                  if (picked != null) setState(() => _startDate = picked);
+                },
+                onDosenChanged: (dosen) => setState(() => _selectedDosen = dosen),
+                onJabatanChanged: (jabatan) => setState(() => _selectedJabatan = jabatan),
+              ),
 
               const SizedBox(height: 40),
 
-              // --- TOMBOL TAMBAH/UPDATE USER ---
+              // --- TOMBOL SUBMIT ---
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: viewModel.isLoading ? null : _submitRegistration,
+                  onPressed: viewModel.isLoading ? null : _submitRegistration, 
                   child: viewModel.isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
                           _isEditMode ? 'Update Data User' : 'Tambah User',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            color: Colors.white,
-                          ),
+                          style: const TextStyle(fontSize: 18, color: Colors.white),
                         ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     padding: const EdgeInsets.symmetric(vertical: 15),
                   ),
                 ),
