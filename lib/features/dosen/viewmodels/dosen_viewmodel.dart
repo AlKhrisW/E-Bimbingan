@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../data/models/user_model.dart';
-import '../../../data/services/firebase_auth_service.dart';
-import '../../../data/services/user_service.dart';
+import 'package:ebimbingan/data/models/user_model.dart';
+import 'package:ebimbingan/data/services/firebase_auth_service.dart';
+import 'package:ebimbingan/data/services/user_service.dart';
 import '../../auth/views/login_page.dart';
 
 class DosenViewModel extends ChangeNotifier {
@@ -54,6 +54,58 @@ class DosenViewModel extends ChangeNotifier {
   Future<void> refresh() async {
     await loadDosenData();
   }
+
+  /// ----------------------------------------
+  /// Update profile fields (name, nip, email, phone)
+  /// ----------------------------------------
+  Future<void> updateProfile({
+    String? name,
+    String? nip,
+    String? email,
+    String? phoneNumber,
+  }) async {
+    if (_dosenData == null) {
+      throw 'Tidak ada data dosen untuk diupdate.';
+    }
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      // create updated model using existing values for fields not provided
+      final updated = UserModel(
+        uid: _dosenData!.uid,
+        name: name ?? _dosenData!.name,
+        email: email ?? _dosenData!.email,
+        role: _dosenData!.role,
+        dosenUid: _dosenData!.dosenUid,
+        nim: _dosenData!.nim,
+        placement: _dosenData!.placement,
+        startDate: _dosenData!.startDate,
+        nip: nip ?? _dosenData!.nip,
+        jabatan: _dosenData!.jabatan,
+        programStudi: _dosenData!.programStudi,
+        phoneNumber: phoneNumber ?? _dosenData!.phoneNumber,
+      );
+
+      await _userService.updateUserMetadata(updated);
+
+      // update local cache and notify
+      _dosenData = updated;
+    } catch (e) {
+      debugPrint('Error updateProfile: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Convenience helpers
+  Future<void> updateName(String name) => updateProfile(name: name);
+  Future<void> updateNip(String? nip) => updateProfile(nip: nip);
+  Future<void> updateEmail(String email) => updateProfile(email: email);
+  Future<void> updatePhone(String phone) => updateProfile(phoneNumber: phone);
 
   // ------------------------------------------------------------
   // LOGOUT
