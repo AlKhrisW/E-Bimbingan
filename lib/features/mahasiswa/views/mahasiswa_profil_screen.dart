@@ -64,6 +64,8 @@ class _MahasiswaProfilScreenState extends State<MahasiswaProfilScreen> {
               _buildField('NIM', data.nim ?? '-'),
               _buildField('Program Studi', data.programStudi ?? '-'),
               _buildField('Nomor Telepon', data.phoneNumber ?? '-'),
+              _buildField('Penempatan Magang', data.placement ?? '-'),
+              // _buildField('Tanggal Mulai', data.startDate ?? '-'),
             ],
           ),
         ),

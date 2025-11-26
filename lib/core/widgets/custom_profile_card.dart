@@ -1,4 +1,5 @@
-// lib/features/shared/widgets/profile_card_widget.dart
+// profile_card_widget.dart (VERSI FINAL – BISA SCROLL, AVATAR & NAMA FIXED)
+
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 
@@ -40,26 +41,52 @@ class ProfileCardWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: AppTheme.primaryColor, width: 3),
             ),
-            child: Column(
-              children: [
-                const SizedBox(height: 70),
-                Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-                const SizedBox(height: 4),
-                ...fields,
-              ],
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  const SizedBox(height: 100),
+                  ...fields,
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
 
-          // Avatar
           Positioned(
-            top: 30,
+            top: 0,
             left: 0,
             right: 0,
-            child: Center(
-              child: CircleAvatar(
-                radius: 50,
-                backgroundColor: AppTheme.primaryColor,
-                child: Text(_initials, style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.white)),
+            child: Container(
+              padding: const EdgeInsets.only(top: 30, bottom: 20),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(color: AppTheme.primaryColor, width: 3),
+                  right: BorderSide(color: AppTheme.primaryColor, width: 3),
+                  left: BorderSide(color: AppTheme.primaryColor, width: 3),
+                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Column(
+                children: [
+                  // Avatar
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundColor: AppTheme.primaryColor,
+                    child: Text(
+                      _initials,
+                      style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Nama
+                  Text(
+                    name,
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
           ),
