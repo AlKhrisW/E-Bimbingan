@@ -14,7 +14,7 @@ class AdminUserManagementViewModel with ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   String? _successMessage;
-  List<UserModel> _users = []; // List untuk AdminUsersScreen
+  List<UserModel> _users = [];
 
   // --- GETTERS ---
   bool get isLoading => _isLoading;
@@ -23,8 +23,7 @@ class AdminUserManagementViewModel with ChangeNotifier {
   List<UserModel> get users => _users;
 
   // --- PRIVATE HELPERS ---
-  // ⭐ TIDAK ADA PERUBAHAN. notifyListeners() dipanggil di sini.
-  void _setLoading(bool v) { 
+  void _setLoading(bool v) {
     _isLoading = v;
     notifyListeners();
   }
@@ -42,10 +41,10 @@ class AdminUserManagementViewModel with ChangeNotifier {
   // ========================================================================
   // READ METHODS
   // ========================================================================
-  
+
   /// Memuat semua pengguna (untuk AdminUsersScreen)
   Future<void> loadAllUsers() async {
-    _setLoading(true); // Memanggil notifyListeners()
+    _setLoading(true);
     resetMessages();
     try {
       _users = await _userService.fetchAllUsers();
@@ -53,33 +52,34 @@ class AdminUserManagementViewModel with ChangeNotifier {
       _setMessage(error: 'Gagal memuat daftar pengguna: ${e.toString()}');
       _users = [];
     } finally {
-      _setLoading(false); // Memanggil notifyListeners()
+      _setLoading(false);
     }
   }
 
   /// Memuat daftar Dosen saja
   Future<void> loadDosenList() async {
-    _setLoading(true); // Memanggil notifyListeners()
+    _setLoading(true);
     resetMessages();
     try {
-      // NOTE: Saya asumsikan fetchDosenList hanya mengambil dosen.
       _users = await _userService.fetchDosenList();
     } catch (e) {
       _setMessage(error: 'Gagal memuat daftar dosen: ${e.toString()}');
       _users = [];
     } finally {
-      _setLoading(false); // Memanggil notifyListeners()
+      _setLoading(false);
     }
   }
 
-  // ... (CRUD methods lainnya tidak berubah)
-  
+  // ========================================================================
+  // CREATE - REGISTER USER
+  // ========================================================================
+
   /// Mendaftarkan pengguna baru (CREATE)
   Future<bool> registerUserUniversal({
     required String email,
     required String name,
     required String role,
-    required String programStudi,
+    String? programStudi, // optional, hanya untuk mahasiswa
     required String phoneNumber,
     String? nim,
     String? placement,
@@ -90,7 +90,6 @@ class AdminUserManagementViewModel with ChangeNotifier {
   }) async {
     _setLoading(true);
     resetMessages();
-
     try {
       await _authService.registerUser(
         email: email,
@@ -107,7 +106,7 @@ class AdminUserManagementViewModel with ChangeNotifier {
         jabatan: jabatan,
       );
 
-      // Refresh list pengguna (Penting)
+      // Refresh daftar pengguna setelah berhasil registrasi
       await loadAllUsers();
 
       _setMessage(
@@ -122,13 +121,17 @@ class AdminUserManagementViewModel with ChangeNotifier {
     }
   }
 
+  // ========================================================================
+  // UPDATE USER
+  // ========================================================================
+
   /// Memperbarui data pengguna (UPDATE)
   Future<bool> updateUserUniversal({
     required String uid,
     required String email,
     required String name,
     required String role,
-    required String programStudi,
+    String? programStudi,
     required String phoneNumber,
     String? nim,
     String? placement,
@@ -139,7 +142,6 @@ class AdminUserManagementViewModel with ChangeNotifier {
   }) async {
     _setLoading(true);
     resetMessages();
-
     try {
       final updatedUser = UserModel(
         uid: uid,
@@ -158,13 +160,13 @@ class AdminUserManagementViewModel with ChangeNotifier {
 
       await _userService.updateUserMetadata(updatedUser);
 
-      // Update list pengguna secara lokal (lebih efisien)
+      // Update lokal (lebih cepat daripada reload semua)
       int index = _users.indexWhere((u) => u.uid == uid);
       if (index != -1) {
         _users[index] = updatedUser;
-        notifyListeners(); 
+        notifyListeners();
       } else {
-        await loadAllUsers(); // Jika tidak ditemukan, load ulang
+        await loadAllUsers(); // fallback
       }
 
       _setMessage(success: "Data $name berhasil diperbarui!");
@@ -177,18 +179,22 @@ class AdminUserManagementViewModel with ChangeNotifier {
     }
   }
 
+  // ========================================================================
+  // DELETE USER
+  // ========================================================================
+
   /// Menghapus pengguna (DELETE)
   Future<bool> deleteUser(String uid) async {
     _setLoading(true);
     resetMessages();
-    
+
     try {
       await _authService.deleteUser(uid);
-      
-      // Hapus dari list lokal dan panggil notifyListeners
+
+      // Hapus dari list lokal
       _users.removeWhere((u) => u.uid == uid);
       notifyListeners();
-      
+
       _setMessage(success: "Pengguna berhasil dihapus!");
       return true;
     } catch (e) {

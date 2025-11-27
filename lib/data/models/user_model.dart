@@ -1,4 +1,3 @@
-// lib/data/models/user_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
@@ -6,20 +5,20 @@ class UserModel {
   final String name;
   final String email;
   final String role;
-  final String? photoBase64;  // new field for profile photo
-  
+  final String? photoBase64; // new field for profile photo
+
   // Mahasiswa fields
-  final String? dosenUid; 
+  final String? dosenUid;
   final String? nim;
   final String? placement;
-  final DateTime? startDate; 
-  
+  final DateTime? startDate;
+  final String? programStudi; // HANYA UNTUK MAHASISWA
+
   // Dosen fields
   final String? nip;
-  final String? jabatan; 
-  
+  final String? jabatan;
+
   // Global fields
-  final String? programStudi; 
   final String? phoneNumber;
 
   UserModel({
@@ -27,14 +26,14 @@ class UserModel {
     required this.name,
     required this.email,
     required this.role,
-    this.photoBase64, 
+    this.photoBase64,
     this.dosenUid,
     this.nim,
     this.placement,
     this.startDate,
+    this.programStudi,
     this.nip,
     this.jabatan,
-    this.programStudi,
     this.phoneNumber,
   });
 
@@ -44,24 +43,21 @@ class UserModel {
       name: data['name'] ?? 'No Name',
       email: data['email'] ?? '',
       role: data['role'] ?? 'unknown',
-      photoBase64: data['photo_base64'], 
-      
-      dosenUid: data['dosen_uid'], 
+      photoBase64: data['photo_base64'],
+      dosenUid: data['dosen_uid'],
       nim: data['nim'],
       placement: data['placement'],
       startDate: _parseTimestamp(data['start_date']),
-      
+      programStudi: data['program_studi'],
       nip: data['nip'],
       jabatan: data['jabatan'],
-      
-      programStudi: data['program_studi'],
       phoneNumber: data['phone_number'],
     );
   }
 
   static DateTime? _parseTimestamp(dynamic value) {
     if (value == null) return null;
-    
+
     try {
       if (value is Timestamp) {
         return value.toDate();
@@ -69,9 +65,8 @@ class UserModel {
         return DateTime.parse(value);
       }
     } catch (e) {
-      print('⚠️ Error parsing timestamp: $e');
+      print('Warning: Error parsing timestamp: $e');
     }
-    
     return null;
   }
 
@@ -81,24 +76,24 @@ class UserModel {
       'name': name,
       'email': email,
       'role': role,
-      
+
       // Global fields
-      if (photoBase64 != null) 'photo_base64': photoBase64, 
-      if (programStudi != null) 'program_studi': programStudi,
+      if (photoBase64 != null) 'photo_base64': photoBase64,
       if (phoneNumber != null) 'phone_number': phoneNumber,
-      
+
       // Mahasiswa specific
       if (role == 'mahasiswa') ...{
-        if (dosenUid != null) 'dosen_uid': dosenUid,
-        if (nim != null) 'nim': nim,
-        if (placement != null) 'placement': placement,
+        'dosen_uid': dosenUid,
+        'nim': nim,
+        'placement': placement,
+        'program_studi': programStudi,
         if (startDate != null) 'start_date': Timestamp.fromDate(startDate!),
       },
-      
+
       // Dosen specific
       if (role == 'dosen') ...{
-        if (nip != null) 'nip': nip,
-        if (jabatan != null) 'jabatan': jabatan,
+        'nip': nip,
+        'jabatan': jabatan,
       },
     };
   }
@@ -127,7 +122,7 @@ class UserModel {
     String? name,
     String? email,
     String? role,
-    String? photoBase64, 
+    String? photoBase64,
     String? dosenUid,
     String? nim,
     String? placement,
@@ -142,7 +137,7 @@ class UserModel {
       name: name ?? this.name,
       email: email ?? this.email,
       role: role ?? this.role,
-      photoBase64: photoBase64 ?? this.photoBase64, 
+      photoBase64: photoBase64 ?? this.photoBase64,
       dosenUid: dosenUid ?? this.dosenUid,
       nim: nim ?? this.nim,
       placement: placement ?? this.placement,
