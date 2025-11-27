@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/models/user_model.dart';
-import '../viewmodels/admin_profile_viewmodel.dart';
+import '../../../core/themes/app_theme.dart';
 import '../../../core/widgets/profile_page_appBar.dart';
+import '../../../core/widgets/custom_profile_card.dart';
 import '../../auth/viewmodels/auth_viewmodel.dart';
 import '../../auth/views/login_page.dart';
+import '../viewmodels/admin_profile_viewmodel.dart';
 
 class AdminProfileScreen extends StatefulWidget {
   final UserModel user;
@@ -21,33 +23,17 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final vm = Provider.of<AdminProfileViewModel>(context, listen: false);
-      if (vm.currentUser == null) {
-        vm.setCurrentUser(widget.user);
-      }
+      final vm = context.read<AdminProfileViewModel>();
+      vm.setCurrentUser(widget.user);
       vm.fetchUser(widget.user.uid);
       vm.resetMessages();
     });
   }
 
-  void _showSnackbar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  // Sekarang fungsi ini MENERIMA BuildContext sesuai dengan ProfilePageAppbar
+  // INI YANG SESUAI DENGAN ProfilePageAppbar → HARUS TERIMA BuildContext
   Future<void> _handleLogout(BuildContext context) async {
-    if (!mounted) return;
-
     try {
-      final authVm = Provider.of<AuthViewModel>(context, listen: false);
-      await authVm.logout();
-
+      await context.read<AuthViewModel>().logout();
       if (!mounted) return;
 
       Navigator.of(context).pushAndRemoveUntil(
@@ -55,50 +41,91 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
         (route) => false,
       );
     } catch (e) {
-      _showSnackbar('Gagal logout: $e', Colors.red);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal logout: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
+  }
+
+  Widget _buildField(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<AdminProfileViewModel>(
       builder: (context, vm, child) {
-        final user = vm.currentUser ?? widget.user;
-
-        // Tampilkan pesan error/success sekali saja
+        // snackbar handler
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (vm.errorMessage != null) {
-            _showSnackbar(vm.errorMessage!, Colors.red);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(vm.errorMessage!), backgroundColor: Colors.red),
+            );
             vm.resetMessages();
           }
           if (vm.successMessage != null) {
-            _showSnackbar(vm.successMessage!, Colors.green);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(vm.successMessage!), backgroundColor: Colors.green),
+            );
             vm.resetMessages();
           }
         });
 
+        final user = vm.currentUser ?? widget.user;
+
+        if (vm.isLoading) {
+          return const Scaffold(
+            backgroundColor: AppTheme.backgroundColor,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
         return Scaffold(
+          backgroundColor: AppTheme.backgroundColor,
           appBar: ProfilePageAppbar(
-            // Sekarang langsung passing fungsi yang sudah sesuai tipe
-            onLogout: _handleLogout,
+            onLogout: _handleLogout, // SEKARANG SUDAH SESUAI: terima BuildContext
           ),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Halaman Profil Admin",
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16),
-                Text("Nama: ${user.name}"),
-                Text("Email: ${user.email}"),
-                Text("Role: ${user.roleLabel}"),
-                const SizedBox(height: 20),
-                const Text("Pengaturan dan informasi administrator."),
-              ],
-            ),
+          body: ProfileCardWidget(
+            name: user.name,
+            avatarInitials: null, // otomatis ambil dari nama
+            onEditPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Edit profil admin belum tersedia')),
+              );
+            },
+            fields: [
+              _buildField('Email', user.email),
+              _buildField('Role', user.roleLabel),
+              _buildField('Nomor Telepon', user.phoneNumber ?? '-'),
+            ],
           ),
         );
       },
