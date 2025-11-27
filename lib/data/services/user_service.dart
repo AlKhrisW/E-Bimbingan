@@ -34,6 +34,12 @@ class UserService {
     await _users.doc(user.uid).update(user.toMap());
   }
 
+  // Partial update: only update provided fields for the user document
+  Future<void> updateUserMetadataPartial(String uid, Map<String, dynamic> data) async {
+    if (data.isEmpty) return;
+    await _users.doc(uid).update(data);
+  }
+
   Future<UserModel> fetchUserByUid(String uid) async {
     try {
       final doc = await _users.doc(uid).get();
@@ -43,6 +49,23 @@ class UserService {
       return UserModel.fromMap(doc.data() as Map<String, dynamic>);
     } catch (e) {
       throw 'Gagal mengambil data user: $e';
+    }
+  }
+
+  // Ambil daftar mahasiswa yang terdaftar pada dosen tertentu (menggunakan field `dosen_uid`)
+  Future<List<UserModel>> fetchMahasiswaByDosenUid(String dosenUid) async {
+    try {
+      final snapshot = await _users
+          .where('role', isEqualTo: 'mahasiswa')
+          .where('dosen_uid', isEqualTo: dosenUid)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => UserModel.fromMap(doc.data() as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('❌ [UserService] Error fetching mahasiswa by dosenUid: $e');
+      rethrow;
     }
   }
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodels/dosen_viewmodel.dart';
+import '../viewmodels/dosen_profil_viewmodel.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:ebimbingan/core/widgets/custom_universal_back_appBar.dart';
 
@@ -14,7 +14,6 @@ class DosenEditProfil extends StatefulWidget {
 class _DosenEditProfilState extends State<DosenEditProfil> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController? _nameController;
-  TextEditingController? _emailController;
   TextEditingController? _phoneController;
   bool _controllersInitialized = false;
   
@@ -22,21 +21,20 @@ class _DosenEditProfilState extends State<DosenEditProfil> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DosenViewModel>().loadDosenData();
+      context.read<DosenProfilViewModel>().loadDosenData();
     });
   }
 
   @override
   void dispose() {
     _nameController?.dispose();
-    _emailController?.dispose();
     _phoneController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DosenViewModel>(
+    return Consumer<DosenProfilViewModel>(
       builder: (context, vm, child) {
         if (vm.isLoading) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -50,7 +48,6 @@ class _DosenEditProfilState extends State<DosenEditProfil> {
 
         if (!_controllersInitialized) {
           _nameController = TextEditingController(text: data.name);
-          _emailController = TextEditingController(text: data.email);
           _phoneController = TextEditingController(text: data.phoneNumber ?? '');
           _controllersInitialized = true;
         }
@@ -92,18 +89,6 @@ class _DosenEditProfilState extends State<DosenEditProfil> {
                               ),
                               const SizedBox(height: 30),
                               TextFormField(
-                                controller: _emailController,
-                                decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
-                                keyboardType: TextInputType.emailAddress,
-                                validator: (v) {
-                                  if (v == null || v.trim().isEmpty) return 'Email tidak boleh kosong';
-                                  final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}");
-                                  if (!emailRegex.hasMatch(v.trim())) return 'Format email tidak valid';
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 30),
-                              TextFormField(
                                 controller: _phoneController,
                                 decoration: const InputDecoration(labelText: 'Nomor Telepon', border: OutlineInputBorder()),
                                 keyboardType: TextInputType.phone,
@@ -121,11 +106,10 @@ class _DosenEditProfilState extends State<DosenEditProfil> {
                                       if (!_formKey.currentState!.validate()) return;
 
                                       final newName = _nameController!.text.trim();
-                                      final newEmail = _emailController!.text.trim();
                                       final newPhone = _phoneController!.text.trim().isEmpty ? null : _phoneController!.text.trim();
 
                                       try {
-                                        await vm.updateProfile(name: newName, email: newEmail, phoneNumber: newPhone);
+                                        await vm.updateProfile(name: newName, phoneNumber: newPhone);
                                         if (mounted) {
                                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profil berhasil diperbarui')));
                                           Navigator.pop(context);

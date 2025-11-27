@@ -103,7 +103,7 @@ class BimbinganModal {
                         appNavigatorKey.currentState!
                           ..pop()
                           ..push(MaterialPageRoute(
-                            builder: (_) => DosenProgres(user: user),
+                            builder: (_) => DosenProgres(),
                           ));
                       },
                       child: Container(

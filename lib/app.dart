@@ -8,12 +8,17 @@ import 'package:provider/provider.dart';
 import 'core/themes/app_theme.dart';
 import 'core/utils/navigation/app_navigator.dart';
 import 'features/auth/views/splash_screen.dart';
+// Auth ViewModel
 import 'features/auth/viewmodels/auth_viewmodel.dart';
+// Admin ViewModels
 import 'features/admin/viewmodels/admin_viewmodel.dart';
 import 'features/admin/viewmodels/admin_profile_viewmodel.dart';
 import 'features/admin/viewmodels/admin_dashboard_viewmodel.dart';
 import 'features/admin/viewmodels/admin_user_management_viewmodel.dart';
-import 'features/dosen/viewmodels/dosen_viewmodel.dart';
+// Dosen ViewModels
+import 'features/dosen/viewmodels/dosen_profil_viewmodel.dart';
+import 'features/dosen/viewmodels/dosen_mahasiswa_viewmodel.dart';
+// Mahasiswa ViewModels
 import 'features/mahasiswa/viewmodels/mahasiswa_viewmodel.dart';
 
 class App extends StatelessWidget {
@@ -26,16 +31,20 @@ class App extends StatelessWidget {
         // Global / Tingkat Tertinggi
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
 
-        // Provider Umum (dipakai di banyak role)
-        ChangeNotifierProvider(create: (_) => AdminViewModel()),
-        ChangeNotifierProvider(create: (_) => DosenViewModel(authService: FirebaseAuthService(),userService: UserService())),
+        // Provider Khusus Mahasiswa
         ChangeNotifierProvider(create: (_) => MahasiswaViewModel(authService: FirebaseAuthService(),userService: UserService())),
+        
+        // Provider Khusus Dosen
+        ChangeNotifierProvider(create: (_) => DosenProfilViewModel(authService: FirebaseAuthService(),userService: UserService())),
+        ChangeNotifierProvider(create: (_) => DosenMahasiswaViewModel(authService: FirebaseAuthService(),userService: UserService())),
 
         // Provider Khusus Admin
+        ChangeNotifierProvider(create: (_) => AdminViewModel()),
         ChangeNotifierProvider(create: (_) => AdminProfileViewModel()),
         ChangeNotifierProvider(create: (_) => AdminDashboardViewModel()),
         ChangeNotifierProvider(create: (_) => AdminUserManagementViewModel()),
       ],
+      
       child: MaterialApp(
         navigatorKey: appNavigatorKey,
         title: 'E-Bimbingan App',

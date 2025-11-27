@@ -4,11 +4,11 @@ import 'package:ebimbingan/data/services/firebase_auth_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
 import '../../auth/views/login_page.dart';
 
-class DosenViewModel extends ChangeNotifier {
+class DosenProfilViewModel extends ChangeNotifier {
   final FirebaseAuthService _authService;
   final UserService _userService;
 
-  DosenViewModel({
+  DosenProfilViewModel({
     required FirebaseAuthService authService,
     required UserService userService,
   })  : _authService = authService,
@@ -56,42 +56,34 @@ class DosenViewModel extends ChangeNotifier {
   }
 
   /// ----------------------------------------
-  /// Update profile fields (name, nip, email, phone)
+  /// Update profile fields (name, phone)
   /// ----------------------------------------
   Future<void> updateProfile({
     String? name,
-    String? nip,
-    String? email,
     String? phoneNumber,
   }) async {
     if (_dosenData == null) {
       throw 'Tidak ada data dosen untuk diupdate.';
     }
+    // Build partial payload only with provided fields
+    final Map<String, dynamic> payload = {};
+    if (name != null) payload['name'] = name;
+    if (phoneNumber != null) payload['phone_number'] = phoneNumber;
+
+    if (payload.isEmpty) return;
 
     _isLoading = true;
     notifyListeners();
 
     try {
-      // create updated model using existing values for fields not provided
-      final updated = UserModel(
-        uid: _dosenData!.uid,
-        name: name ?? _dosenData!.name,
-        email: email ?? _dosenData!.email,
-        role: _dosenData!.role,
-        dosenUid: _dosenData!.dosenUid,
-        nim: _dosenData!.nim,
-        placement: _dosenData!.placement,
-        startDate: _dosenData!.startDate,
-        nip: nip ?? _dosenData!.nip,
-        jabatan: _dosenData!.jabatan,
-        programStudi: _dosenData!.programStudi,
-        phoneNumber: phoneNumber ?? _dosenData!.phoneNumber,
+      // Use partial update to avoid overwriting unrelated fields
+      await _userService.updateUserMetadataPartial(_dosenData!.uid, payload);
+
+      // Update local cache using copyWith
+      _dosenData = _dosenData!.copyWith(
+        name: name,
+        phoneNumber: phoneNumber,
       );
-
-      await _userService.updateUserMetadata(updated);
-
-      // update local cache and notify
-      _dosenData = updated;
     } catch (e) {
       debugPrint('Error updateProfile: $e');
       rethrow;
@@ -103,8 +95,6 @@ class DosenViewModel extends ChangeNotifier {
 
   // Convenience helpers
   Future<void> updateName(String name) => updateProfile(name: name);
-  Future<void> updateNip(String? nip) => updateProfile(nip: nip);
-  Future<void> updateEmail(String email) => updateProfile(email: email);
   Future<void> updatePhone(String phone) => updateProfile(phoneNumber: phone);
 
   // ------------------------------------------------------------
