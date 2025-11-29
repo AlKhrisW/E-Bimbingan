@@ -1,11 +1,13 @@
 // lib/features/admin/admin_navbar_config.dart
 
 import 'package:flutter/material.dart';
-import '../../../../core/widgets/custom_bottom_nav_shell.dart'; 
-import '../views/admin_dashboard.dart'; 
-import '../views/admin_users_screen.dart'; 
-import '../views/admin_mapping_screen.dart'; 
-import '../views/admin_profile_screen.dart'; 
+import '../../../../core/widgets/custom_bottom_nav_shell.dart';
+
+import '../views/admin_dashboard.dart';
+import '../views/admin_users_screen.dart';
+import '../views/mapping/admin_mapping_screen.dart';     // DIPERBAIKI: ke folder mapping
+import '../views/admin_profile_screen.dart';
+
 import '../../../../data/models/user_model.dart';
 
 List<NavItem> buildAdminNavItems(UserModel user) {
@@ -13,7 +15,7 @@ List<NavItem> buildAdminNavItems(UserModel user) {
     NavItem(
       label: 'Beranda',
       icon: Icons.home_filled,
-      screen: AdminDashboard(user: user), 
+      screen: AdminDashboard(user: user),
     ),
     NavItem(
       label: 'Users',
@@ -23,7 +25,7 @@ List<NavItem> buildAdminNavItems(UserModel user) {
     NavItem(
       label: 'Mapping',
       icon: Icons.map_outlined,
-      screen: AdminMappingScreen(user: user),
+      screen: const AdminMappingScreen(), // tidak perlu pass user kalau tidak dipakai
     ),
     NavItem(
       label: 'Akun',
