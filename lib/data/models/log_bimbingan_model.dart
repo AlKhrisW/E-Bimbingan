@@ -9,14 +9,11 @@ enum LogBimbinganStatus {
 
 class LogBimbinganModel {
   final String logBimbinganUid;
+  final String ajuanUid;
   final String mahasiswaUid;
   final String dosenUid;
 
   // detail sesi
-  final DateTime tanggalSesi; 
-  final String waktuSesi;
-  final String topikBahasan;
-  final String metodeBimbingan;
   final String ringkasanHasil;
   final String? lampiranUrl; // url link dokumen/lampiran (opsional)
 
@@ -27,12 +24,9 @@ class LogBimbinganModel {
 
   LogBimbinganModel({
     required this.logBimbinganUid,
+    required this.ajuanUid,
     required this.mahasiswaUid,
     required this.dosenUid,
-    required this.tanggalSesi,
-    required this.waktuSesi,
-    required this.topikBahasan,
-    required this.metodeBimbingan,
     required this.ringkasanHasil,
     required this.status,
     required this.waktuPengajuan,
@@ -44,12 +38,9 @@ class LogBimbinganModel {
     // fungsi frommap untuk deserialisasi data dari firestore
     return LogBimbinganModel(
       logBimbinganUid: data['logBimbinganUid'] ?? '',
+      ajuanUid: data['ajuanUid'] ?? '',
       mahasiswaUid: data['mahasiswaUid'] ?? '',
       dosenUid: data['dosenUid'] ?? '',
-      tanggalSesi: (data['tanggalSesi'] as Timestamp).toDate(),
-      waktuSesi: data['waktuSesi'] ?? 'n/a',
-      topikBahasan: data['topikBahasan'] ?? '',
-      metodeBimbingan: data['metodeBimbingan'] ?? '',
       ringkasanHasil: data['ringkasanHasil'] ?? '',
       waktuPengajuan: (data['waktuPengajuan'] as Timestamp).toDate(),
       
@@ -67,12 +58,9 @@ class LogBimbinganModel {
     // fungsi tomap untuk serialisasi data ke firestore
     return {
       'logBimbinganUid': logBimbinganUid,
+      'ajuanUid': ajuanUid,
       'mahasiswaUid': mahasiswaUid,
       'dosenUid': dosenUid,
-      'tanggalSesi': Timestamp.fromDate(tanggalSesi), // simpan sebagai timestamp
-      'waktuSesi': waktuSesi,
-      'topikBahasan': topikBahasan,
-      'metodeBimbingan': metodeBimbingan,
       'ringkasanHasil': ringkasanHasil,
       'waktuPengajuan': Timestamp.fromDate(waktuPengajuan), // simpan sebagai timestamp
       

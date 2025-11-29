@@ -10,6 +10,7 @@ enum LogbookStatus {
 class LogbookHarianModel {
   final String logbookHarianUid;
   final String mahasiswaUid;
+  final String dosenUid;
   final String judulTopik;
   final DateTime tanggal;
   final String deskripsi;
@@ -18,6 +19,7 @@ class LogbookHarianModel {
   LogbookHarianModel({
     required this.logbookHarianUid,
     required this.mahasiswaUid,
+    required this.dosenUid,
     required this.judulTopik,
     required this.tanggal,
     required this.deskripsi,
@@ -29,6 +31,7 @@ class LogbookHarianModel {
     return LogbookHarianModel(
       logbookHarianUid: data['logbookHarianUid'] ?? '',
       mahasiswaUid: data['mahasiswaUid'] ?? '',
+      dosenUid: data['dosenUid'] ?? '',
       judulTopik: data['judulTopik'] ?? 'n/a',
       tanggal: (data['tanggal'] as Timestamp).toDate(), // konversi dari timestamp
       deskripsi: data['deskripsi'] ?? '',
@@ -45,6 +48,7 @@ class LogbookHarianModel {
     return {
       'logbookHarianUid': logbookHarianUid,
       'mahasiswaUid': mahasiswaUid,
+      'dosenUid': dosenUid,
       'judulTopik': judulTopik,
       'tanggal': Timestamp.fromDate(tanggal), // simpan sebagai timestamp
       'deskripsi': deskripsi,
