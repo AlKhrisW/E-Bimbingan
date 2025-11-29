@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
 import '../../../core/utils/navigation/app_navigator.dart';
-import '../views/dosen_riwayat_logbook_screen.dart';
-import '../views/dosen_riwayat_ajuan_screen.dart';
+import '../views/log_bimbingan/dosen_riwayat_logbook_screen.dart';
+import '../views/ajuan/dosen_riwayat_ajuan_screen.dart';
 
 class RiwayatModal {
   static void show(UserModel user) {

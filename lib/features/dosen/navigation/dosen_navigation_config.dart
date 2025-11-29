@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/custom_bottom_nav_shell.dart';
 import '../../../data/models/user_model.dart';
 
-import '../views/dosen_dashboard_screen.dart';
-import '../views/dosen_profil_screen.dart';
+import '../views/dashboard/dosen_dashboard_screen.dart';
+import '../views/profile/dosen_profil_screen.dart';
 import '../widgets/dosen_bimbingan_modal.dart';
 import '../widgets/dosen_riwayat_modal.dart';
 

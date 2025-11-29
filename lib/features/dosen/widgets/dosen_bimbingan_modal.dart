@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
 import '../../../core/utils/navigation/app_navigator.dart';
-import '../views/dosen_ajuan_screen.dart';
-import '../views/dosen_progres_screen.dart';
+import '../views/ajuan/dosen_ajuan_screen.dart';
+import '../views/log_harian/dosen_progres_screen.dart';
 
 class BimbinganModal {
   static void show(UserModel user) {
