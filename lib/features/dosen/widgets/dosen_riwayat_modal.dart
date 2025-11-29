@@ -1,145 +1,76 @@
 // lib/features/dosen/modals/riwayat_modal.dart
-
+import 'package:ebimbingan/core/utils/navigation/app_navigator.dart';
 import 'package:flutter/material.dart';
-import '../../../data/models/user_model.dart';
-import '../../../core/utils/navigation/app_navigator.dart';
+import 'package:ebimbingan/core/widgets/custom_modal_menu.dart';
 import '../views/log_bimbingan/dosen_riwayat_logbook_screen.dart';
 import '../views/ajuan/dosen_riwayat_ajuan_screen.dart';
 
 class RiwayatModal {
-  static void show(UserModel user) {
+  static void show() {
     showModalBottomSheet(
       context: appNavigatorKey.currentContext!,
       isScrollControlled: true,
       enableDrag: true,
       isDismissible: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        height: MediaQuery.of(appNavigatorKey.currentContext!).size.height * 0.4,
+      builder: (_) => const _RiwayatModalContent(),
+    );
+  }
+}
 
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-        ),
+// Widget utama modal (bisa diprivate dengan _)
+class _RiwayatModalContent extends StatelessWidget {
+  const _RiwayatModalContent();
 
-        child: Column(
-          children: [
-            // Handle kecil
-            Container(
-              margin: EdgeInsets.only(top: 12),
-              width: 50,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey[400],
-                borderRadius: BorderRadius.circular(10),
-              ),
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.4,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      child: Column(
+        children: [
+          // Handle drag
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 50,
+            height: 5,
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(10),
             ),
+          ),
 
-            Padding(
-              padding: EdgeInsets.all(20),
-              child: Text(
-                "Riwayat Bimbingan",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+          const Padding(
+            padding: EdgeInsets.all(20),
+            child: Text(
+              "Riwayat Bimbingan",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
+          ),
 
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                children: [
-
-                  // ITEM 1 — Riwayat Logbook
-                  Material(
-                    elevation: 3,
-                    borderRadius: BorderRadius.circular(16),
-                    color: Colors.white,
-                    child: GestureDetector(
-                      onTap: () {
-                        appNavigatorKey.currentState!
-                          ..pop()
-                          ..push(MaterialPageRoute(
-                            builder: (_) => DosenRiwayatLogbook(),
-                          ));
-                      },
-                      child: Container(
-                        padding: EdgeInsets.all(14),
-                        child: Row(
-                          children: [
-                            Image.asset(
-                              'assets/images/icon/riwayat-ajuan.png',
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.contain,
-                            ),
-
-                            SizedBox(width: 16),
-
-                            Expanded(
-                              child: Text(
-                                "Riwayat Logbook",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-
-                            Icon(Icons.chevron_right),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 12),
-
-                  // ITEM 2 — Riwayat Ajuan
-                  Material(
-                    elevation: 3,
-                    borderRadius: BorderRadius.circular(16),
-                    color: Colors.white,
-                    child: GestureDetector(
-                      onTap: () {
-                        appNavigatorKey.currentState!
-                          ..pop()
-                          ..push(MaterialPageRoute(
-                            builder: (_) => DosenRiwayatAjuan(),
-                          ));
-                      },
-                      child: Container(
-                        padding: EdgeInsets.all(14),
-                        child: Row(
-                          children: [
-                            Image.asset(
-                              'assets/images/icon/riwayat-ajuan.png',
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.contain,
-                            ),
-
-                            SizedBox(width: 16),
-
-                            Expanded(
-                              child: Text(
-                                "Riwayat Ajuan",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-
-                            Icon(Icons.chevron_right),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          // Daftar menu
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              children: const [
+                MenuItem(
+                  title: "Riwayat Logbook",
+                  iconPath: 'assets/images/icon/riwayat-ajuan.png',
+                  destination: DosenRiwayatLogbook(),
+                ),
+                SizedBox(height: 12),
+                MenuItem(
+                  title: "Riwayat Ajuan",
+                  iconPath: 'assets/images/icon/riwayat-ajuan.png',
+                  destination: DosenRiwayatAjuan(),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

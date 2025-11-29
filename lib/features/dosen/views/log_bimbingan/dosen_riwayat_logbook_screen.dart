@@ -26,7 +26,7 @@ class _DosenRiwayatLogbookState extends State<DosenRiwayatLogbook> {
     return Consumer<DosenMahasiswaViewModel>(
       builder: (context, vm, child) {
         return Scaffold(
-          appBar: CustomUniversalAppbar(judul: "Progress Mahasiswa"),
+          appBar: CustomUniversalAppbar(judul: "Riwayat Logbook Bimbingan"),
           body: Padding(
             padding: const EdgeInsets.all(16),
             child: vm.isLoading

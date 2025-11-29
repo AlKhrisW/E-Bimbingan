@@ -26,7 +26,7 @@ class DosenNavigationConfig {
       label: 'Riwayat',
       icon: Icons.history_outlined,
       screen: const SizedBox(),
-      onTap: () => RiwayatModal.show(user),
+      onTap: () => RiwayatModal.show(),
     ),
     NavItem(
       label: 'Profil',

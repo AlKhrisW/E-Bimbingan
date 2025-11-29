@@ -26,7 +26,7 @@ class _DosenRiwayatAjuanState extends State<DosenRiwayatAjuan> {
     return Consumer<DosenMahasiswaViewModel>(
       builder: (context, vm, child) {
         return Scaffold(
-          appBar: CustomUniversalAppbar(judul: "Progress Mahasiswa"),
+          appBar: CustomUniversalAppbar(judul: "Riwayat Ajuan Bimbingan"),
           body: Padding(
             padding: const EdgeInsets.all(16),
             child: vm.isLoading
