@@ -1,23 +1,75 @@
+// features/dosen/views/dosen_riwayat_ajuan_screen.dart
 import 'package:flutter/material.dart';
-import '../../../../data/models/user_model.dart';
-import '../../../../core/widgets/custom_universal_back_appBar.dart';
+import 'package:provider/provider.dart';
+import 'package:ebimbingan/core/widgets/custom_universal_back_appBar.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
 
-class DosenRiwayatAjuan extends StatelessWidget {
-  final UserModel user;
-  const DosenRiwayatAjuan({super.key, required this.user});
+class DosenRiwayatAjuan extends StatefulWidget {
+  const DosenRiwayatAjuan({super.key});
+
+  @override
+  State<DosenRiwayatAjuan> createState() => _DosenRiwayatAjuanState();
+}
+
+class _DosenRiwayatAjuanState extends State<DosenRiwayatAjuan> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<DosenMahasiswaViewModel>().loadForCurrentDosen();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomUniversalAppbar(judul: "Riwayat Ajuan Bimbingan"),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: const [
-            Text("Halaman Riwayat Ajuan Bimbingan Mahasiswa"),
-          ],
-        ),
-      ),
+    return Consumer<DosenMahasiswaViewModel>(
+      builder: (context, vm, child) {
+        return Scaffold(
+          appBar: CustomUniversalAppbar(judul: "Progress Mahasiswa"),
+          body: Padding(
+            padding: const EdgeInsets.all(16),
+            child: vm.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : vm.mahasiswaList.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('Tidak ada mahasiswa yang terdaftar'),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: vm.refresh,
+                              child: const Text('Refresh'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: vm.refresh,
+                        child: ListView.separated(
+                          itemCount: vm.mahasiswaList.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final m = vm.mahasiswaList[index];
+
+                            return MahasiswaCard(
+                              name: m.name,
+                              nim: m.nim ?? '-',
+                              programStudi: m.programStudi,
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Buka detail: ${m.name}")),
+                                );
+                                // Navigator.push(...) ke halaman detail
+                              },
+                            );
+                          },
+                        ),
+                      ),
+          ),
+        );
+      },
     );
   }
 }

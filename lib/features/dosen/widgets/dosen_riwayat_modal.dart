@@ -58,7 +58,7 @@ class RiwayatModal {
                         appNavigatorKey.currentState!
                           ..pop()
                           ..push(MaterialPageRoute(
-                            builder: (_) => DosenRiwayatLogbook(user: user),
+                            builder: (_) => DosenRiwayatLogbook(),
                           ));
                       },
                       child: Container(
@@ -103,7 +103,7 @@ class RiwayatModal {
                         appNavigatorKey.currentState!
                           ..pop()
                           ..push(MaterialPageRoute(
-                            builder: (_) => DosenRiwayatAjuan(user: user),
+                            builder: (_) => DosenRiwayatAjuan(),
                           ));
                       },
                       child: Container(
