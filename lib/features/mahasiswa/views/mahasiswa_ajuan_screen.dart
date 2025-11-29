@@ -78,8 +78,6 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
 
       dosenController.text = dosenName;
     } catch (e) {
-      // print untuk debugging, tapi jangan crash UI
-      // ignore: avoid_print
       print("Error load dosen: $e");
       dosenController.text = "Gagal memuat nama dosen";
     }
@@ -165,9 +163,8 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Bangun model sesuai AjuanBimbinganModel
       final ajuan = AjuanBimbinganModel(
-        ajuanUid: "", // akan diupdate setelah add()
+        ajuanUid: "",
         mahasiswaUid: widget.user.uid ?? "",
         dosenUid: widget.user.dosenUid ?? "",
         judulTopik: topikController.text,
@@ -179,23 +176,24 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
         keterangan: null,
       );
 
-      // Simpan menggunakan toMap() model (yang mengkonversi DateTime ke Timestamp)
       final docRef = await FirebaseFirestore.instance
           .collection("ajuan_bimbingan")
           .add(ajuan.toMap());
 
-      // Perbarui field ajuanUid dengan ID dokumen Firestore
       await docRef.update({"ajuanUid": docRef.id});
 
       if (!mounted) return;
 
-      // Navigasi ke success screen (mengganti route sekarang)
+      // Memanggil SuccessScreen dengan pesan khusus untuk ajuan
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const SuccessScreen()),
+        MaterialPageRoute(
+          builder: (context) => const SuccessScreen(
+            message: "Ajuan Bimbingan Berhasil Diajukan",
+          ),
+        ),
       );
     } catch (e) {
-      // ignore: avoid_print
       print("Gagal submit ajuan: $e");
 
       if (!mounted) return;
