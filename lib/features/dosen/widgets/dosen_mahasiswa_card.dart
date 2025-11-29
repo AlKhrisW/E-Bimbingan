@@ -6,6 +6,7 @@ class MahasiswaCard extends StatelessWidget {
   final String name;
   final String nim;
   final String? programStudi;
+  final String mahasiswaUid;
   final VoidCallback onTap;
 
   const MahasiswaCard({
@@ -13,6 +14,7 @@ class MahasiswaCard extends StatelessWidget {
     required this.name,
     required this.nim,
     this.programStudi,
+    required this.mahasiswaUid,
     required this.onTap,
   });
 

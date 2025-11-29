@@ -2,8 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/widgets/custom_universal_back_appBar.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
+import 'package:ebimbingan/features/dosen/views/log_harian/dosen_progres_user_screen.dart';
 
 class DosenProgres extends StatefulWidget {
   const DosenProgres({super.key});
@@ -57,11 +58,16 @@ class _DosenProgresState extends State<DosenProgres> {
                               name: m.name,
                               nim: m.nim ?? '-',
                               programStudi: m.programStudi,
+                              mahasiswaUid: m.uid,
                               onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text("Buka detail: ${m.name}")),
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DosenLogbookHarian(
+                                      mahasiswaUid: m.uid,
+                                    ),
+                                  ),
                                 );
-                                // Navigator.push(...) ke halaman detail
                               },
                             );
                           },

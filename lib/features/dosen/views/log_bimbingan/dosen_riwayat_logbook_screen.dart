@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/widgets/custom_universal_back_appBar.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
 
 class DosenRiwayatLogbook extends StatefulWidget {
@@ -57,6 +57,7 @@ class _DosenRiwayatLogbookState extends State<DosenRiwayatLogbook> {
                               name: m.name,
                               nim: m.nim ?? '-',
                               programStudi: m.programStudi,
+                              mahasiswaUid: m.uid,
                               onTap: () {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text("Buka detail: ${m.name}")),

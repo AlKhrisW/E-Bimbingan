@@ -2,6 +2,7 @@
 
 import 'package:ebimbingan/data/services/firebase_auth_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
+import 'package:ebimbingan/data/services/logbook_harian_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -17,7 +18,8 @@ import 'features/admin/viewmodels/admin_dashboard_viewmodel.dart';
 import 'features/admin/viewmodels/admin_user_management_viewmodel.dart';
 // Dosen ViewModels
 import 'features/dosen/viewmodels/dosen_profil_viewmodel.dart';
-import 'features/dosen/viewmodels/dosen_mahasiswa_viewmodel.dart';
+import 'features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
+import 'features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
 // Mahasiswa ViewModels
 import 'features/mahasiswa/viewmodels/mahasiswa_viewmodel.dart';
 
@@ -37,6 +39,7 @@ class App extends StatelessWidget {
         // Provider Khusus Dosen
         ChangeNotifierProvider(create: (_) => DosenProfilViewModel(authService: FirebaseAuthService(),userService: UserService())),
         ChangeNotifierProvider(create: (_) => DosenMahasiswaViewModel(authService: FirebaseAuthService(),userService: UserService())),
+        ChangeNotifierProvider(create: (_) => DosenLogbookHarianViewModel(logbookHarianService: LogbookHarianService(), userService: UserService())),
 
         // Provider Khusus Admin
         ChangeNotifierProvider(create: (_) => AdminViewModel()),
