@@ -13,7 +13,8 @@ class AjuanBimbinganModel {
   final String dosenUid;
   
   // data jadwal yang diajukan/disetujui
-  final String judulTopik; 
+  final String judulTopik;
+  final String metodeBimbingan; // misal: tatap muka, online, dll
   final String waktuBimbingan; // format hh:mm string
   final DateTime tanggalBimbingan; // tanggal sesi bimbingan yang disetujui/diajukan
   
@@ -27,6 +28,7 @@ class AjuanBimbinganModel {
     required this.mahasiswaUid,
     required this.dosenUid,
     required this.judulTopik,
+    required this.metodeBimbingan,
     required this.waktuBimbingan,
     required this.tanggalBimbingan,
     required this.status,
@@ -41,6 +43,7 @@ class AjuanBimbinganModel {
       mahasiswaUid: data['mahasiswaUid'] ?? '',
       dosenUid: data['dosenUid'] ?? '',
       judulTopik: data['judulTopik'] ?? 'tanpa judul',
+      metodeBimbingan: data['metodeBimbingan'] ?? 'n/a',
       waktuBimbingan: data['waktuBimbingan'] ?? 'n/a',
       // konversi timestamp ke datetime
       tanggalBimbingan: (data['tanggalBimbingan'] as Timestamp).toDate(),
@@ -61,6 +64,7 @@ class AjuanBimbinganModel {
       'mahasiswaUid': mahasiswaUid,
       'dosenUid': dosenUid,
       'judulTopik': judulTopik,
+      'metodeBimbingan': metodeBimbingan,
       'waktuBimbingan': waktuBimbingan,
       // simpan sebagai timestamp
       'tanggalBimbingan': Timestamp.fromDate(tanggalBimbingan), 
