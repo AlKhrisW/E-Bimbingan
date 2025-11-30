@@ -1,3 +1,4 @@
+// lib/viewmodels/dosen_mahasiswa_list_viewmodel.dart
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
@@ -19,18 +20,26 @@ class DosenMahasiswaViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  /// Load mahasiswa by explicit dosen UID
-  Future<void> loadByDosenUid(String dosenUid) async {
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  /// Load semua mahasiswa yang dibimbing oleh dosen yang sedang login
+  Future<void> loadMahasiswaBimbingan() async {
+    final currentUser = _authService.getCurrentUser();
+    if (currentUser == null) {
+      _errorMessage = "Tidak ada user yang login";
+      notifyListeners();
+      return;
+    }
+
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
-      final list = await _userService.fetchMahasiswaByDosenUid(dosenUid);
-      _mahasiswaList = list;
-    } on Exception catch (e) {
-      // Handle Firestore / network errors gracefully.
-      debugPrint('Error loadByDosenUid: $e');
-      // Do not rethrow to avoid crashing the UI; keep the list empty.
+      _mahasiswaList = await _userService.fetchMahasiswaByDosenUid(currentUser.uid);
+    } catch (e) {
+      _errorMessage = "Gagal memuat daftar mahasiswa: $e";
       _mahasiswaList = [];
     } finally {
       _isLoading = false;
@@ -38,15 +47,6 @@ class DosenMahasiswaViewModel extends ChangeNotifier {
     }
   }
 
-  /// Convenience: load mahasiswa for currently logged in dosen
-  Future<void> loadForCurrentDosen() async {
-    final uid = _authService.getCurrentUser()?.uid;
-    if (uid == null) return;
-    await loadByDosenUid(uid);
-  }
-
-  /// Refresh (re-run last load). If current user available, load for current dosen.
-  Future<void> refresh() async {
-    await loadForCurrentDosen();
-  }
+  /// Refresh manual (pull-to-refresh)
+  Future<void> refresh() => loadMahasiswaBimbingan();
 }

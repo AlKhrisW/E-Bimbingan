@@ -1,7 +1,7 @@
 // lib/app.dart
-
 import 'package:ebimbingan/data/services/firebase_auth_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
+import 'package:ebimbingan/data/services/logbook_harian_service.dart'; 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -17,12 +17,13 @@ import 'features/admin/viewmodels/admin_viewmodel.dart';
 import 'features/admin/viewmodels/admin_profile_viewmodel.dart';
 import 'features/admin/viewmodels/admin_dashboard_viewmodel.dart';
 import 'features/admin/viewmodels/admin_user_management_viewmodel.dart';
-import 'features/admin/viewmodels/mapping/admin_dosen_list_vm.dart';     // IMPORT
-import 'features/admin/viewmodels/mapping/detail_mapping_vm.dart';      // IMPORT
+import 'features/admin/viewmodels/mapping/admin_dosen_list_vm.dart';
+import 'features/admin/viewmodels/mapping/detail_mapping_vm.dart';
 
-// Dosen
+// Dosen 
 import 'features/dosen/viewmodels/dosen_profil_viewmodel.dart';
-import 'features/dosen/viewmodels/dosen_mahasiswa_viewmodel.dart';
+import 'features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';     
+import 'features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart'; 
 
 // Mahasiswa
 import 'features/mahasiswa/viewmodels/mahasiswa_viewmodel.dart';
@@ -37,7 +38,7 @@ class App extends StatelessWidget {
         // Global
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
 
-        // Mahasiswa
+        // Mahasiswa — hanya 1x
         ChangeNotifierProvider(
           create: (_) => MahasiswaViewModel(
             authService: FirebaseAuthService(),
@@ -45,7 +46,7 @@ class App extends StatelessWidget {
           ),
         ),
 
-        // Dosen
+        // Dosen — semua provider dosen
         ChangeNotifierProvider(
           create: (_) => DosenProfilViewModel(
             authService: FirebaseAuthService(),
@@ -53,8 +54,14 @@ class App extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(
-          create: (_) => DosenMahasiswaViewModel(
+          create: (_) => DosenMahasiswaViewModel(  
             authService: FirebaseAuthService(),
+            userService: UserService(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => DosenLogbookHarianViewModel(
+            logbookHarianService: LogbookHarianService(),
             userService: UserService(),
           ),
         ),
@@ -65,9 +72,9 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AdminDashboardViewModel()),
         ChangeNotifierProvider(create: (_) => AdminUserManagementViewModel()),
 
-        // Mapping Admin — HANYA CREATE, JANGAN LANGSUNG LOAD!
+        // Mapping Admin
         ChangeNotifierProvider(create: (_) => AdminDosenListViewModel()),
-        ChangeNotifierProvider(create: (_) => DetailMappingViewModel()), // PENTING!
+        ChangeNotifierProvider(create: (_) => DetailMappingViewModel()),
       ],
       child: MaterialApp(
         navigatorKey: appNavigatorKey,

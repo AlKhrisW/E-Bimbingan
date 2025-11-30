@@ -2,17 +2,18 @@ import 'package:flutter/material.dart';
 
 class SuccessScreen extends StatelessWidget {
   final String message;
+  final VoidCallback? onBack; //aksi custom saat tombol kembali
 
   const SuccessScreen({
     super.key,
-    this.message = "Data Pengajuan Berhasil Diproses",
+    this.message = "Data berhasil diproses",
+    this.onBack,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // AppBar dihapus
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -26,6 +27,13 @@ class SuccessScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.blue,
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
                 child: const Icon(
                   Icons.check,
@@ -36,11 +44,11 @@ class SuccessScreen extends StatelessWidget {
 
               const SizedBox(height: 40),
 
-              // Pesan saja
+              // Pesan sukses
               Text(
                 message,
                 style: const TextStyle(
-                  fontSize: 26,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.blue,
                 ),
@@ -49,14 +57,15 @@ class SuccessScreen extends StatelessWidget {
 
               const SizedBox(height: 60),
 
-              // Back Button
+              // Tombol Kembali
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: onBack ??
+                      () {
+                        Navigator.pop(context);
+                      },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     shape: RoundedRectangleBorder(
@@ -64,7 +73,7 @@ class SuccessScreen extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    "Back",
+                    "Kembali",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

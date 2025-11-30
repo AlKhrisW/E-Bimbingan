@@ -1,8 +1,8 @@
 // lib/features/dosen/views/dosen_dashboard.dart
 
 import 'package:flutter/material.dart';
-import '../../../core/widgets/dashboard_page_appBar.dart';
-import '../../../data/models/user_model.dart';
+import '../../../../core/widgets/dashboard_page_appBar.dart';
+import '../../../../data/models/user_model.dart';
 import 'dosen_notifikasi_screen.dart';
 
 class DosenDashboard extends StatelessWidget {
