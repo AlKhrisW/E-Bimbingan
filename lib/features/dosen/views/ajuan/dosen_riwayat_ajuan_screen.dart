@@ -17,7 +17,7 @@ class _DosenRiwayatAjuanState extends State<DosenRiwayatAjuan> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DosenMahasiswaViewModel>().loadForCurrentDosen();
+      context.read<DosenMahasiswaViewModel>().loadMahasiswaBimbingan();
     });
   }
 

@@ -16,6 +16,12 @@ class LogbookList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<DosenLogbookHarianViewModel>(
       builder: (_, vm, __) {
+        if (vm.selectedMahasiswa?.uid != mahasiswaUid) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            vm.pilihMahasiswa(mahasiswaUid);
+          });
+        }
+        
         if (vm.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -23,26 +29,26 @@ class LogbookList extends StatelessWidget {
         if (vm.errorMessage != null) {
           return LogbookErrorState(
             message: vm.errorMessage!,
-            onRetry: () => vm.loadLogbooks(mahasiswaUid),
+            onRetry: () => vm.pilihMahasiswa(mahasiswaUid),
           );
         }
 
-        if (vm.logbookList.isEmpty) {
+        if (vm.logbooks.isEmpty) {
           return const Center(
             child: Text(
               "Belum ada logbook harian",
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           );
         }
 
         return RefreshIndicator(
-          onRefresh: () async => vm.loadLogbooks(mahasiswaUid),
+          onRefresh: () => vm.pilihMahasiswa(mahasiswaUid),
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: vm.logbookList.length,
+            padding: const EdgeInsets.all(16),
+            itemCount: vm.logbooks.length,
             itemBuilder: (_, index) {
-              final logbook = vm.logbookList[index];
+              final logbook = vm.logbooks[index];
               return LogbookItem(logbook: logbook);
             },
           ),

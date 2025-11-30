@@ -18,7 +18,7 @@ class _DosenProgresState extends State<DosenProgres> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DosenMahasiswaViewModel>().loadForCurrentDosen();
+      context.read<DosenMahasiswaViewModel>().loadMahasiswaBimbingan();
     });
   }
 

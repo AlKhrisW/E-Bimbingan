@@ -24,7 +24,7 @@ class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context
           .read<DosenLogbookHarianViewModel>()
-          .loadLogbooks(widget.mahasiswaUid);
+          .pilihMahasiswa(widget.mahasiswaUid);
     });
   }
 
@@ -36,7 +36,7 @@ class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
       ),
       body: Consumer<DosenLogbookHarianViewModel>(
         builder: (context, vm, child) {
-          final m = vm.mahasiswa;
+          final m = vm.selectedMahasiswa;
 
           return Column(
             children: [
