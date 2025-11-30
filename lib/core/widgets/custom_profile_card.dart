@@ -36,6 +36,7 @@ class ProfileCardWidget extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
+            height: double.infinity,
             padding: const EdgeInsets.only(top: 90, left: 24, right: 24, bottom: 24),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
