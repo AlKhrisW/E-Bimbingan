@@ -36,10 +36,8 @@ class LogbookHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Avatar
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: CircleAvatar(
-                  radius: 38,
+              CircleAvatar(
+                  radius: 39,
                   backgroundColor: Colors.white,
                   child: Text(
                     _initials,
@@ -50,7 +48,6 @@ class LogbookHeader extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
 
               const SizedBox(width: 16),
 

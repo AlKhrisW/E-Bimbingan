@@ -32,7 +32,7 @@ class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomUniversalAppbar(
-        judul: "Logbook Harian Mahasiswa",
+        judul: "Daftar Logbook Harian",
       ),
       body: Consumer<DosenLogbookHarianViewModel>(
         builder: (context, vm, child) {
