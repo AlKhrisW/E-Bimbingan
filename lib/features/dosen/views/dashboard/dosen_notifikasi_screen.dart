@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../data/models/user_model.dart';
-import '../../../core/widgets/custom_universal_back_appBar.dart';
+import '../../../../data/models/user_model.dart';
+import '../../../../core/widgets/custom_universal_back_appBar.dart';
 
 class DosenNotifikasi extends StatelessWidget {
   final UserModel user;
