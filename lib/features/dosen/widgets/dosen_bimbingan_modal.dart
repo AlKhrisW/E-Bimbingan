@@ -61,7 +61,7 @@ class _BimbinganModalContent extends StatelessWidget {
                 MenuItem(
                   title: "Ajuan Bimbingan",
                   iconPath: 'assets/images/icon/validasi-ajuan.png',
-                  destination: DosenAjuan(user: user),
+                  destination: DosenAjuan(),
                 ),
                 const SizedBox(height: 12),
                 MenuItem(
