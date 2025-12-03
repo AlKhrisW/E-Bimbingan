@@ -1,107 +1,78 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../core/widgets/custom_universal_back_appBar.dart';
+import '../viewmodels/mahasiswa_laporan_viewmodel.dart';
+import '../../../core/widgets/custom_universal_back_appbar.dart';
 
 class DetailLogbookHarianScreen extends StatelessWidget {
   final String logbookHarianUid;
+  final MahasiswaLaporanViewModel viewModel;
 
   const DetailLogbookHarianScreen({
     super.key,
     required this.logbookHarianUid,
+    required this.viewModel,
   });
-
-  String _formatTanggal(Timestamp timestamp) {
-    final date = timestamp.toDate();
-    return "${date.day.toString().padLeft(2, '0')}-"
-        "${date.month.toString().padLeft(2, '0')}-"
-        "${date.year}";
-  }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection("logbook_harian")
-          .doc(logbookHarianUid)
-          .snapshots(),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: viewModel.getLogbookHarianDetail(logbookHarianUid),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        // Loading
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        if (!snapshot.data!.exists) {
+        // Tidak ada data
+        if (!snapshot.hasData || snapshot.data == null) {
           return const Scaffold(
             body: Center(child: Text("Data logbook tidak ditemukan")),
           );
         }
 
-        final logbookData = snapshot.data!.data() as Map<String, dynamic>;
+        final data = snapshot.data!;
+        final logbookData = data['logbook'] as Map<String, dynamic>;
+        final mahasiswaData = data['mahasiswa'] as Map<String, dynamic>;
+        final dosenData = data['dosen'] as Map<String, dynamic>;
 
-        final mahasiswaUid = logbookData["mahasiswaUid"];
-        final dosenUid = logbookData["dosenUid"];
+        return Scaffold(
+          appBar: CustomUniversalAppbar(
+            judul: logbookData["judulTopik"] ?? "Detail Logbook",
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _label("Mahasiswa"),
+                _readonlyField(value: mahasiswaData["name"] ?? "Mahasiswa tidak ditemukan"),
 
-        return FutureBuilder(
-          // Ambil data mahasiswa & dosen sekaligus
-          future: Future.wait([
-            FirebaseFirestore.instance.collection("users").doc(mahasiswaUid).get(),
-            FirebaseFirestore.instance.collection("users").doc(dosenUid).get(),
-          ]),
-          builder: (context, AsyncSnapshot<List<DocumentSnapshot>> userSnapshot) {
-            if (!userSnapshot.hasData) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
+                _label("Dosen Pembimbing"),
+                _readonlyField(value: dosenData["name"] ?? "Dosen tidak ditemukan"),
 
-            final mahasiswaData = userSnapshot.data![0].data() as Map<String, dynamic>?;
-            final dosenData = userSnapshot.data![1].data() as Map<String, dynamic>?;
+                _label("Judul Topik"),
+                _readonlyField(value: logbookData["judulTopik"] ?? ""),
 
-            final mahasiswaNama = mahasiswaData?["name"] ?? "Mahasiswa tidak ditemukan";
-            final dosenNama = dosenData?["name"] ?? "Dosen tidak ditemukan";
+                _label("Deskripsi Kegiatan"),
+                _readonlyField(value: logbookData["deskripsi"] ?? "", maxLines: 5),
 
-            return Scaffold(
-              appBar: CustomUniversalAppbar(
-                judul: logbookData["judulTopik"] ?? "Detail Logbook",
-              ),
-
-              body: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _label("Mahasiswa"),
-                    _readonlyField(value: mahasiswaNama),
-
-                    _label("Dosen Pembimbing"),
-                    _readonlyField(value: dosenNama),
-
-                    _label("Judul Topik"),
-                    _readonlyField(value: logbookData["judulTopik"] ?? ""),
-
-                    _label("Deskripsi Kegiatan"),
-                    _readonlyField(value: logbookData["deskripsi"] ?? "", maxLines: 5),
-
-                    _label("Tanggal"),
-                    _readonlyField(
-                      value: logbookData["tanggal"] != null
-                          ? _formatTanggal(logbookData["tanggal"])
-                          : "Tanggal tidak tersedia",
-                    ),
-
-                    const SizedBox(height: 30),
-                  ],
+                _label("Tanggal"),
+                _readonlyField(
+                  value: logbookData["tanggal"] != null
+                      ? MahasiswaLaporanViewModel.formatTanggal(logbookData["tanggal"])
+                      : "Tanggal tidak tersedia",
                 ),
-              ),
-            );
-          },
+
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
         );
       },
     );
   }
 
-  // LABEL
   Widget _label(String text) => Padding(
         padding: const EdgeInsets.only(top: 16, bottom: 6),
         child: Text(
@@ -110,7 +81,6 @@ class DetailLogbookHarianScreen extends StatelessWidget {
         ),
       );
 
-  // READONLY FIELD
   Widget _readonlyField({required String value, int maxLines = 1}) {
     return TextField(
       controller: TextEditingController(text: value),
