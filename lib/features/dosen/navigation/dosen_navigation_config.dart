@@ -5,8 +5,8 @@ import '../../../core/widgets/custom_bottom_nav_shell.dart';
 import '../../../data/models/user_model.dart';
 
 import '../views/dashboard/dosen_dashboard_screen.dart';
+import '../views/ajuan/dosen_ajuan_screen.dart';
 import '../views/profile/dosen_profil_screen.dart';
-import '../widgets/dosen_bimbingan_modal.dart';
 import '../widgets/dosen_riwayat_modal.dart';
 
 class DosenNavigationConfig {
@@ -17,14 +17,13 @@ class DosenNavigationConfig {
       screen: DosenDashboard(user: user),
     ),
     NavItem(
-      label: 'Bimbingan',
+      label: 'Ajuan',
       icon: Icons.pending_actions_outlined,
-      screen: const SizedBox(),
-      onTap: () => BimbinganModal.show(user),
+      screen: DosenAjuan(),
     ),
     NavItem(
-      label: 'Riwayat',
-      icon: Icons.history_outlined,
+      label: 'Bimbingan',
+      icon: Icons.menu_book,
       screen: const SizedBox(),
       onTap: () => RiwayatModal.show(),
     ),

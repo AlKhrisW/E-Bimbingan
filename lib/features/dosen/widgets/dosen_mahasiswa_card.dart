@@ -44,11 +44,11 @@ class MahasiswaCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar besar & tinggi penuh
+              // Avatar
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 child: CircleAvatar(
-                  radius: 50,
+                  radius: 40,
                   backgroundColor: AppTheme.backgroundColor,
                   child: Text(
                     _initials,
@@ -67,7 +67,6 @@ class MahasiswaCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Kotak putih: Nama + NIM/Prodi
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
@@ -90,14 +89,14 @@ class MahasiswaCard extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
-                              color: Colors.black87,
+                              color: Colors.black,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            "${nim}/${programStudi ?? '-'}",
+                            "${nim} / ${programStudi ?? '-'}",
                             style: TextStyle(
                               fontSize: 15,
                               color: Colors.grey[700],
@@ -108,7 +107,7 @@ class MahasiswaCard extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
 
                     // Detail indicator
                     Align(
