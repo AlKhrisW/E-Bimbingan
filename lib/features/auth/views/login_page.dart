@@ -5,8 +5,8 @@ import '../../../../core/themes/app_theme.dart';
 import '../../admin/views/admin_main_screen.dart';
 import '../../mahasiswa/views/mahasiswa_main_screen.dart';
 import '../../dosen/views/dosen_main.dart';
-// import '../../mahasiswa/views/mahasiswa_dashboard.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../widgets/login_alert.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,10 +17,12 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage>
     with SingleTickerProviderStateMixin {
-
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  bool _isPasswordVisible = false;
+  String? _errorMessage;
 
   late AnimationController _animationController;
   late Animation<double> _fadeIn;
@@ -45,34 +47,36 @@ class _LoginPageState extends State<LoginPage>
   @override
   void dispose() {
     _animationController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  InputDecoration _modernInput(String hint, IconData icon) {
+  InputDecoration _modernInput(
+    String hint,
+    IconData icon, {
+    Widget? suffixIcon,
+  }) {
+    const BorderRadius borderRadius = BorderRadius.all(Radius.circular(30));
+
     return InputDecoration(
       hintText: hint,
       filled: true,
       fillColor: Colors.grey.shade100,
       prefixIcon: Icon(icon, color: Colors.grey.shade600),
+      suffixIcon: suffixIcon,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: borderRadius,
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: borderRadius,
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: borderRadius,
         borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
-      ),
-    );
-  }
-
-  void _showSnackbar(BuildContext context, String message,
-      {bool isError = true}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor:
-            isError ? Colors.red.shade700 : Colors.green.shade700,
       ),
     );
   }
@@ -91,7 +95,9 @@ class _LoginPageState extends State<LoginPage>
         destination = MahasiswaMainScreen(user: user);
         break;
       default:
-        _showSnackbar(context, 'Peran pengguna tidak dikenali.');
+        setState(() {
+          _errorMessage = 'Peran pengguna tidak dikenali.';
+        });
         return;
     }
 
@@ -111,9 +117,14 @@ class _LoginPageState extends State<LoginPage>
       );
 
       if (userModel != null) {
+        setState(() {
+          _errorMessage = null;
+        });
         _navigateToDashboard(context, userModel);
       } else if (viewModel.errorMessage != null) {
-        _showSnackbar(context, viewModel.errorMessage!);
+        setState(() {
+          _errorMessage = viewModel.errorMessage!;
+        });
       }
     }
   }
@@ -148,20 +159,32 @@ class _LoginPageState extends State<LoginPage>
                   Text(
                     'Selamat Datang',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
                   ),
 
                   const SizedBox(height: 6),
 
                   Text(
                     'Masuk ke akun Anda',
-                    style: TextStyle(
-                        color: Colors.grey.shade600, fontSize: 15),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 15),
                   ),
 
-                  const SizedBox(height: 35),
+                  const SizedBox(height: 20),
+
+                  // ===== ALERT MODERN OTOMATIS HILANG =====
+                  if (_errorMessage != null)
+                    LoginAlert(
+                      message: _errorMessage!,
+                      onDismissed: () {
+                        setState(() {
+                          _errorMessage = null;
+                        });
+                      },
+                    ),
+
+                  const SizedBox(height: 8),
 
                   // EMAIL INPUT
                   TextFormField(
@@ -176,9 +199,24 @@ class _LoginPageState extends State<LoginPage>
                   // PASSWORD INPUT
                   TextFormField(
                     controller: _passwordController,
-                    decoration:
-                        _modernInput('Kata Sandi', Icons.lock_outline),
-                    obscureText: true,
+                    obscureText: !_isPasswordVisible,
+                    decoration: _modernInput(
+                      'Kata Sandi',
+                      Icons.lock_outline,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: Colors.grey.shade600,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
+                    ),
                     validator: (v) => (v == null || v.length < 6)
                         ? 'Minimal 6 karakter'
                         : null,
@@ -188,15 +226,16 @@ class _LoginPageState extends State<LoginPage>
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        _showSnackbar(context,
-                            'Fitur reset password belum aktif.',
-                            isError: false);
+                        setState(() {
+                          _errorMessage = 'Fitur reset password belum aktif.';
+                        });
                       },
                       child: const Text(
                         'Lupa Kata Sandi?',
                         style: TextStyle(
-                            color: AppTheme.errorColor,
-                            fontWeight: FontWeight.w600),
+                          color: AppTheme.errorColor,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -208,12 +247,13 @@ class _LoginPageState extends State<LoginPage>
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed:
-                          viewModel.isLoading ? null : () => _submitLogin(context),
+                      onPressed: viewModel.isLoading
+                          ? null
+                          : () => _submitLogin(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                         elevation: 5,
                       ),
@@ -222,7 +262,10 @@ class _LoginPageState extends State<LoginPage>
                           : const Text(
                               "Masuk",
                               style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                     ),
                   ),
