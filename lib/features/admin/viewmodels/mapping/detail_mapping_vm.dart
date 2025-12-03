@@ -4,7 +4,12 @@ import '../../../../../data/services/user_service.dart';
 
 class DetailMappingViewModel with ChangeNotifier {
   // --- service ---
-  final UserService _userService = UserService();
+  final UserService _userService;
+
+  // ✅ Constructor dengan dependency injection
+  DetailMappingViewModel({
+    UserService? userService,
+  }) : _userService = userService ?? UserService();
 
   // --- state ---
   List<UserModel> _mappedMahasiswa = [];
@@ -19,6 +24,13 @@ class DetailMappingViewModel with ChangeNotifier {
   String? get successMessage => _successMessage;
   List<UserModel> get mappedMahasiswa => _mappedMahasiswa;
   List<UserModel> get unassignedMahasiswa => _unassignedMahasiswa;
+
+  // --- TESTING HELPER ---
+  @visibleForTesting
+  set mappedMahasiswa(List<UserModel> value) {
+    _mappedMahasiswa = value;
+    notifyListeners();
+  }
 
   // --- private helpers ---
   void _setLoading(bool value) {
@@ -37,12 +49,10 @@ class DetailMappingViewModel with ChangeNotifier {
   }
 
   // --- actions ---
-
   /// Memuat daftar mahasiswa yang dibimbing oleh dosenUid tertentu
   Future<void> loadMappedMahasiswa(String dosenUid) async {
     _setLoading(true);
     resetMessages();
-
     try {
       _mappedMahasiswa =
           await _userService.fetchMahasiswaByDosenUid(dosenUid);
@@ -72,15 +82,12 @@ class DetailMappingViewModel with ChangeNotifier {
   Future<bool> removeMapping(String mahasiswaUid, String dosenUid) async {
     _setLoading(true);
     resetMessages();
-
     try {
       await _userService.updateUserMetadataPartial(mahasiswaUid, {
         'dosen_uid': null,
       });
-
       // Hapus dari list lokal
       _mappedMahasiswa.removeWhere((m) => m.uid == mahasiswaUid);
-
       _setMessage(success: 'Relasi mahasiswa berhasil dihapus.');
       return true;
     } catch (e) {
@@ -96,16 +103,13 @@ class DetailMappingViewModel with ChangeNotifier {
       List<String> mahasiswaUids, String dosenUid) async {
     _setLoading(true);
     resetMessages();
-
     try {
       await _userService.batchUpdateDosenRelasi(
         mahasiswaUids: mahasiswaUids,
         newDosenUid: dosenUid,
       );
-
       // Refresh data ter-mapping
       await loadMappedMahasiswa(dosenUid);
-
       _setMessage(
           success:
               '${mahasiswaUids.length} mahasiswa berhasil ditambahkan ke bimbingan.');

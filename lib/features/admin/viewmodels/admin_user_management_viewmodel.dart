@@ -1,14 +1,20 @@
 // lib/features/admin/viewmodels/admin_user_management_viewmodel.dart
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/services/user_service.dart';
 import '../../../data/services/firebase_auth_service.dart';
 
 class AdminUserManagementViewModel with ChangeNotifier {
-  // --- SERVICE LAYER ---
-  final UserService _userService = UserService();
-  final FirebaseAuthService _authService = FirebaseAuthService();
+  // --- SERVICE LAYER (injectable) ---
+  final UserService _userService;
+  final FirebaseAuthService _authService;
+
+  AdminUserManagementViewModel({
+    UserService? userService,
+    FirebaseAuthService? authService,
+  })  : _userService = userService ?? UserService(),
+        _authService = authService ?? FirebaseAuthService();
 
   // --- STATE ---
   bool _isLoading = false;
@@ -38,11 +44,17 @@ class AdminUserManagementViewModel with ChangeNotifier {
     _setMessage(error: null, success: null);
   }
 
+  // --- TESTING HELPER ---
+  @visibleForTesting
+  set users(List<UserModel> value) {
+    _users = value;
+    notifyListeners();
+  }
+
   // ========================================================================
   // READ METHODS
   // ========================================================================
 
-  /// Memuat semua pengguna (untuk AdminUsersScreen)
   Future<void> loadAllUsers() async {
     _setLoading(true);
     resetMessages();
@@ -56,7 +68,6 @@ class AdminUserManagementViewModel with ChangeNotifier {
     }
   }
 
-  /// Memuat daftar Dosen saja
   Future<void> loadDosenList() async {
     _setLoading(true);
     resetMessages();
@@ -74,12 +85,11 @@ class AdminUserManagementViewModel with ChangeNotifier {
   // CREATE - REGISTER USER
   // ========================================================================
 
-  /// Mendaftarkan pengguna baru (CREATE)
   Future<bool> registerUserUniversal({
     required String email,
     required String name,
     required String role,
-    String? programStudi, // optional, hanya untuk mahasiswa
+    String? programStudi,
     required String phoneNumber,
     String? nim,
     String? placement,
@@ -106,7 +116,6 @@ class AdminUserManagementViewModel with ChangeNotifier {
         jabatan: jabatan,
       );
 
-      // Refresh daftar pengguna setelah berhasil registrasi
       await loadAllUsers();
 
       _setMessage(
@@ -125,7 +134,6 @@ class AdminUserManagementViewModel with ChangeNotifier {
   // UPDATE USER
   // ========================================================================
 
-  /// Memperbarui data pengguna (UPDATE)
   Future<bool> updateUserUniversal({
     required String uid,
     required String email,
@@ -160,13 +168,12 @@ class AdminUserManagementViewModel with ChangeNotifier {
 
       await _userService.updateUserMetadata(updatedUser);
 
-      // Update lokal (lebih cepat daripada reload semua)
       int index = _users.indexWhere((u) => u.uid == uid);
       if (index != -1) {
         _users[index] = updatedUser;
         notifyListeners();
       } else {
-        await loadAllUsers(); // fallback
+        await loadAllUsers();
       }
 
       _setMessage(success: "Data $name berhasil diperbarui!");
@@ -183,7 +190,6 @@ class AdminUserManagementViewModel with ChangeNotifier {
   // DELETE USER
   // ========================================================================
 
-  /// Menghapus pengguna (DELETE)
   Future<bool> deleteUser(String uid) async {
     _setLoading(true);
     resetMessages();
@@ -191,7 +197,6 @@ class AdminUserManagementViewModel with ChangeNotifier {
     try {
       await _authService.deleteUser(uid);
 
-      // Hapus dari list lokal
       _users.removeWhere((u) => u.uid == uid);
       notifyListeners();
 
