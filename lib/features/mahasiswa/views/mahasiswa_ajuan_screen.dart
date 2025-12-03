@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../data/models/user_model.dart';
-import '../../../core/widgets/custom_universal_back_appBar.dart';
 import '../../../data/models/ajuan_bimbingan_model.dart';
+import '../../../core/widgets/custom_appbar.dart'; // versi baru tanpa back
 import 'success_screen.dart';
 
 class MahasiswaAjuanScreen extends StatefulWidget {
@@ -32,7 +32,7 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
   String? waktuError;
   String? tanggalError;
 
-  DateTime? pickedTanggal; // disimpan sebagai DateTime lalu dikonversi oleh model
+  DateTime? pickedTanggal;
 
   @override
   void initState() {
@@ -184,7 +184,6 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
 
       if (!mounted) return;
 
-      // Memanggil SuccessScreen dengan pesan khusus untuk ajuan
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -209,7 +208,7 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomUniversalAppbar(judul: "Ajuan Bimbingan"),
+      appBar: const CustomAppbar(judul: "Ajuan Bimbingan"), // versi tanpa back
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(

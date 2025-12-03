@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
-import '../../../core/widgets/custom_universal_back_appBar.dart';
+import '../../../core/widgets/custom_appbar.dart';
 
 class MahasiswaLogbookScreen extends StatelessWidget {
   final UserModel user;
@@ -10,7 +10,7 @@ class MahasiswaLogbookScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomUniversalAppbar(judul: "Logbook Mingguan"),
+      appBar: const CustomAppbar(judul: "Logbook Mingguan"), 
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -21,7 +21,6 @@ class MahasiswaLogbookScreen extends StatelessWidget {
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 12),
-
             Text(
               "Nama: ${user.name}",
               style: const TextStyle(fontSize: 16),

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../data/models/user_model.dart';
-import '../../../core/widgets/custom_universal_back_appBar.dart';
+import '../../../core/widgets/custom_appbar.dart'; // versi baru tanpa back
 import 'tambah_logbook_harian.dart';
 import '../widgets/report_harian_item.dart';
-import 'detail_logbook_harian.dart'; // <-- FIX
+import 'detail_logbook_harian.dart';
 
 class MahasiswaLaporanScreen extends StatelessWidget {
   final UserModel user;
@@ -14,7 +14,7 @@ class MahasiswaLaporanScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomUniversalAppbar(judul: "Laporan Harian"),
+      appBar: const CustomAppbar(judul: "Laporan Harian"), // versi tanpa back
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection("logbook_harian")
@@ -37,7 +37,6 @@ class MahasiswaLaporanScreen extends StatelessWidget {
 
           final docs = snapshot.data!.docs;
 
-          // ========== Convert to Map List ==========
           final List<Map<String, dynamic>> laporan = docs.map((doc) {
             final data = doc.data() as Map<String, dynamic>;
 
@@ -50,7 +49,6 @@ class MahasiswaLaporanScreen extends StatelessWidget {
             };
           }).toList();
 
-          // ========== GROUPING BY TANGGAL ==========
           Map<String, List<Map<String, dynamic>>> grouped = {};
 
           for (var item in laporan) {
@@ -63,7 +61,6 @@ class MahasiswaLaporanScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ===================== USER CARD =====================
                 Center(
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -155,7 +152,6 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                   ),
                 ),
 
-                // Divider
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16),
                   height: 1,
@@ -163,9 +159,7 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // ===================== LIST GROUPED =====================
                 for (var entry in grouped.entries) ...[
-                  // Header tanggal
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
                     child: Container(
@@ -185,7 +179,6 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // Item per tanggal
                   for (var item in entry.value) ...[
                     GestureDetector(
                       onTap: () {
@@ -229,7 +222,6 @@ class MahasiswaLaporanScreen extends StatelessWidget {
     );
   }
 
-  // ===================== FORMAT TANGGAL =====================
   static String formatTanggal(Timestamp ts) {
     final date = ts.toDate();
     final now = DateTime.now();
