@@ -1,11 +1,12 @@
 // lib/features/mahasiswa/widgets/mahasiswa_navbar_config.dart
 
+import 'package:ebimbingan/features/mahasiswa/views/riwayat_ajuan_screen.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/custom_bottom_nav_shell.dart';
 import '../../../data/models/user_model.dart';
 
 import '../views/mahasiswa_dashboard.dart';
-import '../views/mahasiswa_ajuan_screen.dart';
+import '../views/mahasiswa_riwayat_screen.dart'; 
 import '../views/mahasiswa_laporan_screen.dart';
 import '../views/mahasiswa_logbook_screen.dart';
 import '../views/mahasiswa_profil_screen.dart';
@@ -28,7 +29,7 @@ List<NavItem> buildMahasiswaNavItems(UserModel user) {
     NavItem(
       label: "Ajuan",
       icon: Icons.assignment_outlined,
-      screen: MahasiswaAjuanScreen(user: user),
+       screen: RiwayatAjuanScreen(user: user),
     ),
 
     NavItem(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../data/models/user_model.dart';
-import '../../../core/widgets/custom_universal_back_appBar.dart';
+import '../../../core/widgets/custom_universal_back_appbar.dart';
 import '../../../data/models/logbook_harian_model.dart';
+import '../../../data/models/user_model.dart';
 import 'success_screen.dart';
 
 class TambahLogbookHarianScreen extends StatefulWidget {
@@ -33,7 +33,6 @@ class _TambahLogbookHarianScreenState extends State<TambahLogbookHarianScreen> {
     super.initState();
     mahasiswaController.text = widget.user.name ?? "";
     _loadDosenName();
-
     tanggalController.text =
         "${pickedTanggal.day.toString().padLeft(2, '0')}-${pickedTanggal.month.toString().padLeft(2, '0')}-${pickedTanggal.year}";
   }
@@ -67,7 +66,6 @@ class _TambahLogbookHarianScreenState extends State<TambahLogbookHarianScreen> {
 
       final data = doc.data()!;
       final dosenName = data['name'] ?? data['full_name'] ?? "Nama dosen tidak tersedia";
-
       dosenController.text = dosenName;
     } catch (e) {
       print("Error load dosen: $e");
@@ -95,30 +93,15 @@ class _TambahLogbookHarianScreenState extends State<TambahLogbookHarianScreen> {
 
   bool _validateForm() {
     bool isValid = true;
-
     setState(() {
-      if (judulController.text.isEmpty) {
-        judulError = "Judul topik harus diisi";
-        isValid = false;
-      } else {
-        judulError = null;
-      }
+      judulError = judulController.text.isEmpty ? "Judul topik harus diisi" : null;
+      deskripsiError = deskripsiController.text.isEmpty ? "Deskripsi harus diisi" : null;
+      tanggalError = tanggalController.text.isEmpty ? "Tanggal harus diisi" : null;
 
-      if (deskripsiController.text.isEmpty) {
-        deskripsiError = "Deskripsi harus diisi";
+      if (judulError != null || deskripsiError != null || tanggalError != null) {
         isValid = false;
-      } else {
-        deskripsiError = null;
-      }
-
-      if (tanggalController.text.isEmpty) {
-        tanggalError = "Tanggal harus diisi";
-        isValid = false;
-      } else {
-        tanggalError = null;
       }
     });
-
     return isValid;
   }
 
@@ -177,7 +160,7 @@ class _TambahLogbookHarianScreenState extends State<TambahLogbookHarianScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomUniversalAppbar(judul: "Tambah Logbook Harian"),
+      appBar: const CustomUniversalAppbar(judul: "Tambah Logbook Harian"),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -194,8 +177,8 @@ class _TambahLogbookHarianScreenState extends State<TambahLogbookHarianScreen> {
               controller: judulController,
               hint: "Contoh: Revisi Bab 2",
               errorText: judulError,
-              onChanged: (value) {
-                if (value.isNotEmpty && judulError != null) setState(() => judulError = null);
+              onChanged: (v) {
+                if (v.isNotEmpty && judulError != null) setState(() => judulError = null);
               },
             ),
 
@@ -204,10 +187,10 @@ class _TambahLogbookHarianScreenState extends State<TambahLogbookHarianScreen> {
               controller: deskripsiController,
               hint: "Contoh: Mengerjakan bab 2 metode penelitian",
               errorText: deskripsiError,
-              onChanged: (value) {
-                if (value.isNotEmpty && deskripsiError != null) setState(() => deskripsiError = null);
-              },
               maxLines: 5,
+              onChanged: (v) {
+                if (v.isNotEmpty && deskripsiError != null) setState(() => deskripsiError = null);
+              },
             ),
 
             _label("Tanggal"),
@@ -228,7 +211,6 @@ class _TambahLogbookHarianScreenState extends State<TambahLogbookHarianScreen> {
             ),
 
             const SizedBox(height: 30),
-
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
