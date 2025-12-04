@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../data/models/user_model.dart';
-import '../../../core/widgets/custom_universal_back_appBar.dart';
 import '../../../data/models/ajuan_bimbingan_model.dart';
+import '../../../core/widgets/custom_universal_back_appbar.dart';
+
 import 'success_screen.dart';
 
 class MahasiswaAjuanScreen extends StatefulWidget {
@@ -32,7 +33,7 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
   String? waktuError;
   String? tanggalError;
 
-  DateTime? pickedTanggal; // disimpan sebagai DateTime lalu dikonversi oleh model
+  DateTime? pickedTanggal;
 
   @override
   void initState() {
@@ -61,8 +62,10 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
         return;
       }
 
-      final doc =
-          await FirebaseFirestore.instance.collection("users").doc(dosenUid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection("users")
+          .doc(dosenUid)
+          .get();
 
       if (!doc.exists) {
         dosenController.text = "Dosen tidak ditemukan";
@@ -78,7 +81,6 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
 
       dosenController.text = dosenName;
     } catch (e) {
-      print("Error load dosen: $e");
       dosenController.text = "Gagal memuat nama dosen";
     }
   }
@@ -184,7 +186,6 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
 
       if (!mounted) return;
 
-      // Memanggil SuccessScreen dengan pesan khusus untuk ajuan
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -194,8 +195,6 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
         ),
       );
     } catch (e) {
-      print("Gagal submit ajuan: $e");
-
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -209,7 +208,7 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomUniversalAppbar(judul: "Ajuan Bimbingan"),
+      appBar: const CustomUniversalAppbar(judul: "Ajuan Bimbingan"),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -226,22 +225,18 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
               controller: topikController,
               hint: "Contoh: Revisi Bab 2",
               errorText: topikError,
-              onChanged: (value) {
-                if (value.isNotEmpty && topikError != null) {
-                  setState(() => topikError = null);
-                }
+              onChanged: (_) {
+                if (topikError != null) setState(() => topikError = null);
               },
             ),
 
             _label("Metode Bimbingan"),
             _inputField(
               controller: metodeController,
-              hint: "Contoh: Tatap muka / Online / Zoom",
+              hint: "Contoh: Tatap muka / Zoom / Online",
               errorText: metodeError,
-              onChanged: (value) {
-                if (value.isNotEmpty && metodeError != null) {
-                  setState(() => metodeError = null);
-                }
+              onChanged: (_) {
+                if (metodeError != null) setState(() => metodeError = null);
               },
             ),
 
@@ -253,13 +248,6 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
               decoration: _decoration().copyWith(
                 hintText: "Klik untuk memilih waktu",
                 errorText: waktuError,
-                errorBorder: waktuError != null
-                    ? OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            const BorderSide(color: Colors.red, width: 2),
-                      )
-                    : null,
               ),
             ),
 
@@ -271,13 +259,6 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
               decoration: _decoration().copyWith(
                 hintText: "Klik untuk memilih tanggal",
                 errorText: tanggalError,
-                errorBorder: tanggalError != null
-                    ? OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            const BorderSide(color: Colors.red, width: 2),
-                      )
-                    : null,
               ),
             ),
 
@@ -343,10 +324,8 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
     return TextField(
       controller: controller,
       onChanged: onChanged,
-      decoration: _decoration().copyWith(
-        hintText: hint,
-        errorText: errorText,
-      ),
+      decoration:
+          _decoration().copyWith(hintText: hint, errorText: errorText),
     );
   }
 
@@ -354,7 +333,6 @@ class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
     return InputDecoration(
       filled: true,
       fillColor: Colors.white,
-      hintStyle: const TextStyle(color: Colors.grey),
       contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

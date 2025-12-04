@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../data/models/user_model.dart';
-import '../../../core/widgets/custom_universal_back_appBar.dart';
+import '../../../core/widgets/custom_appbar.dart';
+import '../viewmodels/mahasiswa_laporan_viewmodel.dart';
 import 'tambah_logbook_harian.dart';
 import '../widgets/report_harian_item.dart';
-import 'detail_logbook_harian.dart'; // <-- FIX
+import 'detail_logbook_harian.dart';
 
 class MahasiswaLaporanScreen extends StatelessWidget {
   final UserModel user;
+  final MahasiswaLaporanViewModel viewModel;
 
-  const MahasiswaLaporanScreen({super.key, required this.user});
+  MahasiswaLaporanScreen({
+    super.key,
+    required this.user,
+  }) : viewModel = MahasiswaLaporanViewModel(mahasiswaUid: "");
 
   @override
   Widget build(BuildContext context) {
+    final vm = MahasiswaLaporanViewModel(mahasiswaUid: user.uid);
+
     return Scaffold(
-      appBar: const CustomUniversalAppbar(judul: "Laporan Harian"),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection("logbook_harian")
-            .where("mahasiswaUid", isEqualTo: user.uid)
-            .orderBy("tanggal", descending: true)
-            .snapshots(),
+      appBar: const CustomAppbar(judul: "Laporan Harian"),
+      body: StreamBuilder(
+        stream: vm.laporanStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -35,45 +37,21 @@ class MahasiswaLaporanScreen extends StatelessWidget {
             );
           }
 
-          final docs = snapshot.data!.docs;
-
-          // ========== Convert to Map List ==========
-          final List<Map<String, dynamic>> laporan = docs.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-
-            return {
-              "id": doc.id,
-              "tanggalRaw": data["tanggal"],
-              "tanggal": formatTanggal(data["tanggal"]),
-              "judulTopik": data["judulTopik"] ?? "",
-              "deskripsi": data["deskripsi"] ?? "",
-            };
-          }).toList();
-
-          // ========== GROUPING BY TANGGAL ==========
-          Map<String, List<Map<String, dynamic>>> grouped = {};
-
-          for (var item in laporan) {
-            String tgl = item["tanggal"];
-            if (!grouped.containsKey(tgl)) grouped[tgl] = [];
-            grouped[tgl]!.add(item);
-          }
+          final laporanList = vm.mapLaporan(snapshot.data!);
+          final groupedLaporan = vm.groupByTanggal(laporanList);
 
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ===================== USER CARD =====================
+                // USER CARD
                 Center(
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: const Color(0xFFD4E3FF),
-                      border: Border.all(
-                        color: const Color(0xFF4D7CFE),
-                        width: 2.5,
-                      ),
+                      border: Border.all(color: const Color(0xFF4D7CFE), width: 2.5),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Row(
@@ -137,7 +115,7 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                                   const Icon(Icons.description, size: 14, color: Color(0xFF4D7CFE)),
                                   const SizedBox(width: 4),
                                   Text(
-                                    laporan.length.toString(),
+                                    laporanList.length.toString(),
                                     style: const TextStyle(
                                       color: Color(0xFF4D7CFE),
                                       fontSize: 13,
@@ -155,19 +133,13 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                   ),
                 ),
 
-                // Divider
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  height: 1,
-                  color: const Color(0xFFE0E0E0),
-                ),
+                const Divider(height: 1, color: Color(0xFFE0E0E0)),
                 const SizedBox(height: 12),
 
-                // ===================== LIST GROUPED =====================
-                for (var entry in grouped.entries) ...[
-                  // Header tanggal
+                // GROUPED LIST
+                for (var entry in groupedLaporan.entries) ...[
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                       decoration: BoxDecoration(
@@ -185,7 +157,6 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // Item per tanggal
                   for (var item in entry.value) ...[
                     GestureDetector(
                       onTap: () {
@@ -193,7 +164,8 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (_) => DetailLogbookHarianScreen(
-                              logbookHarianUid: item["id"], 
+                              logbookHarianUid: item["id"],
+                              viewModel: vm,
                             ),
                           ),
                         );
@@ -223,42 +195,8 @@ class MahasiswaLaporanScreen extends StatelessWidget {
           );
         },
         backgroundColor: const Color(0xFF4D7CFE),
-        elevation: 4,
         child: const Icon(Icons.add, color: Colors.white, size: 32),
       ),
     );
-  }
-
-  // ===================== FORMAT TANGGAL =====================
-  static String formatTanggal(Timestamp ts) {
-    final date = ts.toDate();
-    final now = DateTime.now();
-
-    final today = DateTime(now.year, now.month, now.day);
-    final thisDate = DateTime(date.year, date.month, date.day);
-
-    if (thisDate == today) return "Today";
-    if (thisDate == today.subtract(const Duration(days: 1))) return "Yesterday";
-
-    return "${date.day} ${_namaBulan(date.month)}";
-  }
-
-  static String _namaBulan(int m) {
-    const bulan = [
-      "",
-      "Januari",
-      "Februari",
-      "Maret",
-      "April",
-      "Mei",
-      "Juni",
-      "Juli",
-      "Agustus",
-      "September",
-      "Oktober",
-      "November",
-      "Desember"
-    ];
-    return bulan[m];
   }
 }
