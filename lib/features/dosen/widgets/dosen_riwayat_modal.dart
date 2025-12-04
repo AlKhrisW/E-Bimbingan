@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/widgets/custom_modal_menu.dart';
 import '../views/log_bimbingan/dosen_riwayat_logbook_screen.dart';
 import '../views/ajuan/dosen_riwayat_ajuan_screen.dart';
+import '../views/log_harian/dosen_progres_screen.dart';
 
 class RiwayatModal {
   static void show() {
@@ -13,20 +14,20 @@ class RiwayatModal {
       enableDrag: true,
       isDismissible: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const _RiwayatModalContent(),
+      builder: (_) => _RiwayatModalContent(),
     );
   }
 }
 
 // Widget utama modal (bisa diprivate dengan _)
 class _RiwayatModalContent extends StatelessWidget {
-  const _RiwayatModalContent();
+  _RiwayatModalContent();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.4,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
@@ -34,7 +35,7 @@ class _RiwayatModalContent extends StatelessWidget {
         children: [
           // Handle drag
           Container(
-            margin: const EdgeInsets.only(top: 12),
+            margin: EdgeInsets.only(top: 12),
             width: 50,
             height: 5,
             decoration: BoxDecoration(
@@ -43,10 +44,10 @@ class _RiwayatModalContent extends StatelessWidget {
             ),
           ),
 
-          const Padding(
+          Padding(
             padding: EdgeInsets.all(20),
             child: Text(
-              "Riwayat Bimbingan",
+              "Menu Bimbingan",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
@@ -54,18 +55,24 @@ class _RiwayatModalContent extends StatelessWidget {
           // Daftar menu
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              children: const [
-                MenuItem(
-                  title: "Riwayat Logbook",
-                  iconPath: 'assets/images/icon/riwayat-ajuan.png',
-                  destination: DosenRiwayatLogbook(),
-                ),
-                SizedBox(height: 12),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              children: [
                 MenuItem(
                   title: "Riwayat Ajuan",
                   iconPath: 'assets/images/icon/riwayat-ajuan.png',
                   destination: DosenRiwayatAjuan(),
+                ),
+                SizedBox(height: 12),
+                MenuItem(
+                  title: "Log-Book Harian",
+                  iconPath: 'assets/images/icon/laporan-progres.png',
+                  destination: DosenProgres(),
+                ),
+                SizedBox(height: 12),
+                MenuItem(
+                  title: "Log-Book Bimbingan",
+                  iconPath: 'assets/images/icon/riwayat-ajuan.png',
+                  destination: DosenRiwayatLogbook(),
                 ),
               ],
             ),

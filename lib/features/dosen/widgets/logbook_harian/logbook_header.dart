@@ -37,7 +37,7 @@ class LogbookHeader extends StatelessWidget {
             children: [
               // Avatar
               CircleAvatar(
-                  radius: 39,
+                  radius: 35.5,
                   backgroundColor: Colors.white,
                   child: Text(
                     _initials,

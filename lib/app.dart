@@ -1,10 +1,11 @@
 // lib/app.dart
 
-import 'package:ebimbingan/data/services/firebase_auth_service.dart';
-import 'package:ebimbingan/data/services/user_service.dart';
-import 'package:ebimbingan/data/services/logbook_harian_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import 'package:ebimbingan/data/services/user_service.dart';
+import 'package:ebimbingan/data/services/firebase_auth_service.dart';
+import 'package:ebimbingan/data/services/logbook_harian_service.dart';
 
 import 'core/themes/app_theme.dart';
 import 'core/utils/navigation/app_navigator.dart';
@@ -22,9 +23,11 @@ import 'features/admin/viewmodels/mapping/admin_dosen_list_vm.dart';     // IMPO
 import 'features/admin/viewmodels/mapping/detail_mapping_vm.dart';      // IMPORT
 
 // Dosen
-import 'features/dosen/viewmodels/dosen_profil_viewmodel.dart';
-import 'features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
-import 'features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_profil_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_ajuan_bimbingan_viewmodel.dart';
+
 // Mahasiswa ViewModels
 import 'features/mahasiswa/viewmodels/mahasiswa_viewmodel.dart';
 
@@ -40,11 +43,12 @@ class App extends StatelessWidget {
 
         // Provider Khusus Mahasiswa
         ChangeNotifierProvider(create: (_) => MahasiswaViewModel(authService: FirebaseAuthService(),userService: UserService())),
-        
+
         // Provider Khusus Dosen
         ChangeNotifierProvider(create: (_) => DosenProfilViewModel(authService: FirebaseAuthService(),userService: UserService())),
         ChangeNotifierProvider(create: (_) => DosenMahasiswaViewModel(authService: FirebaseAuthService(),userService: UserService())),
         ChangeNotifierProvider(create: (_) => DosenLogbookHarianViewModel(logbookHarianService: LogbookHarianService(), userService: UserService())),
+        ChangeNotifierProvider(create: (_) => DosenAjuanBimbinganViewModel()),
 
         // Admin
         ChangeNotifierProvider(create: (_) => AdminViewModel()),

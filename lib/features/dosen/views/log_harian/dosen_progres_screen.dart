@@ -1,7 +1,7 @@
 // features/dosen/views/dosen_progres_page.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/core/widgets/custom_universal_back_appBar.dart';
+import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
 import 'package:ebimbingan/features/dosen/views/log_harian/dosen_progres_user_screen.dart';

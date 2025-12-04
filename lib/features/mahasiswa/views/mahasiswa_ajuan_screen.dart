@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/models/ajuan_bimbingan_model.dart';
-import '../../../core/widgets/custom_universal_back_appbar.dart';
+import '../../../core/widgets/appbar/custom_universal_back_appbar.dart';
 
 import 'success_screen.dart';
 

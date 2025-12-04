@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../data/models/user_model.dart';
 import '../../../core/themes/app_theme.dart';
-import '../../../core/widgets/profile_page_appBar.dart';
+import '../../../core/widgets/appbar/profile_page_appBar.dart';
 import '../../../core/widgets/custom_profile_card.dart';
 import '../../auth/viewmodels/auth_viewmodel.dart';
 import '../../auth/views/login_page.dart';

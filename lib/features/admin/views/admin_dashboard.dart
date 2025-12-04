@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../data/models/user_model.dart';
 import '../../../../core/themes/app_theme.dart';
 import '../viewmodels/admin_dashboard_viewmodel.dart';
-import '../../../../core/widgets/dashboard_page_appBar.dart';
+import '../../../core/widgets/appbar/dashboard_page_appBar.dart';
 
 class AdminDashboard extends StatefulWidget {
   final UserModel user;

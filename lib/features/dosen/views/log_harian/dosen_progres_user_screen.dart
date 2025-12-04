@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/core/widgets/custom_universal_back_appBar.dart';
+import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_header.dart';
 import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_list.dart';
