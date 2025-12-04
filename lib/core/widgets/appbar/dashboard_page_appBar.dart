@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../themes/app_theme.dart';
+import '../../themes/app_theme.dart';
 
 class DashboardPageAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String name;

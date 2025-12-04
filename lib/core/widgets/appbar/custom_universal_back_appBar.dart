@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'custom_button_back.dart';
+import '../custom_button_back.dart';
 
 class CustomUniversalAppbar extends StatelessWidget implements PreferredSizeWidget {
   final String judul;

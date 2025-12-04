@@ -1,108 +1,126 @@
-// dosen_ajuan_detail_screen.dart (DIKOREKSI)
-
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_ajuan_bimbingan_viewmodel.dart';
+import 'package:ebimbingan/core/themes/app_theme.dart';
+import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
-import 'package:ebimbingan/data/models/user_model.dart';
-import 'package:intl/intl.dart';
+import 'package:ebimbingan/features/dosen/widgets/dosen_tolak_dialog.dart';
+import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_ajuan_bimbingan_viewmodel.dart';
 
 class DosenAjuanDetail extends StatelessWidget {
-  final AjuanWithMahasiswa ajuanData; 
+  final AjuanWithMahasiswa ajuan; 
 
   const DosenAjuanDetail({
     super.key,
-    required this.ajuanData, 
+    required this.ajuan, 
   });
-
-  void _showTolakDialog(BuildContext ctx, DosenAjuanBimbinganViewModel vm, String ajuanUid) {
-    final controller = TextEditingController();
-    showDialog(
-      context: ctx,
-      builder: (_) => AlertDialog(
-        title: const Text("Tolak Ajuan"),
-        content: TextField(
-          controller: controller, 
-          decoration: const InputDecoration(hintText: "Alasan penolakan"),
-          maxLines: 3,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Batal")),
-          ElevatedButton(
-            onPressed: () {
-              vm.tolak(ajuanUid, controller.text);
-              Navigator.pop(ctx); // Tutup dialog
-              Navigator.pop(ctx); // Tutup halaman detail
-            },
-            child: const Text("Tolak"),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<DosenAjuanBimbinganViewModel>(context, listen: false);
-    final AjuanBimbinganModel ajuan = ajuanData.ajuan;
-    final UserModel mahasiswa = ajuanData.mahasiswa;
 
-    // Pastikan properti tanggalBimbingan dan waktuBimbingan sudah benar
-    final formattedTanggal = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(ajuan.waktuDiajukan);
-    final formattedJam = DateFormat('HH:mm').format(ajuan.waktuDiajukan);
+    final tanggalPengajuan = DateFormat('EEEE, dd MMMM yyyy', 'id_ID')
+        .format(ajuan.waktuDiajukan);
+    final tanggalBimbingan = DateFormat('dd MMMM yyyy', 'id_ID')
+        .format(ajuan.tanggalBimbingan);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Detail Ajuan")),
+      backgroundColor: AppTheme.backgroundColor,
+      appBar: const CustomUniversalAppbar(judul: "Detail Ajuan Bimbingan"),
+
+      // ================== BODY (SCROLLABLE) ==================
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Detail Mahasiswa
-            const Text("Mahasiswa", style: TextStyle(fontSize: 14, color: Colors.grey)),
-            Text("${mahasiswa.name} (${mahasiswa.nim})", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
+            BuildField(label: "Nama", value: ajuan.namaMahasiswa),
+            BuildField(label: "Tempat Penempatan", value: ajuan.placement),
+            BuildField(label: "Topik Kegiatan", value: ajuan.judulTopik),
+            BuildField(label: "Tanggal Bimbingan", value: tanggalBimbingan),
+            BuildField(label: "Waktu Bimbingan", value: ajuan.waktuBimbingan),
+            BuildField(label: "Metode Bimbingan", value: ajuan.metodeBimbingan),
+            BuildField(label: "Tanggal Penulisan", value: tanggalPengajuan),
 
-            // Detail Ajuan
-            const Text("Topik Bimbingan", style: TextStyle(fontSize: 14, color: Colors.grey)),
-            Text(ajuan.judulTopik, style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 15),
-
-            const Text("Waktu Bimbingan", style: TextStyle(fontSize: 14, color: Colors.grey)),
-            Text("$formattedTanggal, Pukul $formattedJam", style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 15),
-            
-            const Text("Metode Bimbingan", style: TextStyle(fontSize: 14, color: Colors.grey)),
-            Text(ajuan.metodeBimbingan, style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 30),
-
-            // Tombol Aksi
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    icon: const Icon(Icons.check, color: Colors.white), 
-                    label: const Text("Setujui", style: TextStyle(color: Colors.white)),
-                    onPressed: ajuan.status != AjuanStatus.proses ? null : () async {
-                      await vm.setujui(ajuan.ajuanUid); // Gunakan ajuan.ajuanUid
-                      Navigator.pop(context); // Tutup halaman detail
-                    },
-                  ),
-                ),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                    icon: const Icon(Icons.close, color: Colors.white), 
-                    label: const Text("Tolak", style: TextStyle(color: Colors.white)),
-                    onPressed: ajuan.status != AjuanStatus.proses ? null : () => _showTolakDialog(context, vm, ajuan.ajuanUid), // Gunakan ajuan.ajuanUid
-                  ),
-                ),
-              ],
-            ),
+            const SizedBox(height: 40), // ruang agar tidak ketutup tombol
           ],
+        ),
+      ),
+
+      // tombol tolak dan terima
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 10,
+                color: Colors.black.withOpacity(0.1),
+                offset: const Offset(0, -3),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.backgroundColor,
+                  side: const BorderSide(color: Colors.green),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ).copyWith(
+                  overlayColor: MaterialStateProperty.all(
+                    Colors.green.withOpacity(0.15), // efek sentuhan
+                  ),
+                ),
+                  icon: const Icon(Icons.check, color: Colors.green),
+                  label: const Text("Terima",
+                      style: TextStyle(color: Colors.green)),
+                  onPressed: ajuan.status != AjuanStatus.proses
+                      ? null
+                      : () async {
+                          await vm.setujui(ajuan.ajuanUid);
+                          Navigator.pop(context);
+                        },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.backgroundColor,
+                    side: const BorderSide(color: Colors.red),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ).copyWith(
+                    overlayColor: MaterialStateProperty.all(
+                      Colors.red.withOpacity(0.15),
+                    ),
+                  ),
+                  icon: const Icon(Icons.close, color: Colors.red),
+                  label: const Text("Tolak",
+                      style: TextStyle(color: Colors.red)),
+                  onPressed: ajuan.status != AjuanStatus.proses
+                    ? null
+                    : () {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) {
+                            return TolakAjuanDialog(
+                              onConfirm: (alasan) async {
+                                await vm.tolak(ajuan.ajuanUid, alasan);
+                                Navigator.pop(context);
+                              },
+                            );
+                          },
+                        );
+                      },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

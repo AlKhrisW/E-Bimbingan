@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/core/widgets/custom_universal_back_appBar.dart';
+import 'package:ebimbingan/core/widgets/appbar/custom_appbar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_ajuan_bimbingan_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_ajuan_card.dart';
 import 'package:ebimbingan/features/dosen/views/ajuan/dosen_ajuan_detail_screen.dart';
@@ -28,7 +28,7 @@ class _DosenAjuanState extends State<DosenAjuan> {
     return Consumer<DosenAjuanBimbinganViewModel>(
       builder: (context, vm, child) {
         return Scaffold(
-          appBar: CustomUniversalAppbar(judul: "Ajuan Bimbingan"),
+          appBar: CustomAppbar(judul: "Ajuan Bimbingan"),
           body: Padding(
             padding: const EdgeInsets.all(16),
             child: vm.isLoading
@@ -56,15 +56,15 @@ class _DosenAjuanState extends State<DosenAjuan> {
                             final m = vm.proses[index];
 
                             return AjuanCard(
-                              name: m.mahasiswa.name,
-                              judulTopik: m.ajuan.judulTopik,
-                              tanggalBimbingan: DateFormat('dd MMMM yyyy').format(m.ajuan.tanggalBimbingan),
-                              waktuBimbingan: m.ajuan.waktuBimbingan,
+                              name: m.namaMahasiswa,
+                              judulTopik: m.judulTopik,
+                              tanggalBimbingan: DateFormat('dd MMMM yyyy').format(m.tanggalBimbingan),
+                              waktuBimbingan: m.waktuBimbingan,
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => DosenAjuanDetail(ajuanData: m),
+                                    builder: (_) => DosenAjuanDetail(ajuan: m),
                                   ),
                                 );
                               },

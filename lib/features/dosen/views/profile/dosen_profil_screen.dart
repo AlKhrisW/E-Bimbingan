@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
-import 'package:ebimbingan/core/widgets/profile_page_appBar.dart';
+import 'package:ebimbingan/core/widgets/appbar/profile_page_appBar.dart';
 import 'package:ebimbingan/core/widgets/custom_profile_card.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_profil_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/views/profile/dosen_edit_profil_screen.dart';

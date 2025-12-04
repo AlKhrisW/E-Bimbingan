@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../core/widgets/custom_appbar.dart';
+import '../../../core/widgets/appbar/custom_appbar.dart';
 import '../../../data/models/user_model.dart';
 import '../widgets/mahasiswa_navbar_config.dart';
 import '../viewmodels/ajuan_bimbingan_viewmodel.dart';

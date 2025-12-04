@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
-import '../../../core/widgets/custom_appbar.dart';
+import '../../../core/widgets/appbar/custom_appbar.dart';
 
 class MahasiswaLogbookScreen extends StatelessWidget {
   final UserModel user;
