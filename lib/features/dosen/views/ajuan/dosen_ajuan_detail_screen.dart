@@ -1,3 +1,5 @@
+// dosen_ajuan_detail_screen.dart (DIKOREKSI)
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_ajuan_bimbingan_viewmodel.dart';
@@ -6,79 +8,102 @@ import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:intl/intl.dart';
 
 class DosenAjuanDetail extends StatelessWidget {
-  final AjuanBimbinganModel ajuan;
-  const DosenAjuanDetail({super.key, required this.ajuan});
+  final AjuanWithMahasiswa ajuanData; 
 
-  @override
-  Widget build(BuildContext context) {
-    final vm = Provider.of<DosenAjuanBimbinganViewModel>(context);
+  const DosenAjuanDetail({
+    super.key,
+    required this.ajuanData, 
+  });
 
-    return Scaffold(
-      appBar: AppBar(title: Text("Detail Ajuan")),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: FutureBuilder<UserModel>(
-          future: vm.getMahasiswa(ajuan.mahasiswaUid),
-          builder: (ctx, snap) {
-            final nama = snap.data?.name ?? "Memuat...";
-            final nim = snap.data?.nim ?? "";
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Mahasiswa", style: TextStyle(fontSize: 14, color: Colors.grey)),
-                Text("$nama ($nim)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                SizedBox(height: 20),
-                Text("Topik"), Text(ajuan.judulTopik, style: TextStyle(fontSize: 16)),
-                SizedBox(height: 10),
-                Text("Tanggal"), Text(DateFormat('dd MMMM yyyy').format(ajuan.tanggalBimbingan)),
-                Text("Jam"), Text(ajuan.waktuBimbingan),
-                Text("Metode"), Text(ajuan.metodeBimbingan),
-                SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                      icon: Icon(Icons.check), label: Text("Setujui"),
-                      onPressed: () async {
-                        await vm.setujui(ajuan.ajuanUid);
-                        Navigator.pop(context);
-                      },
-                    ),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      icon: Icon(Icons.close), label: Text("Tolak"),
-                      onPressed: () => _showTolakDialog(context, vm, ajuan.ajuanUid),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  void _showTolakDialog(BuildContext ctx, DosenAjuanBimbinganViewModel vm, String uid) {
+  void _showTolakDialog(BuildContext ctx, DosenAjuanBimbinganViewModel vm, String ajuanUid) {
     final controller = TextEditingController();
     showDialog(
       context: ctx,
       builder: (_) => AlertDialog(
-        title: Text("Tolak Ajuan"),
-        content: TextField(controller: controller, decoration: InputDecoration(hintText: "Alasan penolakan")),
+        title: const Text("Tolak Ajuan"),
+        content: TextField(
+          controller: controller, 
+          decoration: const InputDecoration(hintText: "Alasan penolakan"),
+          maxLines: 3,
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text("Batal")),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Batal")),
           ElevatedButton(
             onPressed: () {
-              vm.tolak(uid, controller.text);
-              Navigator.pop(ctx);
-              Navigator.pop(ctx);
+              vm.tolak(ajuanUid, controller.text);
+              Navigator.pop(ctx); // Tutup dialog
+              Navigator.pop(ctx); // Tutup halaman detail
             },
-            child: Text("Tolak"),
+            child: const Text("Tolak"),
           ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = Provider.of<DosenAjuanBimbinganViewModel>(context, listen: false);
+    final AjuanBimbinganModel ajuan = ajuanData.ajuan;
+    final UserModel mahasiswa = ajuanData.mahasiswa;
+
+    // Pastikan properti tanggalBimbingan dan waktuBimbingan sudah benar
+    final formattedTanggal = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(ajuan.waktuDiajukan);
+    final formattedJam = DateFormat('HH:mm').format(ajuan.waktuDiajukan);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("Detail Ajuan")),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Detail Mahasiswa
+            const Text("Mahasiswa", style: TextStyle(fontSize: 14, color: Colors.grey)),
+            Text("${mahasiswa.name} (${mahasiswa.nim})", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+
+            // Detail Ajuan
+            const Text("Topik Bimbingan", style: TextStyle(fontSize: 14, color: Colors.grey)),
+            Text(ajuan.judulTopik, style: const TextStyle(fontSize: 16)),
+            const SizedBox(height: 15),
+
+            const Text("Waktu Bimbingan", style: TextStyle(fontSize: 14, color: Colors.grey)),
+            Text("$formattedTanggal, Pukul $formattedJam", style: const TextStyle(fontSize: 16)),
+            const SizedBox(height: 15),
+            
+            const Text("Metode Bimbingan", style: TextStyle(fontSize: 14, color: Colors.grey)),
+            Text(ajuan.metodeBimbingan, style: const TextStyle(fontSize: 16)),
+            const SizedBox(height: 30),
+
+            // Tombol Aksi
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    icon: const Icon(Icons.check, color: Colors.white), 
+                    label: const Text("Setujui", style: TextStyle(color: Colors.white)),
+                    onPressed: ajuan.status != AjuanStatus.proses ? null : () async {
+                      await vm.setujui(ajuan.ajuanUid); // Gunakan ajuan.ajuanUid
+                      Navigator.pop(context); // Tutup halaman detail
+                    },
+                  ),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    icon: const Icon(Icons.close, color: Colors.white), 
+                    label: const Text("Tolak", style: TextStyle(color: Colors.white)),
+                    onPressed: ajuan.status != AjuanStatus.proses ? null : () => _showTolakDialog(context, vm, ajuan.ajuanUid), // Gunakan ajuan.ajuanUid
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
