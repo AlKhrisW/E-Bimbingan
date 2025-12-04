@@ -1,18 +1,24 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
-import 'package:ebimbingan/data/models/user_model.dart';
+
+// service
 import 'package:ebimbingan/data/services/user_service.dart';
-import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
+import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 
+// models
+import 'package:ebimbingan/data/models/user_model.dart';
+import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
+import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 
 // =================================================================
 // MODEL HELPER
 // =================================================================
 class AjuanWithMahasiswa {
   final String ajuanUid;
+  final String mahasiswaUid;
 
   // Mahasiswa
   final String namaMahasiswa;
@@ -28,6 +34,7 @@ class AjuanWithMahasiswa {
 
   AjuanWithMahasiswa({
     required this.ajuanUid,
+    required this.mahasiswaUid,
     required this.namaMahasiswa,
     required this.placement,
     required this.judulTopik,
@@ -41,6 +48,7 @@ class AjuanWithMahasiswa {
 
 class DosenAjuanBimbinganViewModel extends ChangeNotifier {
   final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
+  final LogBimbinganService _logService = LogBimbinganService();
   final UserService _userService = UserService();
 
   late final String dosenUid;
@@ -79,7 +87,6 @@ class DosenAjuanBimbinganViewModel extends ChangeNotifier {
 
   StreamSubscription<List<AjuanBimbinganModel>>? _subscription;
 
-
   // =================================================================
   // LOAD DATA (REALTIME + MAPPING KE UI MODEL)
   // =================================================================
@@ -117,21 +124,21 @@ class DosenAjuanBimbinganViewModel extends ChangeNotifier {
 
           for (var ajuan in data) {
             final mahasiswa = mahasiswaMap[ajuan.mahasiswaUid];
-            if (mahasiswa != null) {
-              combinedData.add(
-                AjuanWithMahasiswa(
-                  ajuanUid: ajuan.ajuanUid,
-                  namaMahasiswa: mahasiswa.name,
-                  placement: mahasiswa.placement ?? "-",
-                  judulTopik: ajuan.judulTopik,
-                  metodeBimbingan: ajuan.metodeBimbingan,
-                  tanggalBimbingan: ajuan.tanggalBimbingan,
-                  waktuBimbingan: ajuan.waktuBimbingan,
-                  waktuDiajukan: ajuan.waktuDiajukan,
-                  status: ajuan.status,
-                ),
-              );
-            }
+            
+            combinedData.add(
+              AjuanWithMahasiswa(
+                ajuanUid: ajuan.ajuanUid,
+                mahasiswaUid: ajuan.mahasiswaUid,
+                namaMahasiswa: mahasiswa?.name ?? "Mahasiswa Tidak Dikenal",
+                placement: mahasiswa?.placement ?? "-",
+                judulTopik: ajuan.judulTopik,
+                metodeBimbingan: ajuan.metodeBimbingan,
+                tanggalBimbingan: ajuan.tanggalBimbingan,
+                waktuBimbingan: ajuan.waktuBimbingan,
+                waktuDiajukan: ajuan.waktuDiajukan,
+                status: ajuan.status,
+              ),
+            );
           }
 
           // 5. Sorting terbaru di atas
@@ -162,12 +169,40 @@ class DosenAjuanBimbinganViewModel extends ChangeNotifier {
   // =================================================================
   Future<void> setujui(String ajuanUid) async {
     try {
+      // 1. Cari data ajuan yang sedang diproses untuk mendapatkan MahasiswaUid
+      // Menggunakan orElse untuk keamanan jika data tidak ditemukan (race condition)
+      final ajuanTarget = _ajuanWithMahasiswa.firstWhere(
+        (element) => element.ajuanUid == ajuanUid,
+        orElse: () => throw Exception("Data ajuan tidak ditemukan di list lokal"),
+      );
+
+      // 2. Generate UID Log Bimbingan di ViewModel
+      final String newLogUid = FirebaseFirestore.instance.collection('log_bimbingan').doc().id;
+
+      // 3. Buat Object Log Bimbingan Baru
+      final newLog = LogBimbinganModel(
+        logBimbinganUid: newLogUid,
+        ajuanUid: ajuanUid,
+        mahasiswaUid: ajuanTarget.mahasiswaUid,
+        dosenUid: dosenUid,
+        ringkasanHasil: '',
+        status: LogBimbinganStatus.pending,
+        waktuPengajuan: DateTime.now(),
+        catatanDosen: null,
+        lampiranUrl: null,
+      );
+
+      // 4. Update status Ajuan menjadi disetujui
       await _ajuanService.updateAjuanStatus(
         ajuanUid: ajuanUid,
         status: AjuanStatus.disetujui,
       );
+
+      // 5. Simpan Log Bimbingan Baru
+      await _logService.saveLogBimbingan(newLog);
+
     } catch (e) {
-      _error = 'Gagal menyetujui ajuan';
+      _error = 'Gagal menyetujui ajuan: $e';
       notifyListeners();
     }
   }
@@ -186,8 +221,9 @@ class DosenAjuanBimbinganViewModel extends ChangeNotifier {
         keterangan: keterangan.trim(),
       );
     } catch (e) {
-      _error = 'Gagal menolak ajuan';
+      _error = 'Gagal menolak ajuan: $e';
       notifyListeners();
+      rethrow;
     }
   }
 

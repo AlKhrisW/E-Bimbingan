@@ -37,8 +37,6 @@ class AjuanBimbinganModel {
   });
 
   factory AjuanBimbinganModel.fromMap(Map<String, dynamic> data) {
-    print('DEBUG: Ajuan UID: ${data['ajuanUid']}');
-    print('DEBUG: Tipe data tanggalBimbingan: ${data['tanggalBimbingan'].runtimeType}');
     // fungsi frommap untuk deserialisasi data dari firestore
     return AjuanBimbinganModel(
       ajuanUid: data['ajuanUid'] ?? '',

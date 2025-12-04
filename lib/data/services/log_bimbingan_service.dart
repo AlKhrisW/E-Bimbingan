@@ -42,7 +42,6 @@ class LogBimbinganService {
   Stream<List<LogBimbinganModel>> getLogBimbinganByMahasiswaUid(String mahasiswaUid) {
     return _logBimbinganCollection
         .where('mahasiswaUid', isEqualTo: mahasiswaUid)
-        .orderBy('tanggalSesi', descending: true)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
