@@ -6,7 +6,7 @@ import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_tolak_dialog.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_ajuan_bimbingan_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_bimbingan_viewmodel.dart';
 
 class DosenAjuanDetail extends StatelessWidget {
   final AjuanWithMahasiswa ajuan; 

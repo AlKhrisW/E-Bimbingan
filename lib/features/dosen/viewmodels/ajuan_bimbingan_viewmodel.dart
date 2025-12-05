@@ -1,9 +1,10 @@
+// lib/viewmodels/dosen_ajuan_bimbingan_viewmodel.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
 
-// service
+// services
 import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
@@ -14,17 +15,17 @@ import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 
 // =================================================================
-// MODEL HELPER
+// MODEL HELPER (Untuk Tampilan UI)
 // =================================================================
 class AjuanWithMahasiswa {
   final String ajuanUid;
   final String mahasiswaUid;
 
-  // Mahasiswa
+  // Data Mahasiswa
   final String namaMahasiswa;
   final String placement;
-
-  // Ajuan
+  
+  // Data Ajuan
   final String judulTopik;
   final String metodeBimbingan;
   final DateTime tanggalBimbingan;
@@ -53,13 +54,15 @@ class DosenAjuanBimbinganViewModel extends ChangeNotifier {
 
   late final String dosenUid;
 
+  StreamSubscription<List<AjuanBimbinganModel>>? _subscription;
+
   DosenAjuanBimbinganViewModel() {
     dosenUid = AuthUtils.currentUid ?? '';
-    if (dosenUid.isEmpty) {
+    if (dosenUid.isNotEmpty) {
+      _loadAjuanProses();
+    } else {
       _error = 'User belum login';
       _isLoading = false;
-    } else {
-      _loadAjuan();
     }
   }
 
@@ -67,17 +70,8 @@ class DosenAjuanBimbinganViewModel extends ChangeNotifier {
   // STATE
   // =================================================================
 
-  List<AjuanWithMahasiswa> _ajuanWithMahasiswa = [];
-  List<AjuanWithMahasiswa> get ajuanWithMahasiswa => _ajuanWithMahasiswa;
-
-  List<AjuanWithMahasiswa> get proses =>
-      _ajuanWithMahasiswa.where((a) => a.status == AjuanStatus.proses).toList();
-
-  List<AjuanWithMahasiswa> get disetujui =>
-      _ajuanWithMahasiswa.where((a) => a.status == AjuanStatus.disetujui).toList();
-
-  List<AjuanWithMahasiswa> get ditolak =>
-      _ajuanWithMahasiswa.where((a) => a.status == AjuanStatus.ditolak).toList();
+  List<AjuanWithMahasiswa> _daftarAjuan = [];
+  List<AjuanWithMahasiswa> get daftarAjuan => _daftarAjuan;
 
   bool _isLoading = true;
   bool get isLoading => _isLoading;
@@ -85,12 +79,10 @@ class DosenAjuanBimbinganViewModel extends ChangeNotifier {
   String? _error;
   String? get error => _error;
 
-  StreamSubscription<List<AjuanBimbinganModel>>? _subscription;
-
   // =================================================================
-  // LOAD DATA (REALTIME + MAPPING KE UI MODEL)
+  // LOAD DATA (status: proses)
   // =================================================================
-  void _loadAjuan() {
+  void _loadAjuanProses() {
     _subscription?.cancel();
     _isLoading = true;
     notifyListeners();
@@ -99,27 +91,29 @@ class DosenAjuanBimbinganViewModel extends ChangeNotifier {
       (List<AjuanBimbinganModel> data) async {
         try {
           if (data.isEmpty) {
-            _ajuanWithMahasiswa = [];
+            _daftarAjuan = [];
             _isLoading = false;
             _error = null;
             notifyListeners();
             return;
           }
 
-          // 1. Ambil UID mahasiswa unik
+          // --- LOGIKA MAPPING USER (Optimal) ---
+          
+          // 1. Kumpulkan semua UID Mahasiswa unik
           final mahasiswaUids = data.map((e) => e.mahasiswaUid).toSet();
 
-          // 2. Fetch semua mahasiswa secara paralel
+          // 2. Fetch data user secara paralel
           final List<UserModel> fetchedUsers = await Future.wait(
             mahasiswaUids.map((uid) => _userService.fetchUserByUid(uid)),
           );
 
-          // 3. Buat map UID -> UserModel
+          // 3. Buat Dictionary/Map biar pencarian cepat
           final Map<String, UserModel> mahasiswaMap = {
             for (var user in fetchedUsers) user.uid: user
           };
 
-          // 4. Mapping ke UI Model
+          // 4. Gabungkan Data Ajuan + Data Mahasiswa
           final List<AjuanWithMahasiswa> combinedData = [];
 
           for (var ajuan in data) {
@@ -141,23 +135,22 @@ class DosenAjuanBimbinganViewModel extends ChangeNotifier {
             );
           }
 
-          // 5. Sorting terbaru di atas
-          combinedData.sort(
-            (a, b) => b.waktuDiajukan.compareTo(a.waktuDiajukan),
-          );
+          // 5. Sorting (Terbaru di atas)
+          combinedData.sort((a, b) => b.waktuDiajukan.compareTo(a.waktuDiajukan));
 
-          _ajuanWithMahasiswa = combinedData;
+          _daftarAjuan = combinedData;
           _isLoading = false;
           _error = null;
           notifyListeners();
+
         } catch (e) {
-          _error = 'Gagal memuat ajuan: $e';
+          _error = 'Gagal memproses data ajuan: $e';
           _isLoading = false;
           notifyListeners();
         }
       },
       onError: (e) {
-        _error = 'Gagal memuat ajuan: $e';
+        _error = 'Gagal memuat stream ajuan: $e';
         _isLoading = false;
         notifyListeners();
       },
@@ -165,40 +158,39 @@ class DosenAjuanBimbinganViewModel extends ChangeNotifier {
   }
 
   // =================================================================
-  // AKSI DOSEN
+  // ACTION: SETUJUI
   // =================================================================
   Future<void> setujui(String ajuanUid) async {
     try {
-      // 1. Cari data ajuan yang sedang diproses untuk mendapatkan MahasiswaUid
-      // Menggunakan orElse untuk keamanan jika data tidak ditemukan (race condition)
-      final ajuanTarget = _ajuanWithMahasiswa.firstWhere(
+      // Cari detail ajuan dari list lokal untuk mendapatkan mahasiswaUid
+      final ajuanTarget = _daftarAjuan.firstWhere(
         (element) => element.ajuanUid == ajuanUid,
-        orElse: () => throw Exception("Data ajuan tidak ditemukan di list lokal"),
+        orElse: () => throw Exception("Data tidak ditemukan"),
       );
 
-      // 2. Generate UID Log Bimbingan di ViewModel
+      // 1. Generate ID Log baru
       final String newLogUid = FirebaseFirestore.instance.collection('log_bimbingan').doc().id;
 
-      // 3. Buat Object Log Bimbingan Baru
+      // 2. Buat objek Log Bimbingan (Draft awal)
       final newLog = LogBimbinganModel(
         logBimbinganUid: newLogUid,
         ajuanUid: ajuanUid,
         mahasiswaUid: ajuanTarget.mahasiswaUid,
         dosenUid: dosenUid,
         ringkasanHasil: '',
-        status: LogBimbinganStatus.pending,
+        status: LogBimbinganStatus.draft,
         waktuPengajuan: DateTime.now(),
         catatanDosen: null,
         lampiranUrl: null,
       );
 
-      // 4. Update status Ajuan menjadi disetujui
+      // 3. Update Status Ajuan -> Disetujui
       await _ajuanService.updateAjuanStatus(
         ajuanUid: ajuanUid,
         status: AjuanStatus.disetujui,
       );
 
-      // 5. Simpan Log Bimbingan Baru
+      // 4. Simpan Log Bimbingan
       await _logService.saveLogBimbingan(newLog);
 
     } catch (e) {
@@ -207,30 +199,34 @@ class DosenAjuanBimbinganViewModel extends ChangeNotifier {
     }
   }
 
+  // =================================================================
+  // ACTION: TOLAK
+  // =================================================================
   Future<void> tolak(String ajuanUid, String keterangan) async {
     if (keterangan.trim().isEmpty) {
-      _error = 'Keterangan penolakan harus diisi';
+      _error = 'Keterangan penolakan wajib diisi';
       notifyListeners();
       return;
     }
 
     try {
+      // Update Status Ajuan -> Ditolak
       await _ajuanService.updateAjuanStatus(
         ajuanUid: ajuanUid,
         status: AjuanStatus.ditolak,
         keterangan: keterangan.trim(),
       );
+      
     } catch (e) {
       _error = 'Gagal menolak ajuan: $e';
       notifyListeners();
-      rethrow;
     }
   }
 
   // =================================================================
-  // REFRESH & CLEANUP
+  // UTILS
   // =================================================================
-  void refresh() => _loadAjuan();
+  void refresh() => _loadAjuanProses();
 
   @override
   void dispose() {

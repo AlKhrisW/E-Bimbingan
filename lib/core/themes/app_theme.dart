@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static const Color primaryColor = Color(0xFF3461FF); // Warna Biru Utama (dari tombol Figma)
-  static const Color secondaryColor = Color(0xFF42A5F5); 
+  static const Color secondaryColor = Color(0xFF42A5F5);
+  static const Color cardColor = Color(0xFFE3F2FD); // Warna untuk kartu dan elemen latar belakang ringan
   static const Color errorColor = Color(0xFFFF0000); // Merah untuk error/lupa password
   static const Color backgroundColor = Colors.white; // Warna latar belakang aplikasi
 

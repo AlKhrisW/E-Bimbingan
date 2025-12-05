@@ -1,11 +1,10 @@
-// features/dosen/views/dosen_progres_page.dart
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_appbar.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_ajuan_bimbingan_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_ajuan_card.dart';
-import 'package:ebimbingan/features/dosen/views/ajuan/dosen_ajuan_detail_screen.dart';
+import 'package:ebimbingan/features/dosen/views/ajuan/detail_screen.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_bimbingan_viewmodel.dart';
 
 class DosenAjuan extends StatefulWidget {
   const DosenAjuan({super.key});
@@ -19,7 +18,7 @@ class _DosenAjuanState extends State<DosenAjuan> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DosenAjuanBimbinganViewModel>().proses;
+       context.read<DosenAjuanBimbinganViewModel>().refresh();
     });
   }
 
@@ -33,16 +32,16 @@ class _DosenAjuanState extends State<DosenAjuan> {
             padding: const EdgeInsets.all(16),
             child: vm.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : vm.proses.isEmpty
+                : vm.daftarAjuan.isEmpty
                     ? Center(
                         child: Column(
-                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text('Tidak ada Ajuan Bimbingan masuk'),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: vm.refresh,
-                              child: const Text('Refresh'),
+                            Icon(Icons.history_toggle_off, size: 60, color: Colors.grey[300]),
+                            const SizedBox(height: 12),
+                            const Text(
+                              "Belum ada ajuan bimbingan masuk",
+                              style: TextStyle(fontSize: 16, color: Colors.grey),
                             ),
                           ],
                         ),
@@ -50,10 +49,10 @@ class _DosenAjuanState extends State<DosenAjuan> {
                     : RefreshIndicator(
                         onRefresh: () async => vm.refresh(),
                         child: ListView.separated(
-                          itemCount: vm.proses.length,
+                          itemCount: vm.daftarAjuan.length, 
                           separatorBuilder: (_, __) => const SizedBox(height: 12),
                           itemBuilder: (context, index) {
-                            final m = vm.proses[index];
+                            final m = vm.daftarAjuan[index]; 
 
                             return AjuanCard(
                               name: m.namaMahasiswa,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class LogbookErrorState extends StatelessWidget {
+class DosenErrorState extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
 
-  const LogbookErrorState({
+  const DosenErrorState({
     super.key,
     required this.message,
     required this.onRetry,
