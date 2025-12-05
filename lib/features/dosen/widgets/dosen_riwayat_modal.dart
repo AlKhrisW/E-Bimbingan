@@ -3,7 +3,7 @@ import 'package:ebimbingan/core/utils/navigation/app_navigator.dart';
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/widgets/custom_modal_menu.dart';
 import '../views/log_bimbingan/dosen_riwayat_logbook_screen.dart';
-import '../views/ajuanRiwayat/mahasiswa_list_screen.dart';
+import '../views/ajuanRiwayat/riwayat_mahasiswa_list_screen.dart';
 import '../views/log_harian/mahasiswa_list_screen.dart';
 
 class RiwayatModal {
@@ -60,7 +60,7 @@ class _RiwayatModalContent extends StatelessWidget {
                 MenuItem(
                   title: "Riwayat Ajuan",
                   iconPath: 'assets/images/icon/riwayat-ajuan.png',
-                  destination: DosenRiwayatAjuan(),
+                  destination: DosenListMahasiswaAjuan(),
                 ),
                 SizedBox(height: 12),
                 MenuItem(

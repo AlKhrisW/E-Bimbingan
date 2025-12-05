@@ -1,24 +1,18 @@
-// features/dosen/widgets/logbook_header.dart
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 
-class LogbookHeader extends StatelessWidget {
+class RiwayatHeader extends StatelessWidget {
   final String name;
-  final String nim;
+  final String placement;
 
-  const LogbookHeader({
+  const RiwayatHeader({
     super.key,
     required this.name,
-    required this.nim,
+    required this.placement,
   });
 
   String get _initials {
-    return name
-        .trim()
-        .split(RegExp(r'\s+'))
-        .take(2)
-        .map((e) => e[0].toUpperCase())
-        .join();
+    return name.trim().split(RegExp(r'\s+')).take(2).map((e) => e[0].toUpperCase()).join();
   }
 
   @override
@@ -27,9 +21,8 @@ class LogbookHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Material(
         color: AppTheme.cardColor,
-        elevation: 5,
+        elevation: 3,
         borderRadius: BorderRadius.circular(16),
-
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -51,7 +44,7 @@ class LogbookHeader extends StatelessWidget {
 
               const SizedBox(width: 16),
 
-              // Box putih nama & nim
+              // Box putih nama & placement
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(14),
@@ -83,7 +76,7 @@ class LogbookHeader extends StatelessWidget {
                       const SizedBox(height: 6),
 
                       Text(
-                        nim,
+                        placement,
                         style: TextStyle(
                           fontSize: 15,
                           color: Colors.grey[700],

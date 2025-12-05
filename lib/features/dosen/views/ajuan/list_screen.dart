@@ -35,13 +35,13 @@ class _DosenAjuanState extends State<DosenAjuan> {
                 : vm.daftarAjuan.isEmpty
                     ? Center(
                         child: Column(
-                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text('Tidak ada Ajuan Bimbingan masuk'),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: vm.refresh,
-                              child: const Text('Refresh'),
+                            Icon(Icons.history_toggle_off, size: 60, color: Colors.grey[300]),
+                            const SizedBox(height: 12),
+                            const Text(
+                              "Belum ada ajuan bimbingan masuk",
+                              style: TextStyle(fontSize: 16, color: Colors.grey),
                             ),
                           ],
                         ),

@@ -33,7 +33,7 @@ class MahasiswaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFFCAD6FF),
+      color: AppTheme.cardColor,
       borderRadius: BorderRadius.circular(16),
       elevation: 5,
       child: InkWell(
