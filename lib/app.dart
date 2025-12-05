@@ -25,7 +25,7 @@ import 'features/admin/viewmodels/mapping/detail_mapping_vm.dart';      // IMPOR
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_profil_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_ajuan_bimbingan_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_bimbingan_viewmodel.dart';
 
 // Mahasiswa ViewModels
 import 'features/mahasiswa/viewmodels/mahasiswa_viewmodel.dart';
