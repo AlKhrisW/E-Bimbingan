@@ -46,10 +46,22 @@ class LogbookHarianService {
   // ----------------------------------------------------------------------
 
   /// mengambil semua logbook harian milik mahasiswa tertentu (untuk riwayat & progress)
-  Stream<List<LogbookHarianModel>> getLogbook(String mahasiswaUid, String dosenUid) {
+    Stream<List<LogbookHarianModel>> getLogbookByMahasiswaUid(String mahasiswaUid) {
     return _logbookHarianCollection
         .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+        .orderBy('tanggal', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return LogbookHarianModel.fromMap(doc.data()! as Map<String, dynamic>);
+      }).toList();
+    });
+  }
+  
+  Stream<List<LogbookHarianModel>> getLogbook(String mahasiswaUid, String dosenUid) {
+    return _logbookHarianCollection
         .where('dosenUid', isEqualTo: dosenUid)
+        .where('mahasiswaUid', isEqualTo: mahasiswaUid)
         .orderBy('tanggal', descending: true)
         .snapshots()
         .map((snapshot) {
