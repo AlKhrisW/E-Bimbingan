@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ebimbingan/data/models/logbook_harian_model.dart';
-import 'package:ebimbingan/features/dosen/views/log_harian/dosen_detail_progres_screen.dart';
+import 'package:ebimbingan/features/dosen/views/log_harian/detail_screen.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 
 class LogbookItem extends StatelessWidget {

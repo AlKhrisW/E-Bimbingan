@@ -45,6 +45,7 @@ class AjuanBimbinganService {
     // dosen melihat ajuan yang statusnya masih 'proses' atau yang sudah disetujui/ditolak
     return _ajuanCollection
         .where('dosenUid', isEqualTo: dosenUid)
+        .where('status', whereIn: ['proses']) // hanya ajuan yang masih proses
         .orderBy('waktuDiajukan', descending: true)
         .snapshots()
         .map((snapshot) {
@@ -57,6 +58,20 @@ class AjuanBimbinganService {
   /// mengambil semua ajuan bimbingan milik mahasiswa tertentu
   Stream<List<AjuanBimbinganModel>> getAjuanByMahasiswaUid(String mahasiswaUid) {
     return _ajuanCollection
+        .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+        .orderBy('waktuDiajukan', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return AjuanBimbinganModel.fromMap(doc.data()! as Map<String, dynamic>);
+      }).toList();
+    });
+  }
+
+  /// mengambil riwayat ajuan bimbingan untuk dosen dan mahasiswa tertentu
+  Stream<List<AjuanBimbinganModel>> getRiwayatSpesifik(String dosenUid, String mahasiswaUid) {
+    return _ajuanCollection
+        .where('dosenUid', isEqualTo: dosenUid)
         .where('mahasiswaUid', isEqualTo: mahasiswaUid)
         .orderBy('waktuDiajukan', descending: true)
         .snapshots()

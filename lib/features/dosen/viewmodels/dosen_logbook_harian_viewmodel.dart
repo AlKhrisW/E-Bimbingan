@@ -1,19 +1,24 @@
-// lib/viewmodels/dosen_logbook_harian_viewmodel.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ebimbingan/core/utils/auth_utils.dart';
+
+// models
 import 'package:ebimbingan/data/models/logbook_harian_model.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
+
+// services
 import 'package:ebimbingan/data/services/logbook_harian_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
 
 class DosenLogbookHarianViewModel extends ChangeNotifier {
-  final LogbookHarianService logbookHarianService;
-  final UserService userService;
+  final LogbookHarianService _logbookHarianService = LogbookHarianService();
+  final UserService _userService = UserService();
+  
+  late final String currentDosenUid;
 
-  DosenLogbookHarianViewModel({
-    required this.logbookHarianService,
-    required this.userService,
-  });
+  DosenLogbookHarianViewModel() {
+    currentDosenUid = AuthUtils.currentUid ?? '';
+  }
 
   // Data
   List<LogbookHarianModel> _logbooks = [];
@@ -41,13 +46,13 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
     await _subscription?.cancel();
 
     try {
-      // 1. Ambil detail mahasiswa
-      final mahasiswa = await userService.fetchUserByUid(mahasiswaUid);
+      // 1. Ambil detail mahasiswa menggunakan internal service
+      final mahasiswa = await _userService.fetchUserByUid(mahasiswaUid);
       _selectedMahasiswa = mahasiswa;
 
-      // 2. Dengarkan semua logbook harian milik mahasiswa ini (REAL-TIME)
-      _subscription = logbookHarianService
-          .getLogbookByMahasiswaUid(mahasiswaUid)
+      // 2. Dengarkan logbook harian (REAL-TIME)
+      _subscription = _logbookHarianService
+          .getLogbook(mahasiswaUid, currentDosenUid)
           .listen((data) {
         _logbooks = data;
         _isLoading = false;
@@ -72,7 +77,7 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
     super.dispose();
   }
 
-  /// Refresh manual (bisa dipakai untuk pull-to-refresh)
+  /// Refresh manual
   void refresh() {
     if (_selectedMahasiswa != null) {
       pilihMahasiswa(_selectedMahasiswa!.uid);

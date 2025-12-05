@@ -4,15 +4,16 @@ import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
+import 'riwayat_list_screen.dart';
 
-class DosenRiwayatAjuan extends StatefulWidget {
-  const DosenRiwayatAjuan({super.key});
+class DosenListMahasiswaAjuan extends StatefulWidget {
+  const DosenListMahasiswaAjuan({super.key});
 
   @override
-  State<DosenRiwayatAjuan> createState() => _DosenRiwayatAjuanState();
+  State<DosenListMahasiswaAjuan> createState() => _DosenListMahasiswaAjuanState();
 }
 
-class _DosenRiwayatAjuanState extends State<DosenRiwayatAjuan> {
+class _DosenListMahasiswaAjuanState extends State<DosenListMahasiswaAjuan> {
   @override
   void initState() {
     super.initState();
@@ -59,10 +60,14 @@ class _DosenRiwayatAjuanState extends State<DosenRiwayatAjuan> {
                               programStudi: m.programStudi,
                               mahasiswaUid: m.uid,
                               onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text("Buka detail: ${m.name}")),
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DosenRiwayatAjuan(
+                                      mahasiswaUid: m.uid,
+                                    ),
+                                  ),
                                 );
-                                // Navigator.push(...) ke halaman detail
                               },
                             );
                           },

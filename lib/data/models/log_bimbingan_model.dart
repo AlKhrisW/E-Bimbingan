@@ -2,7 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 // status log bimbingan mingguan yang diajukan oleh mahasiswa
 enum LogBimbinganStatus {
-  pending, // diajukan mahasiswa, menunggu persetujuan dosen
+  draft,    // menunggu mahasiswa melengkapi form sebelum diajukan
+  pending,  // diajukan mahasiswa, menunggu persetujuan dosen
   approved, // dosen menyetujui, logbook harian minggu terkait otomatis verified
   rejected, // dosen menolak, mahasiswa harus revisi
 }
@@ -47,7 +48,7 @@ class LogBimbinganModel {
       // konversi string ke enum
       status: LogBimbinganStatus.values.firstWhere(
         (e) => e.toString().split('.').last == data['status'],
-        orElse: () => LogBimbinganStatus.pending,
+        orElse: () => LogBimbinganStatus.draft,
       ),
       lampiranUrl: data['lampiranUrl'],
       catatanDosen: data['catatanDosen'],

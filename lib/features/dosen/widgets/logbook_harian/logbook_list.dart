@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_error_state.dart';
+import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart';
 import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_item.dart';
 
 class LogbookList extends StatelessWidget {
@@ -27,7 +27,7 @@ class LogbookList extends StatelessWidget {
         }
 
         if (vm.errorMessage != null) {
-          return LogbookErrorState(
+          return DosenErrorState(
             message: vm.errorMessage!,
             onRetry: () => vm.pilihMahasiswa(mahasiswaUid),
           );
