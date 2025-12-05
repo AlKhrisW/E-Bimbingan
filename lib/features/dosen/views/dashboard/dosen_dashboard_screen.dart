@@ -1,7 +1,7 @@
 // lib/features/dosen/views/dosen_dashboard.dart
 
 import 'package:flutter/material.dart';
-import '../../../../core/widgets/dashboard_page_appBar.dart';
+import '../../../../core/widgets/appbar/dashboard_page_appBar.dart';
 import '../../../../data/models/user_model.dart';
 import 'dosen_notifikasi_screen.dart';
 

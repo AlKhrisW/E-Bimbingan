@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'logout_bottom_sheet.dart';
-import '../themes/app_theme.dart';
+import '../logout_bottom_sheet.dart';
+import '../../themes/app_theme.dart';
 
 class ProfilePageAppbar extends StatelessWidget implements PreferredSizeWidget {
   final Future<void> Function(BuildContext context) onLogout;
