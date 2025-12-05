@@ -5,11 +5,10 @@ import 'package:provider/provider.dart';
 
 import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/firebase_auth_service.dart';
-import 'package:ebimbingan/data/services/logbook_harian_service.dart';
 
 import 'core/themes/app_theme.dart';
-import 'core/utils/navigation/app_navigator.dart';
 import 'features/auth/views/splash_screen.dart';
+import 'core/utils/navigation/app_navigator.dart';
 
 // Auth
 import 'features/auth/viewmodels/auth_viewmodel.dart';
@@ -47,7 +46,7 @@ class App extends StatelessWidget {
         // Provider Khusus Dosen
         ChangeNotifierProvider(create: (_) => DosenProfilViewModel(authService: FirebaseAuthService(),userService: UserService())),
         ChangeNotifierProvider(create: (_) => DosenMahasiswaViewModel(authService: FirebaseAuthService(),userService: UserService())),
-        ChangeNotifierProvider(create: (_) => DosenLogbookHarianViewModel(logbookHarianService: LogbookHarianService(), userService: UserService())),
+        ChangeNotifierProvider(create: (_) => DosenLogbookHarianViewModel()),
         ChangeNotifierProvider(create: (_) => DosenAjuanBimbinganViewModel()),
 
         // Admin

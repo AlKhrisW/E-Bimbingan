@@ -1,43 +1,44 @@
 // features/dosen/views/dosen_progres_page.dart
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
-import 'package:ebimbingan/features/dosen/views/log_harian/dosen_progres_user_screen.dart';
+import 'package:ebimbingan/core/widgets/appbar/custom_appbar.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_ajuan_bimbingan_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/widgets/dosen_ajuan_card.dart';
+import 'package:ebimbingan/features/dosen/views/ajuan/detail_screen.dart';
 
-class DosenProgres extends StatefulWidget {
-  const DosenProgres({super.key});
+class DosenAjuan extends StatefulWidget {
+  const DosenAjuan({super.key});
 
   @override
-  State<DosenProgres> createState() => _DosenProgresState();
+  State<DosenAjuan> createState() => _DosenAjuanState();
 }
 
-class _DosenProgresState extends State<DosenProgres> {
+class _DosenAjuanState extends State<DosenAjuan> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DosenMahasiswaViewModel>().loadMahasiswaBimbingan();
+      context.read<DosenAjuanBimbinganViewModel>().proses;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DosenMahasiswaViewModel>(
+    return Consumer<DosenAjuanBimbinganViewModel>(
       builder: (context, vm, child) {
         return Scaffold(
-          appBar: CustomUniversalAppbar(judul: "Logbook Harian"),
+          appBar: CustomAppbar(judul: "Ajuan Bimbingan"),
           body: Padding(
             padding: const EdgeInsets.all(16),
             child: vm.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : vm.mahasiswaList.isEmpty
+                : vm.proses.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text('Tidak ada mahasiswa yang terdaftar'),
+                            const Text('Tidak ada Ajuan Bimbingan masuk'),
                             const SizedBox(height: 16),
                             ElevatedButton(
                               onPressed: vm.refresh,
@@ -47,25 +48,23 @@ class _DosenProgresState extends State<DosenProgres> {
                         ),
                       )
                     : RefreshIndicator(
-                        onRefresh: vm.refresh,
+                        onRefresh: () async => vm.refresh(),
                         child: ListView.separated(
-                          itemCount: vm.mahasiswaList.length,
+                          itemCount: vm.proses.length,
                           separatorBuilder: (_, __) => const SizedBox(height: 12),
                           itemBuilder: (context, index) {
-                            final m = vm.mahasiswaList[index];
+                            final m = vm.proses[index];
 
-                            return MahasiswaCard(
-                              name: m.name,
-                              nim: m.nim ?? '-',
-                              programStudi: m.programStudi,
-                              mahasiswaUid: m.uid,
+                            return AjuanCard(
+                              name: m.namaMahasiswa,
+                              judulTopik: m.judulTopik,
+                              tanggalBimbingan: DateFormat('dd MMMM yyyy').format(m.tanggalBimbingan),
+                              waktuBimbingan: m.waktuBimbingan,
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => DosenLogbookHarian(
-                                      mahasiswaUid: m.uid,
-                                    ),
+                                    builder: (_) => DosenAjuanDetail(ajuan: m),
                                   ),
                                 );
                               },

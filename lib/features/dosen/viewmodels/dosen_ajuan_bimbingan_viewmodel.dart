@@ -186,7 +186,7 @@ class DosenAjuanBimbinganViewModel extends ChangeNotifier {
         mahasiswaUid: ajuanTarget.mahasiswaUid,
         dosenUid: dosenUid,
         ringkasanHasil: '',
-        status: LogBimbinganStatus.pending,
+        status: LogBimbinganStatus.draft,
         waktuPengajuan: DateTime.now(),
         catatanDosen: null,
         lampiranUrl: null,
