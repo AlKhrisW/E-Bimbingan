@@ -3,7 +3,7 @@ import 'package:ebimbingan/core/utils/navigation/app_navigator.dart';
 import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
 import 'package:ebimbingan/core/widgets/custom_modal_menu.dart';
-import '../views/ajuan/list_screen.dart';
+import '../views/ajuan/validasi/list_screen.dart';
 import '../views/log_harian/mahasiswa_list_screen.dart';
 
 class BimbinganModal {

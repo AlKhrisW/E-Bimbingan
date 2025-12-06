@@ -1,0 +1,75 @@
+import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:ebimbingan/features/dosen/widgets/dosen_ajuan_card.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_bimbingan_viewmodel.dart';
+import 'detail_screen.dart';
+
+class DosenAjuan extends StatefulWidget {
+  const DosenAjuan({super.key});
+
+  @override
+  State<DosenAjuan> createState() => _DosenAjuanState();
+}
+
+class _DosenAjuanState extends State<DosenAjuan> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+       context.read<DosenAjuanBimbinganViewModel>().refresh();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<DosenAjuanBimbinganViewModel>(
+      builder: (context, vm, child) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: vm.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : vm.daftarAjuan.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.history_toggle_off, size: 60, color: Colors.grey[300]),
+                          const SizedBox(height: 12),
+                          const Text(
+                            "Belum ada ajuan bimbingan masuk",
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () async => vm.refresh(),
+                      child: ListView.separated(
+                        itemCount: vm.daftarAjuan.length, 
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final m = vm.daftarAjuan[index]; 
+
+                          return AjuanCard(
+                            name: m.namaMahasiswa,
+                            judulTopik: m.judulTopik,
+                            tanggalBimbingan: DateFormat('dd MMMM yyyy').format(m.tanggalBimbingan),
+                            waktuBimbingan: m.waktuBimbingan,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => DosenAjuanDetail(ajuan: m),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+        );
+      },
+    );
+  }
+}
