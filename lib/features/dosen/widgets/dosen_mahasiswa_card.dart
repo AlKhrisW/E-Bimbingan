@@ -4,16 +4,14 @@ import 'package:ebimbingan/core/themes/app_theme.dart';
 
 class MahasiswaCard extends StatelessWidget {
   final String name;
-  final String nim;
-  final String? programStudi;
+  final String placement;
   final String mahasiswaUid;
   final VoidCallback onTap;
 
   const MahasiswaCard({
     super.key,
     required this.name,
-    required this.nim,
-    this.programStudi,
+    required this.placement,
     required this.mahasiswaUid,
     required this.onTap,
   });
@@ -96,7 +94,7 @@ class MahasiswaCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            "${nim} / ${programStudi ?? '-'}",
+                            placement,
                             style: TextStyle(
                               fontSize: 15,
                               color: Colors.grey[700],

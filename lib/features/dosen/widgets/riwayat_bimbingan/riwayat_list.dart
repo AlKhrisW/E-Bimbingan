@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/widgets/riwayat_ajuan/riwayat_item.dart';
-import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart'; 
+import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/riwayat_item.dart';
+import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart';
 
 class RiwayatList extends StatelessWidget {
   final String mahasiswaUid;
@@ -14,7 +14,7 @@ class RiwayatList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DosenRiwayatAjuanViewModel>(
+    return Consumer<DosenRiwayatBimbinganViewModel>(
       builder: (_, vm, __) {
         if (vm.isLoading) {
           return const Center(child: CircularProgressIndicator());
@@ -52,7 +52,7 @@ class RiwayatList extends StatelessWidget {
             itemCount: vm.riwayatList.length,
             itemBuilder: (_, index) {
               final ajuan = vm.riwayatList[index];
-              return RiwayatItem(ajuan: ajuan);
+              return RiwayatItem(data: ajuan);
             },
           ),
         );

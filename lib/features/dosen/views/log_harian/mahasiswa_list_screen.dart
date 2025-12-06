@@ -1,7 +1,7 @@
 // features/dosen/views/dosen_progres_page.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
+import 'package:ebimbingan/core/widgets/appbar/custom_appbar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
 import 'package:ebimbingan/features/dosen/views/log_harian/log_list_screen.dart';
@@ -27,7 +27,7 @@ class _DosenProgresState extends State<DosenProgres> {
     return Consumer<DosenMahasiswaViewModel>(
       builder: (context, vm, child) {
         return Scaffold(
-          appBar: CustomUniversalAppbar(judul: "Logbook Harian"),
+          appBar: CustomAppbar(judul: "Logbook Harian"),
           body: Padding(
             padding: const EdgeInsets.all(16),
             child: vm.isLoading
@@ -56,8 +56,7 @@ class _DosenProgresState extends State<DosenProgres> {
 
                             return MahasiswaCard(
                               name: m.name,
-                              nim: m.nim ?? '-',
-                              programStudi: m.programStudi,
+                              placement: m.placement ?? '-',
                               mahasiswaUid: m.uid,
                               onTap: () {
                                 Navigator.push(

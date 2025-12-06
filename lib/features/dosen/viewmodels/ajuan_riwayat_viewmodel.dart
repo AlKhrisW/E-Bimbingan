@@ -20,12 +20,14 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
     currentDosenUid = AuthUtils.currentUid ?? '';
   }
 
-  // --- Data & State ---
+  // =================================================================
+  // STATE
+  // =================================================================
 
-  // List utama dari database (Disetujui & Ditolak)
+  // List utama dari database
   List<AjuanBimbinganModel> _riwayatListSource = [];
 
-  // Filter aktif untuk bubble (null = Tampilkan Semua)
+  // Filter aktif (null = Semua, Disetujui, Ditolak)
   AjuanStatus? _activeFilter;
   AjuanStatus? get activeFilter => _activeFilter;
 
@@ -39,11 +41,11 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  StreamSubscription? _subscription;
+  // =================================================================
+  // GETTERS (UI LOGIC)
+  // =================================================================
 
-  // --- Getters ---
-
-  // Mengambil list yang sudah difilter sesuai bubble yang dipilih user
+  /// Mengambil list yang sudah difilter sesuai bubble pilihan user
   List<AjuanBimbinganModel> get riwayatList {
     if (_activeFilter == null) {
       return _riwayatListSource;
@@ -53,9 +55,10 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
         .toList();
   }
 
-  // --- Methods ---
+  // =================================================================
+  // ACTIONS & METHODS
+  // =================================================================
 
-  /// Mengubah status filter saat bubble ditekan
   void setFilter(AjuanStatus? status) {
     _activeFilter = status;
     notifyListeners();
@@ -67,54 +70,44 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    await _subscription?.cancel();
-
     try {
       // 1. Ambil detail mahasiswa untuk Header UI
       final mahasiswa = await _userService.fetchUserByUid(mahasiswaUid);
       _selectedMahasiswa = mahasiswa;
 
-      // 2. Subscribe ke stream riwayat spesifik
-      _subscription = _ajuanService
-          .getRiwayatSpesifik(currentDosenUid, mahasiswaUid)
-          .listen((data) {
-            
-        // 3. Filter data dari database: Hanya ambil Disetujui atau Ditolak
-        // Status 'Proses' tidak ditampilkan di halaman riwayat
-        final filteredData = data.where((ajuan) => 
-            ajuan.status == AjuanStatus.disetujui || 
-            ajuan.status == AjuanStatus.ditolak
-        ).toList();
+      // 2. Ambil Riwayat Spesifik (Future)
+      final List<AjuanBimbinganModel> data = await _ajuanService.getRiwayatSpesifik(
+        currentDosenUid, 
+        mahasiswaUid,
+      );
 
-        // 4. Sorting: Waktu terbaru di atas
-        filteredData.sort((a, b) => b.waktuDiajukan.compareTo(a.waktuDiajukan));
+      // 3. Filter: Hanya ambil yang statusnya Disetujui atau Ditolak
+      final filteredData = data.where((ajuan) => 
+          ajuan.status == AjuanStatus.disetujui || 
+          ajuan.status == AjuanStatus.ditolak
+      ).toList();
 
-        _riwayatListSource = filteredData;
-        _isLoading = false;
-        notifyListeners();
-      }, onError: (e) {
-        _errorMessage = "Gagal memuat riwayat: $e";
-        _riwayatListSource = [];
-        _isLoading = false;
-        notifyListeners();
-      });
+      // 4. Sorting: Waktu terbaru di atas
+      filteredData.sort((a, b) => b.waktuDiajukan.compareTo(a.waktuDiajukan));
+
+      _riwayatListSource = filteredData;
+
     } catch (e) {
-      _errorMessage = "Gagal memuat data mahasiswa: $e";
+      _errorMessage = "Gagal memuat riwayat: $e";
+      _riwayatListSource = [];
+    } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  /// Reload data manual
-  void refresh() {
-    if (_selectedMahasiswa != null) {
-      pilihMahasiswa(_selectedMahasiswa!.uid);
-    }
-  }
+  // =================================================================
+  // UTILS
+  // =================================================================
 
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
+  Future<void> refresh() async {
+    if (_selectedMahasiswa != null) {
+      await pilihMahasiswa(_selectedMahasiswa!.uid);
+    }
   }
 }

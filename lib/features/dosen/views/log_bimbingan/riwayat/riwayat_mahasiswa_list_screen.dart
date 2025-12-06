@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
 import 'riwayat_list_screen.dart';
 
-class DosenListMahasiswaAjuan extends StatefulWidget {
-  const DosenListMahasiswaAjuan({super.key});
+class DosenListMahasiswaBimbingan extends StatefulWidget {
+  const DosenListMahasiswaBimbingan({super.key});
 
   @override
-  State<DosenListMahasiswaAjuan> createState() => _DosenListMahasiswaAjuanState();
+  State<DosenListMahasiswaBimbingan> createState() => _DosenListMahasiswaBimbinganState();
 }
 
-class _DosenListMahasiswaAjuanState extends State<DosenListMahasiswaAjuan> {
+class _DosenListMahasiswaBimbinganState extends State<DosenListMahasiswaBimbingan> {
   @override
   void initState() {
     super.initState();
@@ -58,7 +58,7 @@ class _DosenListMahasiswaAjuanState extends State<DosenListMahasiswaAjuan> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => DosenRiwayatAjuan(
+                                  builder: (_) => DosenRiwayatBimbingan(
                                     mahasiswaUid: m.uid,
                                   ),
                                 ),

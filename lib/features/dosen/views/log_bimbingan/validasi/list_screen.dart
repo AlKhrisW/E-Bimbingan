@@ -1,44 +1,44 @@
-import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/features/dosen/widgets/dosen_ajuan_card.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/ajuan_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/widgets/dosen_bimbingan_card.dart'; 
+import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_viewmodel.dart';
 import 'detail_screen.dart';
 
-class DosenAjuan extends StatefulWidget {
-  const DosenAjuan({super.key});
+class DosenBimbingan extends StatefulWidget {
+  const DosenBimbingan({super.key});
 
   @override
-  State<DosenAjuan> createState() => _DosenAjuanState();
+  State<DosenBimbingan> createState() => _DosenBimbinganState();
 }
 
-class _DosenAjuanState extends State<DosenAjuan> {
+class _DosenBimbinganState extends State<DosenBimbingan> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-       context.read<DosenAjuanViewModel>().refresh();
+       context.read<DosenBimbinganViewModel>().refresh();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DosenAjuanViewModel>(
+    return Consumer<DosenBimbinganViewModel>(
       builder: (context, vm, child) {
         return Padding(
           padding: const EdgeInsets.all(16),
           child: vm.isLoading
               ? const Center(child: CircularProgressIndicator())
-              : vm.daftarAjuan.isEmpty
+              : vm.daftarLog.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.history_toggle_off, size: 60, color: Colors.grey[300]),
+                          Icon(Icons.assignment_turned_in_outlined, size: 60, color: Colors.grey[300]),
                           const SizedBox(height: 12),
                           const Text(
-                            "Belum ada ajuan bimbingan masuk",
+                            "Belum ada log bimbingan yang perlu diverifikasi",
                             style: TextStyle(fontSize: 16, color: Colors.grey),
+                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
@@ -46,21 +46,19 @@ class _DosenAjuanState extends State<DosenAjuan> {
                   : RefreshIndicator(
                       onRefresh: () async => vm.refresh(),
                       child: ListView.separated(
-                        itemCount: vm.daftarAjuan.length, 
+                        itemCount: vm.daftarLog.length, 
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
-                          final m = vm.daftarAjuan[index]; 
+                          final item = vm.daftarLog[index]; 
 
-                          return AjuanCard(
-                            name: m.mahasiswa.name,
-                            judulTopik: m.ajuan.judulTopik,
-                            tanggalBimbingan: DateFormat('dd MMMM yyyy').format(m.ajuan.tanggalBimbingan),
-                            waktuBimbingan: m.ajuan.waktuBimbingan,
+                          return BimbinganCard(
+                            name: item.mahasiswa.name,
+                            judulTopik: item.ajuan.judulTopik,
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => DosenAjuanDetail(data: m),
+                                  builder: (_) => DosenLogbookDetail(data: item),
                                 ),
                               );
                             },

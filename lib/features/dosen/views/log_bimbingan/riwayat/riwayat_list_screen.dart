@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart'; 
-import 'package:ebimbingan/features/dosen/widgets/riwayat_ajuan/riwayat_list.dart';
-import 'package:ebimbingan/features/dosen/widgets/riwayat_ajuan/riwayat_filter.dart';
-import 'package:ebimbingan/features/dosen/widgets/riwayat_ajuan/riwayat_header.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart'; 
+import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/riwayat_list.dart';
+import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/riwayat_filter.dart';
+import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/riwayat_header.dart';
 
-class DosenRiwayatAjuan extends StatefulWidget {
+class DosenRiwayatBimbingan extends StatefulWidget {
   final String mahasiswaUid;
 
-  const DosenRiwayatAjuan({
+  const DosenRiwayatBimbingan({
     super.key,
     required this.mahasiswaUid,
   });
 
   @override
-  State<DosenRiwayatAjuan> createState() => _DosenRiwayatAjuanState();
+  State<DosenRiwayatBimbingan> createState() => _DosenRiwayatBimbinganState();
 }
 
-class _DosenRiwayatAjuanState extends State<DosenRiwayatAjuan> {
+class _DosenRiwayatBimbinganState extends State<DosenRiwayatBimbingan> {
   @override
   void initState() {
     super.initState();
     // Memanggil fungsi load data spesifik mahasiswa saat halaman dibuka
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context
-          .read<DosenRiwayatAjuanViewModel>()
+          .read<DosenRiwayatBimbinganViewModel>()
           .pilihMahasiswa(widget.mahasiswaUid);
     });
   }
@@ -34,9 +34,9 @@ class _DosenRiwayatAjuanState extends State<DosenRiwayatAjuan> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomUniversalAppbar(
-        judul: "Detail Riwayat Ajuan",
+        judul: "Detail Riwayat Bimbingan",
       ),
-      body: Consumer<DosenRiwayatAjuanViewModel>(
+      body: Consumer<DosenRiwayatBimbinganViewModel>(
         builder: (context, vm, child) {
           final m = vm.selectedMahasiswa;
 
