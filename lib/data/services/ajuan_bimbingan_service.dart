@@ -40,7 +40,7 @@ class AjuanBimbinganService {
     try {
       final snapshot = await _ajuanCollection
           .where('dosenUid', isEqualTo: dosenUid)
-          .where('status', whereIn: ['proses'])
+          .where('status', isEqualTo: 'proses')
           .orderBy('waktuDiajukan', descending: true)
           .get();
 
