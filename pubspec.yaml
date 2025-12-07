@@ -37,6 +37,7 @@ dependencies:
   cloud_firestore: ^6.1.0
   firebase_messaging: ^16.0.4
   flutter_local_notifications: ^18.0.1
+  firebase_storage: ^13.0.4
  
 
   # State Management
@@ -62,6 +63,12 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+
+  # Integration & End-to-End Testing
+  integration_test:
+    sdk: flutter
+  patrol: ^3.20.0
+
 
   # Unit Test Packages
   test: ^1.26.3
