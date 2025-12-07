@@ -1,16 +1,17 @@
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
+import 'package:ebimbingan/data/models/wrapper/helper_ajuan_bimbingan.dart';
+import 'package:ebimbingan/features/dosen/views/ajuan/riwayat/riwayat_detail_screen.dart';
 
 class RiwayatItem extends StatelessWidget {
-  final AjuanBimbinganModel ajuan;
-
-  const RiwayatItem({super.key, required this.ajuan});
+  final AjuanWithMahasiswa data;
+  const RiwayatItem({super.key, required this.data});
 
   // Helper untuk Status Warna & Text
-  bool get isDisetujui => ajuan.status == AjuanStatus.disetujui;
-  bool get isDitolak => ajuan.status == AjuanStatus.ditolak;
+  bool get isDisetujui => data.ajuan.status == AjuanStatus.disetujui;
+  bool get isDitolak => data.ajuan.status == AjuanStatus.ditolak;
 
   Color get statusColor {
     if (isDisetujui) return Colors.green;
@@ -44,9 +45,11 @@ class RiwayatItem extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () {            
-            // Untuk sementara tampilkan Snack bar atau info
-            ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(content: Text("Fitur detail riwayat dalam pengembangan"))
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DosenAjuanRiwayatDetail(data: data),
+              ),
             );
           },
           child: Padding(
@@ -75,7 +78,7 @@ class RiwayatItem extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        ajuan.judulTopik,
+                        data.ajuan.judulTopik,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
@@ -85,7 +88,7 @@ class RiwayatItem extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        DateFormat('dd MMM yyyy • HH:mm', 'id_ID').format(ajuan.waktuDiajukan),
+                        DateFormat('dd MMM yyyy • HH:mm', 'id_ID').format(data.ajuan.waktuDiajukan),
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 13,

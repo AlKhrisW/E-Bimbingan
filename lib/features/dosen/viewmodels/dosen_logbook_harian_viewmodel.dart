@@ -1,12 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
-
-// models
 import 'package:ebimbingan/data/models/logbook_harian_model.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
-
-// services
 import 'package:ebimbingan/data/services/logbook_harian_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
 
@@ -14,73 +10,83 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
   final LogbookHarianService _logbookHarianService = LogbookHarianService();
   final UserService _userService = UserService();
   
-  late final String currentDosenUid;
+  DosenLogbookHarianViewModel();
 
-  DosenLogbookHarianViewModel() {
-    currentDosenUid = AuthUtils.currentUid ?? '';
-  }
+  // =================================================================
+  // STATE
+  // =================================================================
 
-  // Data
-  List<LogbookHarianModel> _logbooks = [];
-  List<LogbookHarianModel> get logbooks => _logbooks;
+  List<LogbookHarianModel> _logbookListSource = [];
+
+  LogbookStatus? _activeFilter;
+  LogbookStatus? get activeFilter => _activeFilter;
 
   UserModel? _selectedMahasiswa;
   UserModel? get selectedMahasiswa => _selectedMahasiswa;
 
-  // UI State
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  StreamSubscription? _subscription;
+  // =================================================================
+  // GETTERS
+  // =================================================================
 
-  /// Dipanggil ketika dosen memilih salah satu mahasiswa dari daftar
+  List<LogbookHarianModel> get logbooks {
+    if (_activeFilter == null) {
+      return _logbookListSource;
+    }
+    return _logbookListSource
+        .where((element) => element.status == _activeFilter)
+        .toList();
+  }
+
+  // =================================================================
+  // ACTIONS
+  // =================================================================
+
+  void setFilter(LogbookStatus? status) {
+    _activeFilter = status;
+    notifyListeners();
+  }
+
   Future<void> pilihMahasiswa(String mahasiswaUid) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
-    // Batalkan stream sebelumnya
-    await _subscription?.cancel();
+    final uid = AuthUtils.currentUid;
+    if (uid == null) {
+      _errorMessage = "Sesi habis, silakan login ulang";
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
 
     try {
-      // 1. Ambil detail mahasiswa menggunakan internal service
       final mahasiswa = await _userService.fetchUserByUid(mahasiswaUid);
       _selectedMahasiswa = mahasiswa;
 
-      // 2. Dengarkan logbook harian (REAL-TIME)
-      _subscription = _logbookHarianService
-          .getLogbook(mahasiswaUid, currentDosenUid)
-          .listen((data) {
-        _logbooks = data;
-        _isLoading = false;
-        notifyListeners();
-      }, onError: (e) {
-        _errorMessage = "Gagal memuat logbook: $e";
-        _logbooks = [];
-        _isLoading = false;
-        notifyListeners();
-      });
+      final List<LogbookHarianModel> data = await _logbookHarianService.getLogbook(
+        mahasiswaUid, 
+        uid 
+      );
+
+      _logbookListSource = data;
     } catch (e) {
-      _errorMessage = "Gagal memuat data mahasiswa: $e";
+      _errorMessage = "Gagal memuat logbook: $e";
+      _logbookListSource = [];
+    } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  /// Bersihkan saat tidak dipakai lagi
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
-  }
-
-  /// Refresh manual
-  void refresh() {
+  Future<void> refresh() async {
     if (_selectedMahasiswa != null) {
-      pilihMahasiswa(_selectedMahasiswa!.uid);
+      await pilihMahasiswa(_selectedMahasiswa!.uid);
     }
   }
 }

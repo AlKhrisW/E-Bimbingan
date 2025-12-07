@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/riwayat_ajuan_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
 
 class RiwayatFilter extends StatelessWidget {
   const RiwayatFilter({super.key});

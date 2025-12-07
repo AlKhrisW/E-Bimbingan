@@ -849,7 +849,7 @@ class MockFirebaseAuth extends _i1.Mock implements _i4.FirebaseAuth {
 
   @override
   _i6.Future<_i4.PasswordValidationStatus> validatePassword(
-    _i4.FirebaseAuth? auth,
+    _i4.FirebaseAuth auth,
     String? password,
   ) =>
       (super.noSuchMethod(

@@ -1,11 +1,10 @@
-// features/dosen/views/logbook_harian/logbook_detail_screen.dart
-
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
-import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
+import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
 import 'package:ebimbingan/data/models/logbook_harian_model.dart';
+import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
 
 class LogbookHarianDetail extends StatelessWidget {
@@ -15,39 +14,6 @@ class LogbookHarianDetail extends StatelessWidget {
     super.key,
     required this.logbook,
   });
-
-  Widget _buildField(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppTheme.backgroundColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.primaryColor),
-            ),
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,15 +38,17 @@ class LogbookHarianDetail extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // === Identitas Mahasiswa ===
-                _buildField("Nama", mahasiswa.name),
-                _buildField("NIM", mahasiswa.nim ?? "-"),
-                _buildField("Program Studi", mahasiswa.programStudi ?? "-"),
-                _buildField("Tempat Penempatan", mahasiswa.placement ?? "-"),
+                BuildField(label: "Nama", value: mahasiswa.name),
+                BuildField(label: "NIM", value: mahasiswa.nim ?? "-"),
+                BuildField(label: "Program Studi", value: mahasiswa.programStudi ?? "-"),
+                BuildField(label: "Tempat Penempatan", value: mahasiswa.placement ?? "-"),
 
                 // === Detail Logbook ===
-                _buildField("Tanggal Penulisan", dateFormatted),
-                _buildField("Topik Kegiatan", logbook.judulTopik),
-                _buildField("Deskripsi Kegiatan", logbook.deskripsi),
+                BuildField(label: "Tanggal Penulisan", value: dateFormatted),
+                BuildField(label: "Topik Kegiatan", value: logbook.judulTopik),
+                BuildField(label: "Deskripsi Kegiatan", value: logbook.deskripsi),
+                
+                const SizedBox(height: 40),
               ],
             ),
           ),

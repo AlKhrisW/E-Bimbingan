@@ -98,30 +98,61 @@ class LogBimbinganService {
       throw Exception('Gagal update status: $e');
     }
   }
+  
+  // =================================================================
+  // READ (FUTURE / GET)
+  // =================================================================
 
-  Stream<List<LogBimbinganModel>> getLogBimbinganByMahasiswaUid(String mahasiswaUid) {
-    return _logBimbinganCollection
-        .where('mahasiswaUid', isEqualTo: mahasiswaUid)
-        .snapshots()
-        .map((snapshot) {
+  Future<List<LogBimbinganModel>> getLogBimbinganByMahasiswaUid(String mahasiswaUid) async {
+    try {
+      final snapshot = await _logBimbinganCollection
+          .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+          .orderBy('waktuPengajuan', descending: true)
+          .get();
+
       return snapshot.docs.map((doc) {
         return LogBimbinganModel.fromMap(doc.data()! as Map<String, dynamic>);
       }).toList();
-    });
+    } catch (e) {
+      throw Exception('gagal mengambil log mahasiswa: ${e.toString()}');
+    }
   }
 
-  Stream<List<LogBimbinganModel>> getPendingLogsByDosenUid(String dosenUid) {
-    return _logBimbinganCollection
-        .where('dosenUid', isEqualTo: dosenUid)
-        .where('status', isEqualTo: LogBimbinganStatus.pending.toString().split('.').last)
-        .orderBy('waktuPengajuan', descending: false)
-        .snapshots()
-        .map((snapshot) {
+  Future<List<LogBimbinganModel>> getPendingLogsByDosenUid(String dosenUid) async {
+    try {
+      final snapshot = await _logBimbinganCollection
+          .where('dosenUid', isEqualTo: dosenUid)
+          .where('status', isEqualTo: 'pending')
+          .orderBy('waktuPengajuan', descending: true)
+          .get();
+
       return snapshot.docs.map((doc) {
         return LogBimbinganModel.fromMap(doc.data()! as Map<String, dynamic>);
       }).toList();
-    });
+    } catch (e) {
+      throw Exception('gagal mengambil log pending dosen: ${e.toString()}');
+    }
   }
+
+  Future<List<LogBimbinganModel>> getRiwayatSpesifik(String dosenUid, String mahasiswaUid) async {
+    try {
+      final snapshot = await _logBimbinganCollection
+          .where('dosenUid', isEqualTo: dosenUid)
+          .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+          .orderBy('waktuPengajuan', descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        return LogBimbinganModel.fromMap(doc.data()! as Map<String, dynamic>);
+      }).toList();
+    } catch (e) {
+      throw Exception('gagal mengambil riwayat spesifik: ${e.toString()}');
+    }
+  }
+
+  // =================================================================
+  // DELETE
+  // =================================================================
 
   Future<void> deleteLogBimbingan(String logBimbinganUid) async {
     try {

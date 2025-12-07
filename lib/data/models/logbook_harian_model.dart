@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 enum LogbookStatus {
   draft, // baru diisi mahasiswa, belum diverifikasi
   verified, // diverifikasi otomatis/manual oleh dosen/sistem
-  rejected, // ditolak manual oleh dosen
 }
 
 class LogbookHarianModel {

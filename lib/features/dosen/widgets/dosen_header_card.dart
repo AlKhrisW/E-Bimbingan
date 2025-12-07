@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 
-class RiwayatHeader extends StatelessWidget {
+class DosenHeaderCard extends StatelessWidget {
   final String name;
   final String placement;
 
-  const RiwayatHeader({
+  const DosenHeaderCard({
     super.key,
     required this.name,
     required this.placement,

@@ -61,6 +61,12 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+  # Integration & End-to-End Testing
+  integration_test:
+    sdk: flutter
+  patrol: ^3.20.0
+
+
   # Unit Test Packages
   test: ^1.26.3
   mockito: ^5.6.1
