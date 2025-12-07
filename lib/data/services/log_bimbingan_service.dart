@@ -1,21 +1,88 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+
 import '../models/log_bimbingan_model.dart';
 
 class LogBimbinganService {
   final CollectionReference _logBimbinganCollection = 
       FirebaseFirestore.instance.collection('log_bimbingan');
-
-  // =================================================================
-  // CREATE & UPDATE
-  // =================================================================
-
-  Future<void> saveLogBimbingan(LogBimbinganModel log) async {
+  
+  // ======================================================================
+  // ENCODE GAMBAR KE BASE64
+  // ======================================================================
+  
+  Future<String?> encodeImageToBase64({
+    required File? file,
+    required Uint8List? bytes,
+  }) async {
     try {
-      await _logBimbinganCollection.doc(log.logBimbinganUid).set(log.toMap());
+      Uint8List imageBytes;
+      
+      if (kIsWeb && bytes != null) {
+        imageBytes = bytes;
+      } else if (file != null) {
+        imageBytes = await file.readAsBytes();
+      } else {
+        return null;
+      }
+      
+      final base64String = base64Encode(imageBytes);
+      
+      if (base64String.length > 900000) {
+        throw Exception('Gambar terlalu besar. Maksimal ~800KB setelah di-encode.');
+      }
+      
+      return base64String;
+      
     } catch (e) {
-      throw Exception('gagal menyimpan log bimbingan: ${e.toString()}');
+      throw Exception('Gagal encode gambar: $e');
     }
   }
+
+  // ======================================================================
+  // DECODE BASE64 KE IMAGE
+  // ======================================================================
+  
+  Uint8List? decodeBase64ToImage(String? base64String) {
+    try {
+      if (base64String == null || base64String.isEmpty) {
+        return null;
+      }
+      
+      return base64Decode(base64String);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ======================================================================
+  // SIMPAN LOG BIMBINGAN
+  // ======================================================================
+  
+  Future<void> saveLogBimbingan(LogBimbinganModel log) async {
+    try {
+      final data = log.toMap();
+      
+      await _logBimbinganCollection.doc(log.logBimbinganUid).set(
+        data, 
+        SetOptions(merge: true)
+      );
+      
+    } catch (e) {
+      if (e.toString().contains('too large')) {
+        throw Exception('Data terlalu besar untuk Firestore. Kurangi ukuran gambar.');
+      }
+      
+      throw Exception('Gagal menyimpan log bimbingan: $e');
+    }
+  }
+
+  // ======================================================================
+  // CRUD OPERATIONS
+  // ======================================================================
 
   Future<void> updateLogBimbinganStatus({
     required String logBimbinganUid,
@@ -28,7 +95,7 @@ class LogBimbinganService {
         'catatanDosen': catatanDosen,
       });
     } catch (e) {
-      throw Exception('gagal memperbarui status log bimbingan: ${e.toString()}');
+      throw Exception('Gagal update status: $e');
     }
   }
   
@@ -91,7 +158,7 @@ class LogBimbinganService {
     try {
       await _logBimbinganCollection.doc(logBimbinganUid).delete();
     } catch (e) {
-      throw Exception('gagal menghapus log bimbingan: ${e.toString()}');
+      throw Exception('Gagal hapus log: $e');
     }
   }
 }

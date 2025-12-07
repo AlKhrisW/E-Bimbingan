@@ -17,6 +17,7 @@ class LogBimbinganModel {
   // detail sesi
   final String ringkasanHasil;
   final String? lampiranUrl; // url link dokumen/lampiran (opsional)
+  final String? fileName; // nama file lampiran
 
   // tracking
   final LogBimbinganStatus status;
@@ -32,6 +33,7 @@ class LogBimbinganModel {
     required this.status,
     required this.waktuPengajuan,
     this.lampiranUrl,
+    this.fileName,
     this.catatanDosen,
   });
 
@@ -51,6 +53,7 @@ class LogBimbinganModel {
         orElse: () => LogBimbinganStatus.draft,
       ),
       lampiranUrl: data['lampiranUrl'],
+      fileName: data['fileName'],
       catatanDosen: data['catatanDosen'],
     );
   }
@@ -63,13 +66,14 @@ class LogBimbinganModel {
       'mahasiswaUid': mahasiswaUid,
       'dosenUid': dosenUid,
       'ringkasanHasil': ringkasanHasil,
-      'waktuPengajuan': Timestamp.fromDate(waktuPengajuan), // simpan sebagai timestamp
+      'waktuPengajuan': Timestamp.fromDate(waktuPengajuan),
       
       // simpan enum sebagai string lowercase
       'status': status.toString().split('.').last,
       
       // selalu kirim, walaupun null
       'lampiranUrl': lampiranUrl,
+      'fileName': fileName,
       'catatanDosen': catatanDosen,
     };
   }
