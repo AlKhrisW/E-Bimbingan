@@ -32,9 +32,9 @@ dependencies:
     sdk: flutter
 
   # Firebase  
-  firebase_core: ^4.2.1
-  firebase_auth: ^6.1.2
-  cloud_firestore: ^6.1.0
+  firebase_core: ^3.8.1
+  firebase_auth: ^5.3.3
+  cloud_firestore: ^5.5.2
  
 
   # State Management
@@ -59,6 +59,12 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+
+  # Integration & End-to-End Testing
+  integration_test:
+    sdk: flutter
+  patrol: ^3.20.0
+
 
   # Unit Test Packages
   test: ^1.26.3

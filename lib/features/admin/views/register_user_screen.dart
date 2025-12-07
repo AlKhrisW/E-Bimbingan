@@ -77,7 +77,8 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
       _nameController.text = user.name;
       _emailController.text = user.email;
       _phoneController.text = user.phoneNumber ?? '';
-      _selectedRole = user.role.substring(0, 1).toUpperCase() + user.role.substring(1);
+      _selectedRole =
+          user.role.substring(0, 1).toUpperCase() + user.role.substring(1);
 
       if (user.role == 'mahasiswa') {
         _prodiController.text = user.programStudi ?? '';
@@ -95,7 +96,10 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
   }
 
   Future<void> _fetchDosenList() async {
-    final viewModel = Provider.of<AdminUserManagementViewModel>(context, listen: false);
+    final viewModel = Provider.of<AdminUserManagementViewModel>(
+      context,
+      listen: false,
+    );
     await viewModel.loadDosenList();
 
     if (!mounted) return;
@@ -105,7 +109,8 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
       if (_isEditMode && widget.userToEdit!.dosenUid != null) {
         _selectedDosen = _dosenList.firstWhere(
           (d) => d.uid == widget.userToEdit!.dosenUid,
-          orElse: () => _dosenList.isNotEmpty ? _dosenList.first : null as UserModel,
+          orElse: () =>
+              _dosenList.isNotEmpty ? _dosenList.first : null as UserModel,
         );
       } else if (_dosenList.isNotEmpty) {
         _selectedDosen = _dosenList.first;
@@ -116,7 +121,11 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
 
     if (viewModel.errorMessage != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal memuat daftar dosen: ${viewModel.errorMessage!}')),
+        SnackBar(
+          content: Text(
+            'Gagal memuat daftar dosen: ${viewModel.errorMessage!}',
+          ),
+        ),
       );
       viewModel.resetMessages();
     }
@@ -134,19 +143,30 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
     if (_selectedRole == 'Mahasiswa' && _startDate == null) return;
     if (_selectedRole == 'Dosen' && _selectedJabatan == null) return;
 
-    final viewModel = Provider.of<AdminUserManagementViewModel>(context, listen: false);
+    final viewModel = Provider.of<AdminUserManagementViewModel>(
+      context,
+      listen: false,
+    );
 
     final data = {
       'email': _safeTrim(_emailController.text)!,
       'name': _safeTrim(_nameController.text)!,
       'role': _selectedRole.toLowerCase(),
-      'programStudi': _selectedRole == 'Mahasiswa' ? _safeTrim(_prodiController.text) : null,
+      'programStudi': _selectedRole == 'Mahasiswa'
+          ? _safeTrim(_prodiController.text)
+          : null,
       'phoneNumber': _safeTrim(_phoneController.text),
-      'nim': _selectedRole == 'Mahasiswa' ? _safeTrim(_nimNipController.text) : null,
-      'placement': _selectedRole == 'Mahasiswa' ? _safeTrim(_placementController.text) : null,
+      'nim': _selectedRole == 'Mahasiswa'
+          ? _safeTrim(_nimNipController.text)
+          : null,
+      'placement': _selectedRole == 'Mahasiswa'
+          ? _safeTrim(_placementController.text)
+          : null,
       'startDate': _selectedRole == 'Mahasiswa' ? _startDate : null,
       'dosenUid': _selectedRole == 'Mahasiswa' ? _selectedDosen?.uid : null,
-      'nip': _selectedRole == 'Dosen' ? _safeTrim(_nimNipController.text) : null,
+      'nip': _selectedRole == 'Dosen'
+          ? _safeTrim(_nimNipController.text)
+          : null,
       'jabatan': _selectedRole == 'Dosen' ? _selectedJabatan : null,
     };
 
@@ -186,9 +206,11 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(viewModel.successMessage ?? 'Operasi berhasil!')),
+        SnackBar(
+          content: Text(viewModel.successMessage ?? 'Operasi berhasil!'),
+        ),
       );
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(viewModel.errorMessage ?? 'Operasi gagal.')),
@@ -205,8 +227,13 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
       appBar: AppBar(
         leading: const CustomBackButton(), // <-- ganti jadi custom back button
         title: Text(
-          widget.userToEdit == null ? 'Tambah User' : 'Edit User: ${widget.userToEdit?.name}',
-          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          widget.userToEdit == null
+              ? 'Tambah User'
+              : 'Edit User: ${widget.userToEdit?.name}',
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -218,7 +245,11 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AdminTextField(controller: _nameController, label: 'Nama Lengkap', icon: Icons.person),
+              AdminTextField(
+                controller: _nameController,
+                label: 'Nama Lengkap',
+                icon: Icons.person,
+              ),
 
               // role dropdown
               Padding(
@@ -229,7 +260,9 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                     prefixIcon: Icon(Icons.assignment_ind),
                   ),
                   value: _roles.contains(_selectedRole) ? _selectedRole : null,
-                  items: _roles.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+                  items: _roles
+                      .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                      .toList(),
                   onChanged: _isEditMode
                       ? null
                       : (val) {
@@ -240,7 +273,9 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                             _prodiController.clear();
                             _selectedJabatan = null;
                             _startDate = null;
-                            _selectedDosen = _dosenList.isNotEmpty ? _dosenList.first : null;
+                            _selectedDosen = _dosenList.isNotEmpty
+                                ? _dosenList.first
+                                : null;
                           });
                         },
                   isExpanded: true,
@@ -248,7 +283,11 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
               ),
 
               if (_selectedRole == 'Mahasiswa')
-                AdminTextField(controller: _prodiController, label: 'Program Studi/Jurusan', icon: Icons.school),
+                AdminTextField(
+                  controller: _prodiController,
+                  label: 'Program Studi/Jurusan',
+                  icon: Icons.school,
+                ),
 
               AdminTextField(
                 controller: _emailController,
@@ -313,7 +352,9 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
