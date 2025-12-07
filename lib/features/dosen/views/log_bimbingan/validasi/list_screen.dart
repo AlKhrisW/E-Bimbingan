@@ -50,10 +50,15 @@ class _DosenBimbinganState extends State<DosenBimbingan> {
                 name: item.mahasiswa.name,
                 judulTopik: item.ajuan.judulTopik,
                 onTap: () {
+                  final vm = context.read<DosenBimbinganViewModel>(); 
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => DosenLogbookDetail(data: item),
+                      builder: (_) => ChangeNotifierProvider.value(
+                        value: vm, 
+                        child: DosenLogbookDetail(data: item),
+                      ),
                     ),
                   );
                 },

@@ -7,6 +7,7 @@ import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart';
 import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_filter.dart';
 import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_item.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
+import 'detail_screen.dart';
 
 class DosenLogbookHarian extends StatefulWidget {
   final String mahasiswaUid;
@@ -90,7 +91,22 @@ class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
         itemCount: vm.logbooks.length,
         itemBuilder: (_, index) {
           final logbook = vm.logbooks[index];
-          return LogbookItem(logbook: logbook);
+          return LogbookItem(
+            logbook: logbook,
+            onTap: () {
+              final vm = context.read<DosenLogbookHarianViewModel>();
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ChangeNotifierProvider.value(
+                    value: vm, 
+                    child: LogbookHarianDetail(logbook: logbook),
+                  ),
+                ),
+              );
+            },
+          );
         },
       );
     }

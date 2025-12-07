@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_appbar.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
-import 'package:ebimbingan/features/dosen/views/log_harian/log_list_screen.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
+import 'log_list_screen.dart';
 
 class DosenProgres extends StatefulWidget {
   const DosenProgres({super.key});
@@ -54,11 +55,15 @@ class _DosenProgresState extends State<DosenProgres> {
                 placement: m.placement ?? '-',
                 mahasiswaUid: m.uid,
                 onTap: () {
+                  final vm = context.read<DosenLogbookHarianViewModel>();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => DosenLogbookHarian(
-                        mahasiswaUid: m.uid,
+                      builder: (_) => ChangeNotifierProvider.value(
+                        value: vm,
+                        child: DosenLogbookHarian(
+                          mahasiswaUid: m.uid,
+                        ),
                       ),
                     ),
                   );

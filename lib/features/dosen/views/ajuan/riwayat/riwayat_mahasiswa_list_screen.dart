@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
 import 'riwayat_list_screen.dart';
 
 class DosenListMahasiswaAjuan extends StatefulWidget {
@@ -51,11 +52,17 @@ class _DosenListMahasiswaAjuanState extends State<DosenListMahasiswaAjuan> {
                 placement: m.placement ?? '-',
                 mahasiswaUid: m.uid,
                 onTap: () {
+                  final riwayatVm = context.read<DosenRiwayatAjuanViewModel>();
+                  
+                  // 2. Navigasi dengan membawa ViewModel tersebut
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => DosenRiwayatAjuan(
-                        mahasiswaUid: m.uid,
+                      builder: (_) => ChangeNotifierProvider.value(
+                        value: riwayatVm, // Lempar instance yang benar
+                        child: DosenRiwayatAjuan(
+                          mahasiswaUid: m.uid,
+                        ),
                       ),
                     ),
                   );

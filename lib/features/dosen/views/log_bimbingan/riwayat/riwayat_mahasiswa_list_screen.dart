@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
 import 'riwayat_list_screen.dart';
 
 class DosenListMahasiswaBimbingan extends StatefulWidget {
@@ -51,11 +52,15 @@ class _DosenListMahasiswaBimbinganState extends State<DosenListMahasiswaBimbinga
                 placement: m.placement ?? '-',
                 mahasiswaUid: m.uid,
                 onTap: () {
+                  final vm = context.read<DosenRiwayatBimbinganViewModel>();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => DosenRiwayatBimbingan(
-                        mahasiswaUid: m.uid,
+                      builder: (_) => ChangeNotifierProvider.value(
+                        value: vm,
+                        child: DosenRiwayatBimbingan(
+                          mahasiswaUid: m.uid,
+                        ),
                       ),
                     ),
                   );

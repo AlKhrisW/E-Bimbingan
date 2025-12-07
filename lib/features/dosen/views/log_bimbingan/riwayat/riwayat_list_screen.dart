@@ -7,6 +7,7 @@ import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
 import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/riwayat_filter.dart';
 import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/riwayat_item.dart';
+import 'riwayat_detail_screen.dart';
 
 class DosenRiwayatBimbingan extends StatefulWidget {
   final String mahasiswaUid;
@@ -92,7 +93,17 @@ class _DosenRiwayatBimbinganState extends State<DosenRiwayatBimbingan> {
         itemCount: vm.riwayatList.length,
         itemBuilder: (_, index) {
           final ajuan = vm.riwayatList[index];
-          return RiwayatItem(data: ajuan);
+          return RiwayatItem(
+            data: ajuan,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DosenRiwayatBimbinganDetail(data: ajuan)
+                ),
+              );
+            },
+          );
         },
       );
     }

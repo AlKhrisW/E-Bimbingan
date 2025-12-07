@@ -53,10 +53,15 @@ class _DosenAjuanState extends State<DosenAjuan> {
                 tanggalBimbingan: DateFormat('dd MMMM yyyy').format(m.ajuan.tanggalBimbingan),
                 waktuBimbingan: m.ajuan.waktuBimbingan,
                 onTap: () {
+                  final vm = context.read<DosenAjuanViewModel>(); 
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => DosenAjuanDetail(data: m),
+                      builder: (_) => ChangeNotifierProvider.value(
+                        value: vm, 
+                        child: DosenAjuanDetail(data: m),
+                      ),
                     ),
                   );
                 },
