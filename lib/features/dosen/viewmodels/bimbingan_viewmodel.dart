@@ -9,6 +9,7 @@ import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
 import 'package:ebimbingan/data/services/notification_service.dart';
+import 'package:intl/intl.dart';
 
 class DosenBimbinganViewModel extends ChangeNotifier {
   final LogBimbinganService _logService = LogBimbinganService();
@@ -121,11 +122,10 @@ class DosenBimbinganViewModel extends ChangeNotifier {
         catatanDosen: "Disetujui",
       );
 
-      // --- [MODIFIKASI: NOTIFIKASI LOG DITERIMA] ---
-      await _notifService.notifyMahasiswa(
-        mahasiswaUid: targetItem.log.mahasiswaUid,
+      await _notifService.sendNotification(
+        recipientUid: targetItem.log.mahasiswaUid,
         title: "Log Bimbingan Diverifikasi",
-        body: "Log bimbingan Anda tanggal ${targetItem.log.waktuPengajuan} telah disetujui Dosen.",
+        body: "Log tanggal ${DateFormat('dd MMM').format(targetItem.log.waktuPengajuan)} telah disetujui.",
         type: "log_status",
         relatedId: logUid,
       );
@@ -153,11 +153,10 @@ class DosenBimbinganViewModel extends ChangeNotifier {
         catatanDosen: catatan.trim(),
       );
 
-      // --- [MODIFIKASI: NOTIFIKASI LOG DITOLAK] ---
-      await _notifService.notifyMahasiswa(
-        mahasiswaUid: targetItem.log.mahasiswaUid,
-        title: "Log Bimbingan Ditolak",
-        body: "Log bimbingan perlu revisi. Catatan: $catatan",
+      await _notifService.sendNotification(
+        recipientUid: targetItem.log.mahasiswaUid,
+        title: "Log Bimbingan Perlu Revisi",
+        body: "Catatan Dosen: $catatan",
         type: "log_status",
         relatedId: logUid,
       );

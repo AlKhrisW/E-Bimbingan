@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/appbar/dashboard_page_appBar.dart';
 import '../../../../data/models/user_model.dart';
-import 'dosen_notifikasi_screen.dart';
+import 'package:ebimbingan/features/notifikasi/views/notifikasi_screen.dart';
 
 class DosenDashboard extends StatelessWidget {
   final UserModel user; 

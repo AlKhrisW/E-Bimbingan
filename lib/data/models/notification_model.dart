@@ -4,9 +4,10 @@ class NotificationModel {
   final String id;
   final String title;
   final String body;
-  final String type; // 'ajuan', 'log_bimbingan', 'log_harian', 'reminder'
-  final String recipientUid; // UID penerima (Dosen atau Mahasiswa)
-  final String relatedId; // ID dokumen terkait (misal: ID proposal, ID log)
+  final String type; 
+  final String recipientUid; 
+  final String relatedId;
+  final String? senderUid;
   final bool isRead;
   final DateTime createdAt;
 
@@ -17,6 +18,7 @@ class NotificationModel {
     required this.type,
     required this.recipientUid,
     required this.relatedId,
+    this.senderUid,
     this.isRead = false,
     required this.createdAt,
   });
@@ -28,6 +30,7 @@ class NotificationModel {
       'type': type,
       'recipient_uid': recipientUid,
       'related_id': relatedId,
+      'sender_uid': senderUid, 
       'is_read': isRead,
       'created_at': Timestamp.fromDate(createdAt),
     };
@@ -41,8 +44,14 @@ class NotificationModel {
       type: data['type'] ?? 'info',
       recipientUid: data['recipient_uid'] ?? '',
       relatedId: data['related_id'] ?? '',
+      senderUid: data['sender_uid'],
       isRead: data['is_read'] ?? false,
-      createdAt: (data['created_at'] as Timestamp).toDate(),
+      createdAt: _parseTimestamp(data['created_at']),
     );
+  }
+
+  static DateTime _parseTimestamp(dynamic val) {
+    if (val is Timestamp) return val.toDate();
+    return DateTime.now();
   }
 }

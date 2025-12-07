@@ -134,21 +134,19 @@ class DosenAjuanViewModel extends ChangeNotifier {
 
       await _logService.saveLogBimbingan(newLog);
 
-      // --- [MODIFIKASI 1: NOTIFIKASI KE MAHASISWA] ---
-      await _notifService.notifyMahasiswa(
-        mahasiswaUid: itemTarget.ajuan.mahasiswaUid,
+      await _notifService.sendNotification(
+        recipientUid: itemTarget.ajuan.mahasiswaUid,
         title: "Ajuan Bimbingan Disetujui",
-        body: "Dosen telah menyetujui jadwal bimbingan Anda untuk tanggal ${DateFormat('dd MMM yyyy').format(itemTarget.ajuan.tanggalBimbingan)}.",
+        body: "Dosen menyetujui jadwal untuk ${DateFormat('dd MMM').format(itemTarget.ajuan.tanggalBimbingan)}.",
         type: "ajuan_status",
         relatedId: ajuanUid,
       );
 
-      // --- [MODIFIKASI 2: ALARM PENGINGAT UNTUK DOSEN (ANDA SENDIRI)] ---
-      await _notifService.scheduleDosenReminder(
-        id: ajuanUid.hashCode, // ID unik integer
+      await _notifService.scheduleReminder(
+        id: ajuanUid.hashCode,
         title: "Pengingat Bimbingan Besok",
-        body: "Bimbingan dengan ${itemTarget.mahasiswa.name} pukul ${itemTarget.ajuan.waktuBimbingan}",
-        jadwalBimbingan: itemTarget.ajuan.tanggalBimbingan,
+        body: "Mahasiswa: ${itemTarget.mahasiswa.name} pukul ${itemTarget.ajuan.waktuBimbingan}",
+        scheduledDate: itemTarget.ajuan.tanggalBimbingan.subtract(const Duration(days: 1)),
       );
 
       // Refresh list
@@ -179,11 +177,10 @@ class DosenAjuanViewModel extends ChangeNotifier {
         keterangan: keterangan.trim(),
       );
 
-      // --- [MODIFIKASI: NOTIFIKASI TOLAK KE MAHASISWA] ---
-      await _notifService.notifyMahasiswa(
-        mahasiswaUid: itemTarget.ajuan.mahasiswaUid,
+      await _notifService.sendNotification(
+        recipientUid: itemTarget.ajuan.mahasiswaUid,
         title: "Ajuan Bimbingan Ditolak",
-        body: "Maaf, ajuan Anda ditolak. Ket: $keterangan",
+        body: "Maaf, ajuan ditolak. Ket: $keterangan",
         type: "ajuan_status",
         relatedId: ajuanUid,
       );
