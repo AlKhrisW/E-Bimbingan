@@ -1,43 +1,29 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
-
-import 'package:ebimbingan/data/models/notification_model.dart';
 import '../viewmodels/notifikasi_viewmodel.dart';
+import '../widgets/custom_notification_appbar.dart'; 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ebimbingan/data/models/notification_model.dart';
 
 class NotificationPage extends StatelessWidget {
   const NotificationPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Bungkus dengan Provider agar ViewModel hidup
     return ChangeNotifierProvider(
       create: (_) => NotificationViewModel(),
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Notifikasi"),
-          actions: [
-            // Tombol Mark All Read
-            Consumer<NotificationViewModel>(
-              builder: (context, vm, _) => IconButton(
-                icon: const Icon(Icons.done_all),
-                tooltip: "Tandai semua dibaca",
-                onPressed: () {
-                  vm.markAllAsRead();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Semua ditandai terbaca")),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+        // Panggil Custom AppBar di sini
+        appBar: const CustomNotificationAppBar(),
+        
         body: Consumer<NotificationViewModel>(
           builder: (context, vm, _) {
             return StreamBuilder<QuerySnapshot>(
               stream: vm.notificationStream,
               builder: (context, snapshot) {
+                // ... (Logika body tetap sama seperti sebelumnya) ...
+                
                 // 1. Loading
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -66,7 +52,7 @@ class NotificationPage extends StatelessWidget {
 
                     return Dismissible(
                       key: Key(notif.id),
-                      direction: DismissDirection.endToStart, // Swipe Kiri
+                      direction: DismissDirection.endToStart,
                       background: Container(
                         color: Colors.red,
                         alignment: Alignment.centerRight,
@@ -132,15 +118,27 @@ class NotificationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.notifications_off_outlined, size: 64, color: Colors.grey[400]),
+          Icon(
+            Icons.notifications_off_outlined, 
+            size: 60, 
+            color: Colors.grey[300]
+          ),
           const SizedBox(height: 16),
-          Text("Tidak ada notifikasi", style: TextStyle(color: Colors.grey[600])),
-        ],
+          Text(
+            "Tidak ada notifikasi",
+            style: const TextStyle(
+              fontSize: 16, 
+              color: Colors.grey, 
+              fontWeight: FontWeight.w500
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ]
       ),
     );
   }

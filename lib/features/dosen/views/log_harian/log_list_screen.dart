@@ -6,7 +6,7 @@ import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmo
 import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart';
 import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_filter.dart';
 import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_item.dart';
-import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
+import 'package:ebimbingan/core/widgets/custom_halaman_kosong.dart';
 import 'detail_screen.dart';
 
 class DosenLogbookHarian extends StatefulWidget {
@@ -35,17 +35,19 @@ class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomUniversalAppbar(
+      appBar: const CustomUniversalAppbar(
         judul: "Daftar Logbook Harian",
       ),
       body: Consumer<DosenLogbookHarianViewModel>(
         builder: (context, vm, child) {
+          final m = vm.selectedMahasiswa;
+
           return Column(
             children: [
-              if (vm.selectedMahasiswa != null)
+              if (m != null)
                 DosenHeaderCard(
-                  name: vm.selectedMahasiswa!.name,
-                  placement: vm.selectedMahasiswa!.placement ?? "-",
+                  name: m.name,
+                  placement: m.placement ?? "-",
                 )
               else
                 const Padding(
@@ -79,10 +81,11 @@ class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
     Widget content;
     
     if (vm.logbooks.isEmpty) {
-      content = const DosenHalamanKosong(
+      content = const CustomHalamanKosong(
         icon: Icons.book_outlined,
         message: "Belum ada logbook harian",
         subMessage: "Mahasiswa belum mengisi logbook harian.",
+        height: 0.5,
       );
     } else {
       content = ListView.builder(
@@ -90,18 +93,17 @@ class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
         padding: const EdgeInsets.all(16),
         itemCount: vm.logbooks.length,
         itemBuilder: (_, index) {
-          final logbook = vm.logbooks[index];
+          final helperItem = vm.logbooks[index];
           return LogbookItem(
-            logbook: logbook,
+            logbook: helperItem.logbook, 
             onTap: () {
               final vm = context.read<DosenLogbookHarianViewModel>();
-
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => ChangeNotifierProvider.value(
                     value: vm, 
-                    child: LogbookHarianDetail(logbook: logbook),
+                    child: LogbookHarianDetail(data: helperItem),
                   ),
                 ),
               );

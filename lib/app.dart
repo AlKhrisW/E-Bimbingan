@@ -10,6 +10,13 @@ import 'core/themes/app_theme.dart';
 import 'features/auth/views/splash_screen.dart';
 import 'core/utils/navigation/app_navigator.dart';
 
+// Dosen Routes
+import 'package:ebimbingan/features/dosen/views/ajuan/riwayat/riwayat_detail_screen.dart';
+import 'package:ebimbingan/features/dosen/views/ajuan/validasi/detail_screen.dart';
+import 'package:ebimbingan/features/dosen/views/log_bimbingan/riwayat/riwayat_detail_screen.dart';
+import 'package:ebimbingan/features/dosen/views/log_bimbingan/validasi/detail_screen.dart';
+import 'package:ebimbingan/features/dosen/views/log_harian/detail_screen.dart';
+
 // Auth
 import 'features/auth/viewmodels/auth_viewmodel.dart';
 
@@ -51,6 +58,18 @@ class App extends StatelessWidget {
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
         home: const SplashScreen(),
+        routes: {
+          // --- AJUAN BIMBINGAN ---
+          '/detail_ajuan_validasi': (context) => const DosenAjuanDetail(),
+          '/detail_ajuan_riwayat': (context) => const DosenAjuanRiwayatDetail(),
+
+          // --- LOG BIMBINGAN ---
+          '/detail_log_validasi': (context) => const DosenLogbookDetail(), 
+          '/detail_log_riwayat': (context) => const DosenRiwayatBimbinganDetail(),
+
+          // --- LOGBOOK HARIAN ---
+          '/detail_logbook_harian': (context) => const LogbookHarianDetail(),
+        },
       ),
     );
   }

@@ -104,4 +104,30 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
       await pilihMahasiswa(_selectedMahasiswa!.uid);
     }
   }
+
+  // =================================================================
+  // NEW: FETCH SINGLE DETAIL (Untuk Notifikasi)
+  // =================================================================
+  
+  /// Mengambil data lengkap (Ajuan + Mahasiswa) berdasarkan ID.
+  Future<AjuanWithMahasiswa?> getAjuanDetail(String ajuanUid) async {
+    try {
+      // 1. Ambil data Ajuan by ID
+      final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(ajuanUid);
+      
+      if (ajuan == null) return null;
+
+      // 2. Ambil data Mahasiswa
+      final mahasiswa = await _userService.fetchUserByUid(ajuan.mahasiswaUid);
+
+      // 3. Return wrapper
+      return AjuanWithMahasiswa(
+        ajuan: ajuan,
+        mahasiswa: mahasiswa,
+      );
+    } catch (e) {
+      debugPrint("Error fetching detail for notification: $e");
+      return null;
+    }
+  }
 }

@@ -1,67 +1,155 @@
+// lib/features/notification/viewmodels/notification_viewmodel.dart
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+// Utils & Services
 import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/services/notification_service.dart';
+import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
+import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
+
+// Models
 import 'package:ebimbingan/data/models/notification_model.dart';
+import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
+import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 
 class NotificationViewModel extends ChangeNotifier {
-  final NotificationService _service = NotificationService();
+  // --- DEPENDENCIES ---
+  final NotificationService _notifService = NotificationService();
+  
+  // Service tambahan untuk pengecekan status data sebelum navigasi
+  final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
+  final LogBimbinganService _logService = LogBimbinganService();
 
-  // Stream Data
+  // =================================================================
+  // GETTERS (STREAM)
+  // =================================================================
+  
+  /// Mengambil stream notifikasi real-time khusus user yang login
   Stream<QuerySnapshot> get notificationStream {
     final uid = AuthUtils.currentUid;
-    if (uid == null) return const Stream.empty();
-    return _service.getNotificationsStream(uid);
+    if (uid == null) {
+      return const Stream.empty();
+    }
+    return _notifService.getNotificationsStream(uid);
   }
 
-  // Aksi Dasar
-  Future<void> deleteNotification(String id) async => await _service.deleteNotification(id);
-  
+  // =================================================================
+  // BASIC ACTIONS (Baca & Hapus)
+  // =================================================================
+
+  Future<void> markAsRead(String docId) async {
+    await _notifService.markAsRead(docId);
+  }
+
+  Future<void> deleteNotification(String docId) async {
+    await _notifService.deleteNotification(docId);
+  }
+
   Future<void> markAllAsRead() async {
     final uid = AuthUtils.currentUid;
-    if (uid != null) await _service.markAllAsRead(uid);
+    if (uid != null) {
+      await _notifService.markAllAsRead(uid);
+    }
   }
 
   // =================================================================
-  // UNIVERSAL NAVIGATION LOGIC
+  // SMART NAVIGATION LOGIC (Fitur Utama)
   // =================================================================
-  void handleNotificationTap(BuildContext context, NotificationModel notif) {
-    // 1. Tandai dibaca di background
+
+  /// Menangani klik pada notifikasi:
+  /// 1. Tandai sudah dibaca
+  /// 2. Cek status data di server (Loading...)
+  /// 3. Arahkan ke halaman Validasi (jika butuh aksi) atau Riwayat (jika sudah selesai)
+  Future<void> handleNotificationTap(BuildContext context, NotificationModel notif) async {
+    // 1. Tandai dibaca di background (Fire and Forget)
     if (!notif.isRead) {
-      _service.markAsRead(notif.id);
+      _notifService.markAsRead(notif.id);
     }
 
-    // 2. Tentukan Tujuan Berdasarkan Tipe
-    // Logic ini berlaku untuk Dosen MAUPUN Mahasiswa
-    switch (notif.type) {
-      
-      // Kasus: Ajuan Bimbingan (Status berubah atau Ajuan baru masuk)
-      case 'ajuan':
-      case 'ajuan_status':
-      case 'info_jadwal':
-      case 'reminder': // Alarm H-1
-        Navigator.pushNamed(
-          context,
-          '/detail_ajuan', // Pastikan route ini ada di main.dart
-          arguments: notif.relatedId, // Kirim ID Ajuan
-        );
-        break;
+    // 2. Tampilkan Loading Indicator (karena kita harus fetch data dulu)
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
 
-      // Kasus: Log Bimbingan
-      case 'log_bimbingan':
-      case 'log_status':
-        Navigator.pushNamed(
-          context,
-          '/detail_log', // Pastikan route ini ada di main.dart
-          arguments: notif.relatedId, // Kirim ID Log
-        );
-        break;
+    try {
+      String routeName = '';
+      Object? arguments;
 
-      default:
-        // Fallback jika tipe tidak dikenal
+      switch (notif.type) {
+        // -----------------------------------------------------------
+        // KASUS 1: AJUAN BIMBINGAN (Judul/Jadwal)
+        // -----------------------------------------------------------
+        case 'ajuan':
+        case 'ajuan_status':
+        case 'info_jadwal':
+        case 'reminder':
+          // Fetch data ajuan terbaru dari server
+          final ajuan = await _ajuanService.getAjuanByUid(notif.relatedId);
+          
+          if (ajuan != null) {
+            arguments = notif.relatedId;
+
+            if (ajuan.status == AjuanStatus.proses) {
+              routeName = '/detail_ajuan_validasi'; 
+            } else {
+              routeName = '/detail_ajuan_riwayat';
+            }
+          }
+          break;
+
+        // -----------------------------------------------------------
+        // KASUS 2: LOG BIMBINGAN (Mingguan)
+        // -----------------------------------------------------------
+        case 'log_bimbingan':
+        case 'log_status':
+          final log = await _logService.getLogBimbinganByUid(notif.relatedId);
+          if (log != null) {
+            arguments = notif.relatedId;
+            // Jika status PENDING/DRAFT -> Masuk halaman Validasi
+            if (log.status == LogBimbinganStatus.pending || log.status == LogBimbinganStatus.draft) {
+              routeName = '/detail_log_validasi';
+            } else {
+              routeName = '/detail_log_riwayat';
+            }
+          }
+          break;
+
+        // -----------------------------------------------------------
+        // KASUS 3: LOGBOOK HARIAN (Tidak ada validasi khusus)
+        // -----------------------------------------------------------
+        case 'logbook_harian':
+          routeName = '/detail_logbook_harian';
+          arguments = notif.relatedId;
+          break;
+
+        default:
+          print("Tipe notifikasi tidak dikenal: ${notif.type}");
+      }
+
+      // 3. Tutup Loading & Lakukan Navigasi
+      if (context.mounted) {
+        Navigator.pop(context); // Tutup dialog loading
+
+        if (routeName.isNotEmpty) {
+          Navigator.pushNamed(context, routeName, arguments: arguments);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Data terkait tidak ditemukan atau telah dihapus")),
+          );
+        }
+      }
+
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Tutup loading jika error
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Info: ${notif.body}")),
+          SnackBar(content: Text("Terjadi kesalahan: $e")),
         );
+      }
     }
   }
 }

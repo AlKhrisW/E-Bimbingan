@@ -1,15 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+// Utils
 import 'package:ebimbingan/core/utils/auth_utils.dart';
+
+// Services
 import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
+import 'package:ebimbingan/data/services/notification_service.dart';
+
+// Models
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
-import 'package:ebimbingan/data/services/notification_service.dart';
-import 'package:intl/intl.dart';
 
 class DosenBimbinganViewModel extends ChangeNotifier {
   final LogBimbinganService _logService = LogBimbinganService();
@@ -33,7 +39,7 @@ class DosenBimbinganViewModel extends ChangeNotifier {
   String? get error => _error;
 
   // =================================================================
-  // LOAD DATA
+  // LOAD DATA UTAMA (List Pending)
   // =================================================================
 
   Future<void> _loadLogPending() async {
@@ -108,13 +114,51 @@ class DosenBimbinganViewModel extends ChangeNotifier {
   }
 
   // =================================================================
+  // NEW: FETCH SINGLE LOG DETAIL (Untuk Notifikasi)
+  // =================================================================
+  
+  /// Mengambil data lengkap (Log + Mahasiswa + Ajuan) berdasarkan ID Log.
+  Future<HelperLogBimbingan?> getLogDetail(String logUid) async {
+    try {
+      // 1. Ambil data Log
+      final LogBimbinganModel? log = await _logService.getLogBimbinganByUid(logUid);
+      if (log == null) return null;
+
+      // 2. Ambil data Mahasiswa
+      final UserModel? mahasiswa = await _userService.fetchUserByUid(log.mahasiswaUid);
+      if (mahasiswa == null) return null;
+
+      // 3. Ambil data Ajuan Terkait
+      final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(log.ajuanUid);
+      if (ajuan == null) return null;
+
+      // 4. Return wrapper
+      return HelperLogBimbingan(
+        log: log,
+        mahasiswa: mahasiswa,
+        ajuan: ajuan,
+      );
+    } catch (e) {
+      debugPrint("Error fetching log detail: $e");
+      return null;
+    }
+  }
+
+  // =================================================================
   // ACTIONS
   // =================================================================
 
   Future<void> verifikasiLog(String logUid) async {
     try {
-      // Cari data log dulu untuk notifikasi
-      final targetItem = _daftarLog.firstWhere((e) => e.log.logBimbinganUid == logUid);
+      // Logic pencarian data (Safe check jika item tidak ada di list)
+      HelperLogBimbingan? targetItem;
+      try {
+        targetItem = _daftarLog.firstWhere((e) => e.log.logBimbinganUid == logUid);
+      } catch (_) {
+        targetItem = await getLogDetail(logUid);
+      }
+
+      if (targetItem == null) throw Exception("Data log tidak ditemukan");
 
       await _logService.updateLogBimbinganStatus(
         logBimbinganUid: logUid,
@@ -130,7 +174,10 @@ class DosenBimbinganViewModel extends ChangeNotifier {
         relatedId: logUid,
       );
 
-      await _loadLogPending();
+      // Refresh list jika ada
+      if (_daftarLog.isNotEmpty) {
+        await _loadLogPending();
+      }
     } catch (e) {
       _error = 'Gagal verifikasi log: $e';
       notifyListeners();
@@ -145,7 +192,14 @@ class DosenBimbinganViewModel extends ChangeNotifier {
     }
 
     try {
-      final targetItem = _daftarLog.firstWhere((e) => e.log.logBimbinganUid == logUid);
+      HelperLogBimbingan? targetItem;
+      try {
+        targetItem = _daftarLog.firstWhere((e) => e.log.logBimbinganUid == logUid);
+      } catch (_) {
+        targetItem = await getLogDetail(logUid);
+      }
+
+      if (targetItem == null) throw Exception("Data log tidak ditemukan");
 
       await _logService.updateLogBimbinganStatus(
         logBimbinganUid: logUid,
@@ -161,7 +215,9 @@ class DosenBimbinganViewModel extends ChangeNotifier {
         relatedId: logUid,
       );
 
-      await _loadLogPending();
+      if (_daftarLog.isNotEmpty) {
+        await _loadLogPending();
+      }
     } catch (e) {
       _error = 'Gagal menolak log: $e';
       notifyListeners();

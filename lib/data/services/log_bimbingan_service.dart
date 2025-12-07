@@ -83,6 +83,19 @@ class LogBimbinganService {
     }
   }
 
+  Future<LogBimbinganModel?> getLogBimbinganByUid(String logBimbinganUid) async {
+    try {
+      final doc = await _logBimbinganCollection.doc(logBimbinganUid).get();
+      if (doc.exists) {
+        return LogBimbinganModel.fromMap(doc.data()! as Map<String, dynamic>);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      throw Exception('gagal mengambil log bimbingan: ${e.toString()}');
+    }
+  }
+
   // =================================================================
   // DELETE
   // =================================================================

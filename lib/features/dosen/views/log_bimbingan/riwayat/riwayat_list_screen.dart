@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart';
-import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
+import 'package:ebimbingan/core/widgets/custom_halaman_kosong.dart';
 import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/riwayat_filter.dart';
 import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/riwayat_item.dart';
 import 'riwayat_detail_screen.dart';
@@ -81,10 +81,11 @@ class _DosenRiwayatBimbinganState extends State<DosenRiwayatBimbingan> {
     Widget content;
 
     if (vm.riwayatList.isEmpty) {
-      content = const DosenHalamanKosong(
+      content = const CustomHalamanKosong(
         icon: Icons.history_toggle_off,
         message: "Belum ada riwayat bimbingan",
         subMessage: "Mahasiswa belum memiliki data bimbingan",
+        height: 0.5,
       );
     } else {
       content = ListView.builder(
@@ -92,14 +93,18 @@ class _DosenRiwayatBimbinganState extends State<DosenRiwayatBimbingan> {
         padding: const EdgeInsets.all(16),
         itemCount: vm.riwayatList.length,
         itemBuilder: (_, index) {
-          final ajuan = vm.riwayatList[index];
+          final bimbingan = vm.riwayatList[index];
           return RiwayatItem(
-            data: ajuan,
+            data: bimbingan,
             onTap: () {
+              final vm = context.read<DosenRiwayatBimbinganViewModel>();
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => DosenRiwayatBimbinganDetail(data: ajuan)
+                  builder: (_) => ChangeNotifierProvider.value(
+                    value: vm, 
+                    child: DosenRiwayatBimbinganDetail(data: bimbingan),
+                  ),
                 ),
               );
             },
