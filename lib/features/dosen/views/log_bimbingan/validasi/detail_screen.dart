@@ -30,13 +30,11 @@ class DosenLogbookDetail extends StatelessWidget {
       backgroundColor: AppTheme.backgroundColor,
       appBar: const CustomUniversalAppbar(judul: "Detail Log Bimbingan"),
 
-      // ================== BODY (SCROLLABLE) ==================
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Data Mahasiswa & Ajuan
             BuildField(label: "Nama", value: data.mahasiswa.name),
             BuildField(label: "Tempat Penempatan", value: data.mahasiswa.placement ?? "-"),
             BuildField(label: "Topik Kegiatan", value: data.ajuan.judulTopik),
@@ -46,7 +44,6 @@ class DosenLogbookDetail extends StatelessWidget {
             BuildField(label: "Tanggal Penulisan", value: tanggalPengajuan),
             BuildField(label: "Ringkasan Hasil Bimbingan", value: data.log.ringkasanHasil),
             
-            // Jika ada lampiran (Opsional)
             if (data.log.lampiranUrl != null && data.log.lampiranUrl!.isNotEmpty)
               BuildField(label: "Lampiran", value: data.log.lampiranUrl!),
 
@@ -55,7 +52,6 @@ class DosenLogbookDetail extends StatelessWidget {
         ),
       ),
 
-      // ================== BOTTOM BUTTONS ==================
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.all(10),

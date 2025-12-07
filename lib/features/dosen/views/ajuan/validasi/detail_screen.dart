@@ -30,7 +30,6 @@ class DosenAjuanDetail extends StatelessWidget {
       backgroundColor: AppTheme.backgroundColor,
       appBar: const CustomUniversalAppbar(judul: "Detail Ajuan Bimbingan"),
 
-      // ================== BODY (SCROLLABLE) ==================
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -44,12 +43,11 @@ class DosenAjuanDetail extends StatelessWidget {
             BuildField(label: "Metode Bimbingan", value: data.ajuan.metodeBimbingan),
             BuildField(label: "Tanggal Penulisan", value: tanggalPengajuan),
 
-            const SizedBox(height: 40), // ruang agar tidak ketutup tombol
+            const SizedBox(height: 40),
           ],
         ),
       ),
 
-      // tombol tolak dan terima
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.all(10),

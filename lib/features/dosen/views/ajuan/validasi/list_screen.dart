@@ -1,8 +1,9 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_ajuan_card.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/ajuan_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_viewmodel.dart'; //
 import 'detail_screen.dart';
 
 class DosenAjuan extends StatefulWidget {
@@ -25,49 +26,51 @@ class _DosenAjuanState extends State<DosenAjuan> {
   Widget build(BuildContext context) {
     return Consumer<DosenAjuanViewModel>(
       builder: (context, vm, child) {
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: vm.isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : vm.daftarAjuan.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.history_toggle_off, size: 60, color: Colors.grey[300]),
-                          const SizedBox(height: 12),
-                          const Text(
-                            "Belum ada ajuan bimbingan masuk",
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: () async => vm.refresh(),
-                      child: ListView.separated(
-                        itemCount: vm.daftarAjuan.length, 
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final m = vm.daftarAjuan[index]; 
+        
+        if (vm.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-                          return AjuanCard(
-                            name: m.mahasiswa.name,
-                            judulTopik: m.ajuan.judulTopik,
-                            tanggalBimbingan: DateFormat('dd MMMM yyyy').format(m.ajuan.tanggalBimbingan),
-                            waktuBimbingan: m.ajuan.waktuBimbingan,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => DosenAjuanDetail(data: m),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
+        Widget content;
+        
+        if (vm.daftarAjuan.isEmpty) {
+          content = const DosenHalamanKosong(
+            icon: Icons.inbox,
+            message: 'Tidak ada ajuan bimbingan',
+            subMessage: 'Mahasiswa belum mengajukan topik bimbingan.',
+          );
+        } else {
+          content = ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: vm.daftarAjuan.length, 
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final m = vm.daftarAjuan[index]; 
+
+              return AjuanCard(
+                name: m.mahasiswa.name,
+                judulTopik: m.ajuan.judulTopik,
+                tanggalBimbingan: DateFormat('dd MMMM yyyy').format(m.ajuan.tanggalBimbingan),
+                waktuBimbingan: m.ajuan.waktuBimbingan,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DosenAjuanDetail(data: m),
                     ),
+                  );
+                },
+              );
+            },
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async => vm.refresh(),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: content,
+          ),
         );
       },
     );

@@ -19,17 +19,17 @@ class DosenNavigationConfig {
     ),
     NavItem(
       label: 'Ajuan',
-      icon: Icons.pending_actions_outlined,
+      icon: Icons.assignment_outlined,
       screen: DosenAjuanMainScreen(),
     ),
     NavItem(
       label: 'Log-Bimbingan',
-      icon: Icons.pending_actions_outlined,
+      icon: Icons.menu_book_outlined,
       screen: DosenBimbinganMainScreen(),
     ),
     NavItem(
       label: 'Log-Harian',
-      icon: Icons.menu_book,
+      icon: Icons.calendar_month_outlined,
       screen: DosenProgres(),
     ),
     NavItem(

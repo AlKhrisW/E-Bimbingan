@@ -1,9 +1,12 @@
+import 'package:ebimbingan/features/dosen/widgets/dosen_header_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_header.dart';
-import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_list.dart';
+import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart';
+import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_filter.dart';
+import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_item.dart';
+import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
 
 class DosenLogbookHarian extends StatefulWidget {
   final String mahasiswaUid;
@@ -36,27 +39,65 @@ class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
       ),
       body: Consumer<DosenLogbookHarianViewModel>(
         builder: (context, vm, child) {
-          final m = vm.selectedMahasiswa;
-
           return Column(
             children: [
-              if (m != null)
-                LogbookHeader(
-                  name: m.name,
-                  nim: m.nim ?? "-",
+              if (vm.selectedMahasiswa != null)
+                DosenHeaderCard(
+                  name: vm.selectedMahasiswa!.name,
+                  placement: vm.selectedMahasiswa!.placement ?? "-",
                 )
               else
                 const Padding(
                   padding: EdgeInsets.all(20),
                   child: CircularProgressIndicator(),
                 ),
-
+              const LogbookFilter(),
               const SizedBox(height: 8),
-              Expanded(child: LogbookList(mahasiswaUid: widget.mahasiswaUid)),
+              Expanded(
+                child: _buildListContent(vm),
+              ),
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildListContent(DosenLogbookHarianViewModel vm) {
+    if (vm.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (vm.errorMessage != null) {
+      return DosenErrorState(
+        message: vm.errorMessage!,
+        onRetry: () => vm.pilihMahasiswa(widget.mahasiswaUid),
+      );
+    }
+
+    Widget content;
+    
+    if (vm.logbooks.isEmpty) {
+      content = const DosenHalamanKosong(
+        icon: Icons.book_outlined,
+        message: "Belum ada logbook harian",
+        subMessage: "Mahasiswa belum mengisi logbook harian.",
+      );
+    } else {
+      content = ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(), 
+        padding: const EdgeInsets.all(16),
+        itemCount: vm.logbooks.length,
+        itemBuilder: (_, index) {
+          final logbook = vm.logbooks[index];
+          return LogbookItem(logbook: logbook);
+        },
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => vm.pilihMahasiswa(widget.mahasiswaUid),
+      child: content,
     );
   }
 }

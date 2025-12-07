@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
 
 // models
-import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
+import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
+import 'package:ebimbingan/data/models/wrapper/helper_ajuan_bimbingan.dart'; 
 
 // services
-import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
+import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 
 class DosenRiwayatAjuanViewModel extends ChangeNotifier {
   final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
@@ -24,8 +25,8 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
   // STATE
   // =================================================================
 
-  // List utama dari database
-  List<AjuanBimbinganModel> _riwayatListSource = [];
+  // List utama dari database, sekarang menggunakan wrapper Helper/Wrapper
+  List<AjuanWithMahasiswa> _riwayatListSource = [];
 
   // Filter aktif (null = Semua, Disetujui, Ditolak)
   AjuanStatus? _activeFilter;
@@ -46,12 +47,12 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
   // =================================================================
 
   /// Mengambil list yang sudah difilter sesuai bubble pilihan user
-  List<AjuanBimbinganModel> get riwayatList {
+  List<AjuanWithMahasiswa> get riwayatList {
     if (_activeFilter == null) {
       return _riwayatListSource;
     }
     return _riwayatListSource
-        .where((element) => element.status == _activeFilter)
+        .where((element) => element.ajuan.status == _activeFilter)
         .toList();
   }
 
@@ -71,7 +72,7 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. Ambil detail mahasiswa untuk Header UI
+      // 1. Ambil detail mahasiswa untuk Header UI dan Wrapper
       final mahasiswa = await _userService.fetchUserByUid(mahasiswaUid);
       _selectedMahasiswa = mahasiswa;
 
@@ -87,10 +88,18 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
           ajuan.status == AjuanStatus.ditolak
       ).toList();
 
-      // 4. Sorting: Waktu terbaru di atas
-      filteredData.sort((a, b) => b.waktuDiajukan.compareTo(a.waktuDiajukan));
+      // 4. Mapping ke Helper (AjuanWithMahasiswa)
+      List<AjuanWithMahasiswa> tempList = filteredData.map((ajuan) {
+        return AjuanWithMahasiswa(
+          ajuan: ajuan,
+          mahasiswa: mahasiswa, // Menggunakan mahasiswa yang sudah difetch di step 1
+        );
+      }).toList();
 
-      _riwayatListSource = filteredData;
+      // 5. Sorting: Waktu terbaru di atas
+      tempList.sort((a, b) => b.ajuan.waktuDiajukan.compareTo(a.ajuan.waktuDiajukan));
+
+      _riwayatListSource = tempList;
 
     } catch (e) {
       _errorMessage = "Gagal memuat riwayat: $e";

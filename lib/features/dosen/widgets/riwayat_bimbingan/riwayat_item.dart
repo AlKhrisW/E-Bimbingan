@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
+import 'package:ebimbingan/features/dosen/views/log_bimbingan/riwayat/riwayat_detail_screen.dart';
 
 class RiwayatItem extends StatelessWidget {
   final HelperLogBimbingan data;
@@ -45,9 +46,11 @@ class RiwayatItem extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () {            
-            // Untuk sementara tampilkan Snack bar atau info
-            ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(content: Text("Fitur detail riwayat dalam pengembangan"))
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DosenRiwayatBimbinganDetail(data: data),
+              ),
             );
           },
           child: Padding(
