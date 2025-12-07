@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
@@ -9,11 +10,13 @@ import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/wrapper/helper_ajuan_bimbingan.dart';
+import 'package:ebimbingan/data/services/notification_service.dart';
 
 class DosenAjuanViewModel extends ChangeNotifier {
   final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
   final LogBimbinganService _logService = LogBimbinganService();
   final UserService _userService = UserService();
+  final NotificationService _notifService = NotificationService();
 
   DosenAjuanViewModel();
 
@@ -102,6 +105,7 @@ class DosenAjuanViewModel extends ChangeNotifier {
     if (uid == null) return;
 
     try {
+      // 1. Ambil data ajuan yang sedang diproses
       final itemTarget = _daftarAjuan.firstWhere(
         (element) => element.ajuan.ajuanUid == ajuanUid,
         orElse: () => throw Exception("Data tidak ditemukan"),
@@ -109,7 +113,8 @@ class DosenAjuanViewModel extends ChangeNotifier {
 
       final String newLogUid = FirebaseFirestore.instance.collection('log_bimbingan').doc().id;
 
-      final newLog = LogBimbinganModel(
+      // ... (Logika pembuatan LogBimbinganModel tetap sama) ...
+       final newLog = LogBimbinganModel(
         logBimbinganUid: newLogUid,
         ajuanUid: ajuanUid,
         mahasiswaUid: itemTarget.ajuan.mahasiswaUid,
@@ -121,12 +126,32 @@ class DosenAjuanViewModel extends ChangeNotifier {
         lampiranUrl: null,
       );
 
+      // 2. Update status di Database
       await _ajuanService.updateAjuanStatus(
         ajuanUid: ajuanUid,
         status: AjuanStatus.disetujui,
       );
 
       await _logService.saveLogBimbingan(newLog);
+
+      // --- [MODIFIKASI 1: NOTIFIKASI KE MAHASISWA] ---
+      await _notifService.notifyMahasiswa(
+        mahasiswaUid: itemTarget.ajuan.mahasiswaUid,
+        title: "Ajuan Bimbingan Disetujui",
+        body: "Dosen telah menyetujui jadwal bimbingan Anda untuk tanggal ${DateFormat('dd MMM yyyy').format(itemTarget.ajuan.tanggalBimbingan)}.",
+        type: "ajuan_status",
+        relatedId: ajuanUid,
+      );
+
+      // --- [MODIFIKASI 2: ALARM PENGINGAT UNTUK DOSEN (ANDA SENDIRI)] ---
+      await _notifService.scheduleDosenReminder(
+        id: ajuanUid.hashCode, // ID unik integer
+        title: "Pengingat Bimbingan Besok",
+        body: "Bimbingan dengan ${itemTarget.mahasiswa.name} pukul ${itemTarget.ajuan.waktuBimbingan}",
+        jadwalBimbingan: itemTarget.ajuan.tanggalBimbingan,
+      );
+
+      // Refresh list
       await _loadAjuanProses();
 
     } catch (e) {
@@ -143,11 +168,26 @@ class DosenAjuanViewModel extends ChangeNotifier {
     }
 
     try {
+       // Ambil data untuk tahu siapa mahasiswanya
+      final itemTarget = _daftarAjuan.firstWhere(
+        (element) => element.ajuan.ajuanUid == ajuanUid,
+      );
+
       await _ajuanService.updateAjuanStatus(
         ajuanUid: ajuanUid,
         status: AjuanStatus.ditolak,
         keterangan: keterangan.trim(),
       );
+
+      // --- [MODIFIKASI: NOTIFIKASI TOLAK KE MAHASISWA] ---
+      await _notifService.notifyMahasiswa(
+        mahasiswaUid: itemTarget.ajuan.mahasiswaUid,
+        title: "Ajuan Bimbingan Ditolak",
+        body: "Maaf, ajuan Anda ditolak. Ket: $keterangan",
+        type: "ajuan_status",
+        relatedId: ajuanUid,
+      );
+
       await _loadAjuanProses();
     } catch (e) {
       _error = 'Gagal menolak ajuan: $e';

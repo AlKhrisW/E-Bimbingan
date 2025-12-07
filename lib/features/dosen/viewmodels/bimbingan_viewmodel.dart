@@ -8,11 +8,13 @@ import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
+import 'package:ebimbingan/data/services/notification_service.dart';
 
 class DosenBimbinganViewModel extends ChangeNotifier {
   final LogBimbinganService _logService = LogBimbinganService();
   final UserService _userService = UserService();
   final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
+  final NotificationService _notifService = NotificationService();
 
   DosenBimbinganViewModel();
 
@@ -110,11 +112,24 @@ class DosenBimbinganViewModel extends ChangeNotifier {
 
   Future<void> verifikasiLog(String logUid) async {
     try {
+      // Cari data log dulu untuk notifikasi
+      final targetItem = _daftarLog.firstWhere((e) => e.log.logBimbinganUid == logUid);
+
       await _logService.updateLogBimbinganStatus(
         logBimbinganUid: logUid,
         status: LogBimbinganStatus.approved,
         catatanDosen: "Disetujui",
       );
+
+      // --- [MODIFIKASI: NOTIFIKASI LOG DITERIMA] ---
+      await _notifService.notifyMahasiswa(
+        mahasiswaUid: targetItem.log.mahasiswaUid,
+        title: "Log Bimbingan Diverifikasi",
+        body: "Log bimbingan Anda tanggal ${targetItem.log.waktuPengajuan} telah disetujui Dosen.",
+        type: "log_status",
+        relatedId: logUid,
+      );
+
       await _loadLogPending();
     } catch (e) {
       _error = 'Gagal verifikasi log: $e';
@@ -130,11 +145,23 @@ class DosenBimbinganViewModel extends ChangeNotifier {
     }
 
     try {
+      final targetItem = _daftarLog.firstWhere((e) => e.log.logBimbinganUid == logUid);
+
       await _logService.updateLogBimbinganStatus(
         logBimbinganUid: logUid,
         status: LogBimbinganStatus.rejected,
         catatanDosen: catatan.trim(),
       );
+
+      // --- [MODIFIKASI: NOTIFIKASI LOG DITOLAK] ---
+      await _notifService.notifyMahasiswa(
+        mahasiswaUid: targetItem.log.mahasiswaUid,
+        title: "Log Bimbingan Ditolak",
+        body: "Log bimbingan perlu revisi. Catatan: $catatan",
+        type: "log_status",
+        relatedId: logUid,
+      );
+
       await _loadLogPending();
     } catch (e) {
       _error = 'Gagal menolak log: $e';

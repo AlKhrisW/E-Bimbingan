@@ -20,7 +20,7 @@ class DosenDashboard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => DosenNotifikasi(user: user),
+              builder: (context) => NotificationPage(),
             ),
           );
         },
