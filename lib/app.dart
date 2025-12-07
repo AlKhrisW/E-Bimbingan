@@ -18,17 +18,8 @@ import 'features/admin/viewmodels/admin_viewmodel.dart';
 import 'features/admin/viewmodels/admin_profile_viewmodel.dart';
 import 'features/admin/viewmodels/admin_dashboard_viewmodel.dart';
 import 'features/admin/viewmodels/admin_user_management_viewmodel.dart';
-import 'features/admin/viewmodels/mapping/admin_dosen_list_vm.dart';     // IMPORT
-import 'features/admin/viewmodels/mapping/detail_mapping_vm.dart';      // IMPORT
-
-// Dosen
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_profil_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/ajuan_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
+import 'features/admin/viewmodels/mapping/admin_dosen_list_vm.dart';
+import 'features/admin/viewmodels/mapping/detail_mapping_vm.dart';
 
 // Mahasiswa ViewModels
 import 'features/mahasiswa/viewmodels/mahasiswa_viewmodel.dart';
@@ -40,30 +31,19 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Global
+        // Global Auth
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
 
         // Provider Khusus Mahasiswa
-        ChangeNotifierProvider(create: (_) => MahasiswaViewModel(authService: FirebaseAuthService(),userService: UserService())),
+        ChangeNotifierProvider(create: (_) => MahasiswaViewModel(authService: FirebaseAuthService(), userService: UserService())),
 
-        // Provider Khusus Dosen
-        ChangeNotifierProvider(create: (_) => DosenProfilViewModel(authService: FirebaseAuthService(),userService: UserService())),
-        ChangeNotifierProvider(create: (_) => DosenMahasiswaViewModel(authService: FirebaseAuthService(),userService: UserService())),
-        ChangeNotifierProvider(create: (_) => DosenLogbookHarianViewModel()),
-        ChangeNotifierProvider(create: (_) => DosenAjuanViewModel()),
-        ChangeNotifierProvider(create: (_) => DosenRiwayatAjuanViewModel()),
-        ChangeNotifierProvider(create: (_) => DosenBimbinganViewModel()),
-        ChangeNotifierProvider(create: (_) => DosenRiwayatBimbinganViewModel()),
-
-        // Admin
+        // --- ADMIN ---
         ChangeNotifierProvider(create: (_) => AdminViewModel()),
         ChangeNotifierProvider(create: (_) => AdminProfileViewModel()),
         ChangeNotifierProvider(create: (_) => AdminDashboardViewModel()),
         ChangeNotifierProvider(create: (_) => AdminUserManagementViewModel()),
-
-        // Mapping Admin — HANYA CREATE, JANGAN LANGSUNG LOAD!
         ChangeNotifierProvider(create: (_) => AdminDosenListViewModel()),
-        ChangeNotifierProvider(create: (_) => DetailMappingViewModel()), // PENTING!
+        ChangeNotifierProvider(create: (_) => DetailMappingViewModel()),
       ],
       child: MaterialApp(
         navigatorKey: appNavigatorKey,

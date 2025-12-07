@@ -10,7 +10,6 @@ class LogbookItem extends StatelessWidget {
   const LogbookItem({super.key, required this.logbook});
 
   bool get isVerified => logbook.status == LogbookStatus.verified;
-  bool get isDraft => logbook.status == LogbookStatus.draft; 
 
   Color get statusColor {
     if (isVerified) {

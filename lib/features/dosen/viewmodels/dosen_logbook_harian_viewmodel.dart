@@ -1,12 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
-
-// models
 import 'package:ebimbingan/data/models/logbook_harian_model.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
-
-// services
 import 'package:ebimbingan/data/services/logbook_harian_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
 
@@ -14,24 +10,17 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
   final LogbookHarianService _logbookHarianService = LogbookHarianService();
   final UserService _userService = UserService();
   
-  late final String currentDosenUid;
-
-  DosenLogbookHarianViewModel() {
-    currentDosenUid = AuthUtils.currentUid ?? '';
-  }
+  DosenLogbookHarianViewModel();
 
   // =================================================================
   // STATE
   // =================================================================
 
-  // List utama dari database (Source Data)
   List<LogbookHarianModel> _logbookListSource = [];
 
-  // Filter aktif (null = Semua, Verified, Draft)
   LogbookStatus? _activeFilter;
   LogbookStatus? get activeFilter => _activeFilter;
 
-  // Data detail mahasiswa yang sedang dilihat
   UserModel? _selectedMahasiswa;
   UserModel? get selectedMahasiswa => _selectedMahasiswa;
 
@@ -42,10 +31,9 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   // =================================================================
-  // GETTERS (UI LOGIC)
+  // GETTERS
   // =================================================================
 
-  /// Mengambil list yang sudah difilter sesuai bubble pilihan user
   List<LogbookHarianModel> get logbooks {
     if (_activeFilter == null) {
       return _logbookListSource;
@@ -56,7 +44,7 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
   }
 
   // =================================================================
-  // ACTIONS & METHODS
+  // ACTIONS
   // =================================================================
 
   void setFilter(LogbookStatus? status) {
@@ -64,26 +52,29 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Dipanggil ketika dosen memilih salah satu mahasiswa dari daftar
   Future<void> pilihMahasiswa(String mahasiswaUid) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
+    final uid = AuthUtils.currentUid;
+    if (uid == null) {
+      _errorMessage = "Sesi habis, silakan login ulang";
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
     try {
-      // 1. Ambil detail mahasiswa
       final mahasiswa = await _userService.fetchUserByUid(mahasiswaUid);
       _selectedMahasiswa = mahasiswa;
 
-      // 2. Ambil Logbook Harian (FUTURE)
       final List<LogbookHarianModel> data = await _logbookHarianService.getLogbook(
         mahasiswaUid, 
-        currentDosenUid
+        uid 
       );
 
-      // 3. Simpan ke source list
       _logbookListSource = data;
-
     } catch (e) {
       _errorMessage = "Gagal memuat logbook: $e";
       _logbookListSource = [];
@@ -93,11 +84,6 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
     }
   }
 
-  // =================================================================
-  // UTILS
-  // =================================================================
-
-  /// Refresh manual
   Future<void> refresh() async {
     if (_selectedMahasiswa != null) {
       await pilihMahasiswa(_selectedMahasiswa!.uid);

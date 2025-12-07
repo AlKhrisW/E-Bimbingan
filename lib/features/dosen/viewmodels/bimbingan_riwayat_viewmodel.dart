@@ -1,13 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
-
-// models
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
-
-// services
 import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
@@ -17,11 +13,7 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
   final UserService _userService = UserService();
   final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
   
-  late final String currentDosenUid;
-
-  DosenRiwayatBimbinganViewModel() {
-    currentDosenUid = AuthUtils.currentUid ?? '';
-  }
+  DosenRiwayatBimbinganViewModel();
 
   // =================================================================
   // STATE
@@ -55,7 +47,7 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
   }
 
   // =================================================================
-  // ACTIONS & METHODS
+  // ACTIONS
   // =================================================================
 
   void setFilter(LogBimbinganStatus? status) {
@@ -68,29 +60,33 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
+    final uid = AuthUtils.currentUid;
+    if (uid == null) {
+      _errorMessage = "Sesi habis";
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
     try {
-      // 1. Ambil detail mahasiswa
       final mahasiswa = await _userService.fetchUserByUid(mahasiswaUid);
       _selectedMahasiswa = mahasiswa;
 
-      // 2. Ambil Riwayat Log
       final List<LogBimbinganModel> logs = await _logService.getRiwayatSpesifik(
-        currentDosenUid, 
+        uid, 
         mahasiswaUid,
       );
 
-      // 3. Filter status (Approved & Rejected only)
       final filteredLogs = logs.where((log) => 
           log.status == LogBimbinganStatus.approved || 
           log.status == LogBimbinganStatus.rejected
       ).toList();
 
-      // 4. Mapping data ke Helper (Log + Mahasiswa + Ajuan)
       List<HelperLogBimbingan> tempList = [];
 
       for (var log in filteredLogs) {
         final ajuan = await _ajuanService.getAjuanByUid(log.ajuanUid);
-        
+
         if (ajuan != null) {
           tempList.add(HelperLogBimbingan(
             log: log,
@@ -100,9 +96,7 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
         }
       }
 
-      // 5. Sorting (Terbaru di atas)
       tempList.sort((a, b) => b.log.waktuPengajuan.compareTo(a.log.waktuPengajuan));
-
       _riwayatListSource = tempList;
 
     } catch (e) {
@@ -113,10 +107,6 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-  // =================================================================
-  // UTILS
-  // =================================================================
 
   Future<void> refresh() async {
     if (_selectedMahasiswa != null) {

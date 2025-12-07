@@ -48,7 +48,7 @@ class RiwayatItem extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => DosenAjuanDetail(data: data),
+                builder: (_) => DosenAjuanRiwayatDetail(data: data),
               ),
             );
           },

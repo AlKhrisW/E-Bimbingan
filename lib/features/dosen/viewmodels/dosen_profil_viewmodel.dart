@@ -14,22 +14,21 @@ class DosenProfilViewModel extends ChangeNotifier {
   })  : _authService = authService,
         _userService = userService;
 
+  // =================================================================
+  // STATE
+  // =================================================================
+
   UserModel? _dosenData;
   bool _isLoading = false;
 
   UserModel? get dosenData => _dosenData;
   bool get isLoading => _isLoading;
+  String? get currentUserId => _authService.getCurrentUser()?.uid;
 
-  /// ----------------------------------------
-  /// Mengambil UID dosen yang login saat ini
-  /// ----------------------------------------
-  String? get currentUserId {
-    return _authService.getCurrentUser()?.uid;
-  }
+  // =================================================================
+  // LOAD DATA
+  // =================================================================
 
-  /// ----------------------------------------
-  /// Memuat data dosen berdasarkan UID
-  /// ----------------------------------------
   Future<void> loadDosenData() async {
     final uid = currentUserId;
     if (uid == null) return;
@@ -48,16 +47,14 @@ class DosenProfilViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// ----------------------------------------
-  /// Refresh data manual
-  /// ----------------------------------------
   Future<void> refresh() async {
     await loadDosenData();
   }
 
-  /// ----------------------------------------
-  /// Update profile fields (name, phone)
-  /// ----------------------------------------
+  // =================================================================
+  // UPDATE PROFILE
+  // =================================================================
+
   Future<void> updateProfile({
     String? name,
     String? phoneNumber,
@@ -65,7 +62,7 @@ class DosenProfilViewModel extends ChangeNotifier {
     if (_dosenData == null) {
       throw 'Tidak ada data dosen untuk diupdate.';
     }
-    // Build partial payload only with provided fields
+    
     final Map<String, dynamic> payload = {};
     if (name != null) payload['name'] = name;
     if (phoneNumber != null) payload['phone_number'] = phoneNumber;
@@ -76,10 +73,7 @@ class DosenProfilViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Use partial update to avoid overwriting unrelated fields
       await _userService.updateUserMetadataPartial(_dosenData!.uid, payload);
-
-      // Update local cache using copyWith
       _dosenData = _dosenData!.copyWith(
         name: name,
         phoneNumber: phoneNumber,
@@ -93,14 +87,13 @@ class DosenProfilViewModel extends ChangeNotifier {
     }
   }
 
-  // Convenience helpers
   Future<void> updateName(String name) => updateProfile(name: name);
   Future<void> updatePhone(String phone) => updateProfile(phoneNumber: phone);
 
-  // ------------------------------------------------------------
+  // =================================================================
   // LOGOUT
-  // ------------------------------------------------------------
-  // Logic logout (hapus token dll)
+  // =================================================================
+
   Future<void> logout() async {
     try {
       await _authService.signOut();
@@ -109,11 +102,15 @@ class DosenProfilViewModel extends ChangeNotifier {
     }
   }
 
-  // Handle logout + navigate ke login
   Future<void> handleLogout(BuildContext context) async {
+    // 1. Ambil Navigator SEBELUM proses async (saat context masih valid)
+    final navigator = Navigator.of(context);
+
+    // 2. Proses logout
     await logout();
 
-    Navigator.of(context).pushAndRemoveUntil(
+    // 3. Gunakan variabel 'navigator' yang sudah disimpan, BUKAN 'context' lagi
+    navigator.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginPage()),
       (route) => false,
     );

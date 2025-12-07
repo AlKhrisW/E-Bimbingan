@@ -55,7 +55,7 @@ class LogBimbinganService {
     try {
       final snapshot = await _logBimbinganCollection
           .where('dosenUid', isEqualTo: dosenUid)
-          .where('status', whereIn: ['pending'])
+          .where('status', isEqualTo: 'pending')
           .orderBy('waktuPengajuan', descending: true)
           .get();
 

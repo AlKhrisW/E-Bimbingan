@@ -1,4 +1,3 @@
-// lib/viewmodels/dosen_mahasiswa_list_viewmodel.dart
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
@@ -14,6 +13,10 @@ class DosenMahasiswaViewModel extends ChangeNotifier {
   })  : _userService = userService,
         _authService = authService;
 
+  // =================================================================
+  // STATE
+  // =================================================================
+
   List<UserModel> _mahasiswaList = [];
   List<UserModel> get mahasiswaList => _mahasiswaList;
 
@@ -23,7 +26,10 @@ class DosenMahasiswaViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  /// Load semua mahasiswa yang dibimbing oleh dosen yang sedang login
+  // =================================================================
+  // LOAD DATA
+  // =================================================================
+
   Future<void> loadMahasiswaBimbingan() async {
     final currentUser = _authService.getCurrentUser();
     if (currentUser == null) {
@@ -47,6 +53,5 @@ class DosenMahasiswaViewModel extends ChangeNotifier {
     }
   }
 
-  /// Refresh manual (pull-to-refresh)
   Future<void> refresh() => loadMahasiswaBimbingan();
 }
