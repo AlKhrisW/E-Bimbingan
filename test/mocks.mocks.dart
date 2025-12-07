@@ -58,7 +58,8 @@ class _FakeConfirmationResult_4 extends _i1.SmartFake
     : super(parent, parentInvocation);
 }
 
-class _FakePasswordValidationStatus_5 extends _i1.SmartFake {
+class _FakePasswordValidationStatus_5 extends _i1.SmartFake
+    implements _i4.PasswordValidationStatus {
   _FakePasswordValidationStatus_5(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
@@ -846,20 +847,21 @@ class MockFirebaseAuth extends _i1.Mock implements _i4.FirebaseAuth {
           )
           as _i6.Future<void>);
 
-  _i6.Future<dynamic> validatePassword(
-    _i4.FirebaseAuth? auth,
+  @override
+  _i6.Future<_i4.PasswordValidationStatus> validatePassword(
+    _i4.FirebaseAuth auth,
     String? password,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#validatePassword, [auth, password]),
-            returnValue: _i6.Future<dynamic>.value(
+            returnValue: _i6.Future<_i4.PasswordValidationStatus>.value(
               _FakePasswordValidationStatus_5(
                 this,
                 Invocation.method(#validatePassword, [auth, password]),
               ),
             ),
           )
-          as _i6.Future<dynamic>);
+          as _i6.Future<_i4.PasswordValidationStatus>);
 }
 
 /// A class which mocks [UserCredential].
