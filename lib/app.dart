@@ -23,8 +23,10 @@ import 'features/admin/viewmodels/mapping/detail_mapping_vm.dart';      // IMPOR
 
 // Dosen
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_profil_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/ajuan_bimbingan_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/riwayat_ajuan_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
 
@@ -47,9 +49,11 @@ class App extends StatelessWidget {
         // Provider Khusus Dosen
         ChangeNotifierProvider(create: (_) => DosenProfilViewModel(authService: FirebaseAuthService(),userService: UserService())),
         ChangeNotifierProvider(create: (_) => DosenMahasiswaViewModel(authService: FirebaseAuthService(),userService: UserService())),
-        ChangeNotifierProvider(create: (_) => DosenRiwayatAjuanViewModel()),
         ChangeNotifierProvider(create: (_) => DosenLogbookHarianViewModel()),
-        ChangeNotifierProvider(create: (_) => DosenAjuanBimbinganViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenAjuanViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenRiwayatAjuanViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenBimbinganViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenRiwayatBimbinganViewModel()),
 
         // Admin
         ChangeNotifierProvider(create: (_) => AdminViewModel()),

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
+import 'package:ebimbingan/data/models/logbook_harian_model.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
 
-class RiwayatFilter extends StatelessWidget {
-  const RiwayatFilter({super.key});
+class LogbookFilter extends StatelessWidget {
+  const LogbookFilter({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DosenRiwayatAjuanViewModel>(
+    return Consumer<DosenLogbookHarianViewModel>(
       builder: (context, vm, _) {
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -25,24 +25,24 @@ class RiwayatFilter extends StatelessWidget {
               
               const SizedBox(width: 8),
 
-              // Bubble: DISETUJUI
+              // Bubble: TERVAlIDASI
               _buildFilterChip(
                 context, 
-                label: 'Disetujui', 
-                isSelected: vm.activeFilter == AjuanStatus.disetujui,
+                label: 'Tervalidasi', 
+                isSelected: vm.activeFilter == LogbookStatus.verified,
                 color: Colors.green,
-                onSelected: () => vm.setFilter(AjuanStatus.disetujui),
+                onSelected: () => vm.setFilter(LogbookStatus.verified),
               ),
 
               const SizedBox(width: 8),
 
-              // Bubble: DITOLAK
+              // Bubble: PENDING
               _buildFilterChip(
                 context, 
-                label: 'Ditolak', 
-                isSelected: vm.activeFilter == AjuanStatus.ditolak,
-                color: Colors.red,
-                onSelected: () => vm.setFilter(AjuanStatus.ditolak),
+                label: 'Pending', 
+                isSelected: vm.activeFilter == LogbookStatus.draft,
+                color: Colors.orange,
+                onSelected: () => vm.setFilter(LogbookStatus.draft),
               ),
             ],
           ),
@@ -56,7 +56,7 @@ class RiwayatFilter extends StatelessWidget {
     required String label,
     required bool isSelected,
     required VoidCallback onSelected,
-    Color color = Colors.blue, // Default color
+    Color color = Colors.blue,
   }) {
     return ChoiceChip(
       label: Text(

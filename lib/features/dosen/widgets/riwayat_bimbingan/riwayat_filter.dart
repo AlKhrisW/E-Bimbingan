@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
+import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
 
 class RiwayatFilter extends StatelessWidget {
   const RiwayatFilter({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DosenRiwayatAjuanViewModel>(
+    return Consumer<DosenRiwayatBimbinganViewModel>(
       builder: (context, vm, _) {
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -29,9 +29,9 @@ class RiwayatFilter extends StatelessWidget {
               _buildFilterChip(
                 context, 
                 label: 'Disetujui', 
-                isSelected: vm.activeFilter == AjuanStatus.disetujui,
+                isSelected: vm.activeFilter == LogBimbinganStatus.approved,
                 color: Colors.green,
-                onSelected: () => vm.setFilter(AjuanStatus.disetujui),
+                onSelected: () => vm.setFilter(LogBimbinganStatus.approved),
               ),
 
               const SizedBox(width: 8),
@@ -40,9 +40,9 @@ class RiwayatFilter extends StatelessWidget {
               _buildFilterChip(
                 context, 
                 label: 'Ditolak', 
-                isSelected: vm.activeFilter == AjuanStatus.ditolak,
+                isSelected: vm.activeFilter == LogBimbinganStatus.rejected,
                 color: Colors.red,
-                onSelected: () => vm.setFilter(AjuanStatus.ditolak),
+                onSelected: () => vm.setFilter(LogBimbinganStatus.rejected),
               ),
             ],
           ),

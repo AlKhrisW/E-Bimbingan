@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/core/widgets/appbar/custom_appbar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
-import 'package:ebimbingan/features/dosen/views/log_harian/log_list_screen.dart';
+import 'riwayat_list_screen.dart';
 
-class DosenProgres extends StatefulWidget {
-  const DosenProgres({super.key});
+class DosenListMahasiswaBimbingan extends StatefulWidget {
+  const DosenListMahasiswaBimbingan({super.key});
 
   @override
-  State<DosenProgres> createState() => _DosenProgresState();
+  State<DosenListMahasiswaBimbingan> createState() => _DosenListMahasiswaBimbinganState();
 }
 
-class _DosenProgresState extends State<DosenProgres> {
+class _DosenListMahasiswaBimbinganState extends State<DosenListMahasiswaBimbingan> {
   @override
   void initState() {
     super.initState();
@@ -26,11 +25,9 @@ class _DosenProgresState extends State<DosenProgres> {
   Widget build(BuildContext context) {
     return Consumer<DosenMahasiswaViewModel>(
       builder: (context, vm, child) {
+        
         if (vm.isLoading) {
-          return Scaffold(
-            appBar: CustomAppbar(judul: "Logbook Harian"),
-            body: const Center(child: CircularProgressIndicator()),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         Widget content;
@@ -57,7 +54,7 @@ class _DosenProgresState extends State<DosenProgres> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => DosenLogbookHarian(
+                      builder: (_) => DosenRiwayatBimbingan(
                         mahasiswaUid: m.uid,
                       ),
                     ),
@@ -68,14 +65,11 @@ class _DosenProgresState extends State<DosenProgres> {
           );
         }
 
-        return Scaffold(
-          appBar: CustomAppbar(judul: "Logbook Harian"),
-          body: RefreshIndicator(
-            onRefresh: vm.refresh,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: content,
-            ),
+        return RefreshIndicator(
+          onRefresh: () async => vm.refresh(),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: content,
           ),
         );
       },

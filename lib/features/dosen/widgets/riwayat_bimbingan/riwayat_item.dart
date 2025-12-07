@@ -1,39 +1,35 @@
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:ebimbingan/data/models/logbook_harian_model.dart';
-import 'package:ebimbingan/features/dosen/views/log_harian/detail_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
+import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
+import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
+import 'package:ebimbingan/features/dosen/views/log_bimbingan/riwayat/riwayat_detail_screen.dart';
 
-class LogbookItem extends StatelessWidget {
-  final LogbookHarianModel logbook;
+class RiwayatItem extends StatelessWidget {
+  final HelperLogBimbingan data;
 
-  const LogbookItem({super.key, required this.logbook});
+  const RiwayatItem({super.key, required this.data});
 
-  bool get isVerified => logbook.status == LogbookStatus.verified;
-  bool get isDraft => logbook.status == LogbookStatus.draft; 
+  // Helper untuk Status Warna & Text
+  bool get isDisetujui => data.log.status == LogBimbinganStatus.approved;
+  bool get isDitolak => data.log.status == LogBimbinganStatus.rejected;
 
   Color get statusColor {
-    if (isVerified) {
-      return Colors.green;
-    } else {
-      return Colors.orangeAccent;
-    }
+    if (isDisetujui) return Colors.green;
+    if (isDitolak) return Colors.red;
+    return Colors.orange;
   }
 
   String get statusText {
-    if (isVerified) {
-      return "Tervalidasi";
-    } else {
-      return "Pending";
-    }
+    if (isDisetujui) return "Disetujui";
+    if (isDitolak) return "Ditolak";
+    return "Proses";
   }
 
   IconData get statusIcon {
-    if (isVerified) {
-      return Icons.check_circle;
-    } else {
-      return Icons.schedule; 
-    }
+    if (isDisetujui) return Icons.check_circle;
+    if (isDitolak) return Icons.cancel;
+    return Icons.access_time_filled;
   }
 
   @override
@@ -49,10 +45,11 @@ class LogbookItem extends StatelessWidget {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            Navigator.of(context).push(
+          onTap: () {            
+            Navigator.push(
+              context,
               MaterialPageRoute(
-                builder: (_) => LogbookHarianDetail(logbook: logbook),
+                builder: (_) => DosenRiwayatBimbinganDetail(data: data),
               ),
             );
           },
@@ -60,7 +57,7 @@ class LogbookItem extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Icon Status dalam lingkaran transparan
+                // Icon Status
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -73,7 +70,7 @@ class LogbookItem extends StatelessWidget {
                     size: 24,
                   ),
                 ),
-
+                
                 const SizedBox(width: 16),
 
                 // Konten Teks
@@ -82,7 +79,7 @@ class LogbookItem extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        logbook.judulTopik,
+                        data.ajuan.judulTopik,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
@@ -92,15 +89,13 @@ class LogbookItem extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        DateFormat('dd MMMM yyyy', 'id_ID').format(logbook.tanggal),
+                        DateFormat('dd MMM yyyy • HH:mm', 'id_ID').format(data.log.waktuPengajuan),
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 13,
                         ),
                       ),
-
                       const SizedBox(height: 4),
-
                       // Badge Status Kecil
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

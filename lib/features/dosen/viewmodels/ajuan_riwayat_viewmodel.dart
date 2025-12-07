@@ -3,20 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
 
 // models
-import 'package:ebimbingan/data/models/logbook_harian_model.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
+import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
+import 'package:ebimbingan/data/models/wrapper/helper_ajuan_bimbingan.dart'; 
 
 // services
-import 'package:ebimbingan/data/services/logbook_harian_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
+import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 
-class DosenLogbookHarianViewModel extends ChangeNotifier {
-  final LogbookHarianService _logbookHarianService = LogbookHarianService();
+class DosenRiwayatAjuanViewModel extends ChangeNotifier {
+  final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
   final UserService _userService = UserService();
   
   late final String currentDosenUid;
 
-  DosenLogbookHarianViewModel() {
+  DosenRiwayatAjuanViewModel() {
     currentDosenUid = AuthUtils.currentUid ?? '';
   }
 
@@ -24,12 +25,12 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
   // STATE
   // =================================================================
 
-  // List utama dari database (Source Data)
-  List<LogbookHarianModel> _logbookListSource = [];
+  // List utama dari database, sekarang menggunakan wrapper Helper/Wrapper
+  List<AjuanWithMahasiswa> _riwayatListSource = [];
 
-  // Filter aktif (null = Semua, Verified, Draft)
-  LogbookStatus? _activeFilter;
-  LogbookStatus? get activeFilter => _activeFilter;
+  // Filter aktif (null = Semua, Disetujui, Ditolak)
+  AjuanStatus? _activeFilter;
+  AjuanStatus? get activeFilter => _activeFilter;
 
   // Data detail mahasiswa yang sedang dilihat
   UserModel? _selectedMahasiswa;
@@ -46,12 +47,12 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
   // =================================================================
 
   /// Mengambil list yang sudah difilter sesuai bubble pilihan user
-  List<LogbookHarianModel> get logbooks {
+  List<AjuanWithMahasiswa> get riwayatList {
     if (_activeFilter == null) {
-      return _logbookListSource;
+      return _riwayatListSource;
     }
-    return _logbookListSource
-        .where((element) => element.status == _activeFilter)
+    return _riwayatListSource
+        .where((element) => element.ajuan.status == _activeFilter)
         .toList();
   }
 
@@ -59,34 +60,50 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
   // ACTIONS & METHODS
   // =================================================================
 
-  void setFilter(LogbookStatus? status) {
+  void setFilter(AjuanStatus? status) {
     _activeFilter = status;
     notifyListeners();
   }
 
-  /// Dipanggil ketika dosen memilih salah satu mahasiswa dari daftar
+  /// Memuat data mahasiswa dan riwayat bimbingannya
   Future<void> pilihMahasiswa(String mahasiswaUid) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      // 1. Ambil detail mahasiswa
+      // 1. Ambil detail mahasiswa untuk Header UI dan Wrapper
       final mahasiswa = await _userService.fetchUserByUid(mahasiswaUid);
       _selectedMahasiswa = mahasiswa;
 
-      // 2. Ambil Logbook Harian (FUTURE)
-      final List<LogbookHarianModel> data = await _logbookHarianService.getLogbook(
-        mahasiswaUid, 
-        currentDosenUid
+      // 2. Ambil Riwayat Spesifik (Future)
+      final List<AjuanBimbinganModel> data = await _ajuanService.getRiwayatSpesifik(
+        currentDosenUid, 
+        mahasiswaUid,
       );
 
-      // 3. Simpan ke source list
-      _logbookListSource = data;
+      // 3. Filter: Hanya ambil yang statusnya Disetujui atau Ditolak
+      final filteredData = data.where((ajuan) => 
+          ajuan.status == AjuanStatus.disetujui || 
+          ajuan.status == AjuanStatus.ditolak
+      ).toList();
+
+      // 4. Mapping ke Helper (AjuanWithMahasiswa)
+      List<AjuanWithMahasiswa> tempList = filteredData.map((ajuan) {
+        return AjuanWithMahasiswa(
+          ajuan: ajuan,
+          mahasiswa: mahasiswa, // Menggunakan mahasiswa yang sudah difetch di step 1
+        );
+      }).toList();
+
+      // 5. Sorting: Waktu terbaru di atas
+      tempList.sort((a, b) => b.ajuan.waktuDiajukan.compareTo(a.ajuan.waktuDiajukan));
+
+      _riwayatListSource = tempList;
 
     } catch (e) {
-      _errorMessage = "Gagal memuat logbook: $e";
-      _logbookListSource = [];
+      _errorMessage = "Gagal memuat riwayat: $e";
+      _riwayatListSource = [];
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -97,7 +114,6 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
   // UTILS
   // =================================================================
 
-  /// Refresh manual
   Future<void> refresh() async {
     if (_selectedMahasiswa != null) {
       await pilihMahasiswa(_selectedMahasiswa!.uid);

@@ -5,11 +5,10 @@ class LogBimbinganService {
   final CollectionReference _logBimbinganCollection = 
       FirebaseFirestore.instance.collection('log_bimbingan');
 
-  // ----------------------------------------------------------------------
-  // create & update (c/u)
-  // ----------------------------------------------------------------------
+  // =================================================================
+  // CREATE & UPDATE
+  // =================================================================
 
-  /// menyimpan log bimbingan baru atau memperbarui yang sudah ada
   Future<void> saveLogBimbingan(LogBimbinganModel log) async {
     try {
       await _logBimbinganCollection.doc(log.logBimbinganUid).set(log.toMap());
@@ -18,7 +17,6 @@ class LogBimbinganService {
     }
   }
 
-  /// memperbarui status log bimbingan oleh dosen
   Future<void> updateLogBimbinganStatus({
     required String logBimbinganUid,
     required LogBimbinganStatus status,
@@ -26,7 +24,7 @@ class LogBimbinganService {
   }) async {
     try {
       await _logBimbinganCollection.doc(logBimbinganUid).update({
-        'status': status.toString().split('.').last, // simpan sebagai string lowercase
+        'status': status.toString().split('.').last,
         'catatanDosen': catatanDosen,
       });
     } catch (e) {
@@ -34,41 +32,61 @@ class LogBimbinganService {
     }
   }
   
-  // ----------------------------------------------------------------------
-  // read (r)
-  // ----------------------------------------------------------------------
+  // =================================================================
+  // READ (FUTURE / GET)
+  // =================================================================
 
-  /// mengambil semua log bimbingan (mingguan) milik mahasiswa tertentu
-  Stream<List<LogBimbinganModel>> getLogBimbinganByMahasiswaUid(String mahasiswaUid) {
-    return _logBimbinganCollection
-        .where('mahasiswaUid', isEqualTo: mahasiswaUid)
-        .snapshots()
-        .map((snapshot) {
+  Future<List<LogBimbinganModel>> getLogBimbinganByMahasiswaUid(String mahasiswaUid) async {
+    try {
+      final snapshot = await _logBimbinganCollection
+          .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+          .orderBy('waktuPengajuan', descending: true)
+          .get();
+
       return snapshot.docs.map((doc) {
         return LogBimbinganModel.fromMap(doc.data()! as Map<String, dynamic>);
       }).toList();
-    });
+    } catch (e) {
+      throw Exception('gagal mengambil log mahasiswa: ${e.toString()}');
+    }
   }
 
-  /// mengambil log bimbingan yang menunggu persetujuan dosen
-  Stream<List<LogBimbinganModel>> getPendingLogsByDosenUid(String dosenUid) {
-    return _logBimbinganCollection
-        .where('dosenUid', isEqualTo: dosenUid)
-        .where('status', isEqualTo: LogBimbinganStatus.pending.toString().split('.').last)
-        .orderBy('waktuPengajuan', descending: false)
-        .snapshots()
-        .map((snapshot) {
+  Future<List<LogBimbinganModel>> getPendingLogsByDosenUid(String dosenUid) async {
+    try {
+      final snapshot = await _logBimbinganCollection
+          .where('dosenUid', isEqualTo: dosenUid)
+          .where('status', whereIn: ['pending'])
+          .orderBy('waktuPengajuan', descending: true)
+          .get();
+
       return snapshot.docs.map((doc) {
         return LogBimbinganModel.fromMap(doc.data()! as Map<String, dynamic>);
       }).toList();
-    });
+    } catch (e) {
+      throw Exception('gagal mengambil log pending dosen: ${e.toString()}');
+    }
   }
 
-  // ----------------------------------------------------------------------
-  // delete (d)
-  // ----------------------------------------------------------------------
+  Future<List<LogBimbinganModel>> getRiwayatSpesifik(String dosenUid, String mahasiswaUid) async {
+    try {
+      final snapshot = await _logBimbinganCollection
+          .where('dosenUid', isEqualTo: dosenUid)
+          .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+          .orderBy('waktuPengajuan', descending: true)
+          .get();
 
-  /// menghapus log bimbingan
+      return snapshot.docs.map((doc) {
+        return LogBimbinganModel.fromMap(doc.data()! as Map<String, dynamic>);
+      }).toList();
+    } catch (e) {
+      throw Exception('gagal mengambil riwayat spesifik: ${e.toString()}');
+    }
+  }
+
+  // =================================================================
+  // DELETE
+  // =================================================================
+
   Future<void> deleteLogBimbingan(String logBimbinganUid) async {
     try {
       await _logBimbinganCollection.doc(logBimbinganUid).delete();
