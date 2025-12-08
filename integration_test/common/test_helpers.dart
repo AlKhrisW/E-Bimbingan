@@ -79,41 +79,43 @@ Future<void> verifyMahasiswaDashboard(WidgetTester tester) async {
 /// =========================== LOGOUT ===========================
 /// =============================================================
 Future<void> logoutViaProfile(WidgetTester tester) async {
-  // Pastikan sudah di tab Akun/Profil
+  // 1. Navigasi ke tab Akun/Profile
   await tester.pumpAndSettle(const Duration(milliseconds: 500));
-
-  // >>> 1. TAMBAH LANGKAH INI: Navigasi ke tab Akun/Profile <<<
   final profileTab = find.text('Akun');
+
+  // TAP TAB AKUN
   if (profileTab.evaluate().isNotEmpty) {
     print('Navigasi ke tab Akun...');
     await tester.tap(profileTab.first);
-    await tester.pumpAndSettle(const Duration(seconds: 1)); // Tunggu navigasi
+    await tester.pumpAndSettle(const Duration(seconds: 2)); // Tunggu navigasi
   } else {
-    // Fallback/Warning jika tab Akun tidak ditemukan, mungkin tampilan berbeda
     print('⚠️ Tab Akun tidak ditemukan, mencoba melanjutkan.');
   }
 
-  // 2. Tap ikon logout di AppBar
-  // Langkah ini sekarang akan berhasil karena kita sudah di tab Akun
+  // VALIDASI: Pastikan kita berada di halaman Profil (judul AppBar)
+  expect(
+    find.text('Profil'),
+    findsWidgets,
+    reason: 'Gagal pindah/verifikasi halaman Profil sebelum mencari logout.',
+  );
+
+  // 2. Cari dan tap ikon logout
+  // Menggunakan find.byIcon(Icons.logout)
   final logoutIcon = find.byIcon(Icons.logout);
+
   expect(
     logoutIcon,
     findsOneWidget,
-    reason: 'Ikon logout tidak ditemukan di AppBar Profil',
+    reason:
+        'Ikon logout tidak ditemukan di AppBar Profil (Pastikan ikon dimuat di AppBar MahasiswaProfilScreen)',
   );
 
   await tester.tap(logoutIcon);
   await tester.pumpAndSettle(); // Tunggu BottomSheet muncul
 
-  // 3. Tap tombol "Logout" yang ada di dalam BottomSheet
-  final logoutButtonInSheet = find.descendant(
-    of: find.byType(BottomSheet),
-    matching: find.text('Logout'),
-  );
-
-  final confirmButton = logoutButtonInSheet.evaluate().isNotEmpty
-      ? logoutButtonInSheet.first
-      : find.text('Logout').last;
+  // 3. Tap tombol "Logout" di BottomSheet
+  // Mencari tombol ElevatedButton dengan teks 'Logout'
+  final confirmButton = find.widgetWithText(ElevatedButton, 'Logout');
 
   expect(
     confirmButton,
@@ -127,7 +129,7 @@ Future<void> logoutViaProfile(WidgetTester tester) async {
   // 4. Pastikan sudah kembali ke halaman login
   expect(
     find.text('Selamat Datang').or(find.text('Masuk ke akun Anda')),
-    findsWidgets, // bisa salah satu
+    findsWidgets,
     reason: 'Gagal kembali ke halaman login setelah logout',
   );
 

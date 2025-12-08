@@ -10,10 +10,8 @@ class MahasiswaLaporanScreen extends StatelessWidget {
   final UserModel user;
   final MahasiswaLaporanViewModel viewModel;
 
-  MahasiswaLaporanScreen({
-    super.key,
-    required this.user,
-  }) : viewModel = MahasiswaLaporanViewModel(mahasiswaUid: "");
+  MahasiswaLaporanScreen({super.key, required this.user})
+    : viewModel = MahasiswaLaporanViewModel(mahasiswaUid: "");
 
   @override
   Widget build(BuildContext context) {
@@ -47,11 +45,17 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                 // USER CARD
                 Center(
                   child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: const Color(0xFFD4E3FF),
-                      border: Border.all(color: const Color(0xFF4D7CFE), width: 2.5),
+                      border: Border.all(
+                        color: const Color(0xFF4D7CFE),
+                        width: 2.5,
+                      ),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Row(
@@ -61,7 +65,9 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                           radius: 32,
                           backgroundColor: const Color(0xFF4D7CFE),
                           child: Text(
-                            user.name.isNotEmpty ? user.name[0].toUpperCase() : 'M',
+                            user.name.isNotEmpty
+                                ? user.name[0].toUpperCase()
+                                : 'M',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 26,
@@ -75,7 +81,10 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF0F5FF),
                                 borderRadius: BorderRadius.circular(12),
@@ -104,7 +113,10 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF0F5FF),
                                 borderRadius: BorderRadius.circular(8),
@@ -112,7 +124,11 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.description, size: 14, color: Color(0xFF4D7CFE)),
+                                  const Icon(
+                                    Icons.description,
+                                    size: 14,
+                                    color: Color(0xFF4D7CFE),
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     laporanList.length.toString(),
@@ -139,9 +155,15 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                 // GROUPED LIST
                 for (var entry in groupedLaporan.entries) ...[
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE8EFFF),
                         borderRadius: BorderRadius.circular(20),
@@ -176,7 +198,7 @@ class MahasiswaLaporanScreen extends StatelessWidget {
                         description: item['deskripsi'] ?? '',
                       ),
                     ),
-                  ]
+                  ],
                 ],
 
                 const SizedBox(height: 80),
@@ -186,6 +208,7 @@ class MahasiswaLaporanScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'laporanFab',
         onPressed: () {
           Navigator.push(
             context,
