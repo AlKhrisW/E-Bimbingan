@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 
 class CustomAppbar extends StatelessWidget implements PreferredSizeWidget {
   final String judul;
-  const CustomAppbar({super.key, required this.judul});
+  final PreferredSizeWidget? bottom;
+
+  const CustomAppbar({
+    super.key, 
+    required this.judul, 
+    this.bottom,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,9 +24,14 @@ class CustomAppbar extends StatelessWidget implements PreferredSizeWidget {
           color: Colors.black,
         ),
       ),
+      bottom: bottom,
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  // Menghitung tinggi total: Tinggi AppBar standar + Tinggi TabBar (jika ada)
+  Size get preferredSize {
+    final double bottomHeight = bottom?.preferredSize.height ?? 0.0;
+    return Size.fromHeight(kToolbarHeight + bottomHeight);
+  }
 }

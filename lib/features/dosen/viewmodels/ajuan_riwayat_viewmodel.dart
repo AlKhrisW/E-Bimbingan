@@ -1,25 +1,26 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
-import 'package:ebimbingan/data/models/logbook_harian_model.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
-import 'package:ebimbingan/data/services/logbook_harian_service.dart';
+import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
+import 'package:ebimbingan/data/models/wrapper/helper_ajuan_bimbingan.dart'; 
 import 'package:ebimbingan/data/services/user_service.dart';
+import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 
-class DosenLogbookHarianViewModel extends ChangeNotifier {
-  final LogbookHarianService _logbookHarianService = LogbookHarianService();
+class DosenRiwayatAjuanViewModel extends ChangeNotifier {
+  final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
   final UserService _userService = UserService();
   
-  DosenLogbookHarianViewModel();
+  DosenRiwayatAjuanViewModel();
 
   // =================================================================
   // STATE
   // =================================================================
 
-  List<LogbookHarianModel> _logbookListSource = [];
+  List<AjuanWithMahasiswa> _riwayatListSource = [];
 
-  LogbookStatus? _activeFilter;
-  LogbookStatus? get activeFilter => _activeFilter;
+  AjuanStatus? _activeFilter;
+  AjuanStatus? get activeFilter => _activeFilter;
 
   UserModel? _selectedMahasiswa;
   UserModel? get selectedMahasiswa => _selectedMahasiswa;
@@ -34,12 +35,12 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
   // GETTERS
   // =================================================================
 
-  List<LogbookHarianModel> get logbooks {
+  List<AjuanWithMahasiswa> get riwayatList {
     if (_activeFilter == null) {
-      return _logbookListSource;
+      return _riwayatListSource;
     }
-    return _logbookListSource
-        .where((element) => element.status == _activeFilter)
+    return _riwayatListSource
+        .where((element) => element.ajuan.status == _activeFilter)
         .toList();
   }
 
@@ -47,7 +48,7 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
   // ACTIONS
   // =================================================================
 
-  void setFilter(LogbookStatus? status) {
+  void setFilter(AjuanStatus? status) {
     _activeFilter = status;
     notifyListeners();
   }
@@ -69,15 +70,29 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
       final mahasiswa = await _userService.fetchUserByUid(mahasiswaUid);
       _selectedMahasiswa = mahasiswa;
 
-      final List<LogbookHarianModel> data = await _logbookHarianService.getLogbook(
-        mahasiswaUid, 
-        uid 
+      final List<AjuanBimbinganModel> data = await _ajuanService.getRiwayatSpesifik(
+        uid, 
+        mahasiswaUid,
       );
 
-      _logbookListSource = data;
+      final filteredData = data.where((ajuan) => 
+          ajuan.status == AjuanStatus.disetujui || 
+          ajuan.status == AjuanStatus.ditolak
+      ).toList();
+
+      List<AjuanWithMahasiswa> tempList = filteredData.map((ajuan) {
+        return AjuanWithMahasiswa(
+          ajuan: ajuan,
+          mahasiswa: mahasiswa,
+        );
+      }).toList();
+
+      tempList.sort((a, b) => b.ajuan.waktuDiajukan.compareTo(a.ajuan.waktuDiajukan));
+      _riwayatListSource = tempList;
+
     } catch (e) {
-      _errorMessage = "Gagal memuat logbook: $e";
-      _logbookListSource = [];
+      _errorMessage = "Gagal memuat riwayat: $e";
+      _riwayatListSource = [];
     } finally {
       _isLoading = false;
       notifyListeners();

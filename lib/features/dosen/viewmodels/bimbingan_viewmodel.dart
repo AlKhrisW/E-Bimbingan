@@ -1,0 +1,148 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:ebimbingan/core/utils/auth_utils.dart';
+import 'package:ebimbingan/data/services/user_service.dart';
+import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
+import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
+import 'package:ebimbingan/data/models/user_model.dart';
+import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
+import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
+import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
+
+class DosenBimbinganViewModel extends ChangeNotifier {
+  final LogBimbinganService _logService = LogBimbinganService();
+  final UserService _userService = UserService();
+  final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
+
+  DosenBimbinganViewModel();
+
+  // =================================================================
+  // STATE
+  // =================================================================
+
+  List<HelperLogBimbingan> _daftarLog = [];
+  List<HelperLogBimbingan> get daftarLog => _daftarLog;
+
+  bool _isLoading = true;
+  bool get isLoading => _isLoading;
+
+  String? _error;
+  String? get error => _error;
+
+  // =================================================================
+  // LOAD DATA
+  // =================================================================
+
+  Future<void> _loadLogPending() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    final uid = AuthUtils.currentUid;
+    if (uid == null) {
+      _error = 'User belum login';
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final List<LogBimbinganModel> data = await _logService.getPendingLogsByDosenUid(uid);
+
+      if (data.isEmpty) {
+        _daftarLog = [];
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
+
+      final mhsUids = data.map((e) => e.mahasiswaUid).toSet();
+      final ajuanUids = data.map((e) => e.ajuanUid).toSet();
+
+      final results = await Future.wait([
+        Future.wait(mhsUids.map((uid) => _userService.fetchUserByUid(uid))),
+        Future.wait(ajuanUids.map((uid) => _ajuanService.getAjuanByUid(uid))),
+      ]);
+
+      final List<UserModel> fetchedUsers = results[0] as List<UserModel>;
+      final List<AjuanBimbinganModel?> fetchedAjuans = results[1] as List<AjuanBimbinganModel?>;
+
+      final Map<String, UserModel> userMap = {
+        for (var user in fetchedUsers) user.uid: user
+      };
+
+      final Map<String, AjuanBimbinganModel> ajuanMap = {
+        for (var ajuan in fetchedAjuans) 
+          if (ajuan != null) ajuan.ajuanUid: ajuan
+      };
+
+      final List<HelperLogBimbingan> combinedData = [];
+
+      for (var log in data) {
+        final mahasiswa = userMap[log.mahasiswaUid];
+        final ajuan = ajuanMap[log.ajuanUid];
+
+        if (mahasiswa != null && ajuan != null) {
+          combinedData.add(
+            HelperLogBimbingan(
+              log: log,
+              mahasiswa: mahasiswa,
+              ajuan: ajuan,
+            ),
+          );
+        }
+      }
+
+      combinedData.sort((a, b) => b.log.waktuPengajuan.compareTo(a.log.waktuPengajuan));
+      _daftarLog = combinedData;
+
+    } catch (e) {
+      _error = 'Gagal memuat daftar log bimbingan: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // =================================================================
+  // ACTIONS
+  // =================================================================
+
+  Future<void> verifikasiLog(String logUid) async {
+    try {
+      await _logService.updateLogBimbinganStatus(
+        logBimbinganUid: logUid,
+        status: LogBimbinganStatus.approved,
+        catatanDosen: "Disetujui",
+      );
+      await _loadLogPending();
+    } catch (e) {
+      _error = 'Gagal verifikasi log: $e';
+      notifyListeners();
+    }
+  }
+
+  Future<void> tolakLog(String logUid, String catatan) async {
+    if (catatan.trim().isEmpty) {
+      _error = 'Catatan penolakan wajib diisi';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _logService.updateLogBimbinganStatus(
+        logBimbinganUid: logUid,
+        status: LogBimbinganStatus.rejected,
+        catatanDosen: catatan.trim(),
+      );
+      await _loadLogPending();
+    } catch (e) {
+      _error = 'Gagal menolak log: $e';
+      notifyListeners();
+    }
+  }
+
+  Future<void> refresh() async {
+    await _loadLogPending();
+  }
+}

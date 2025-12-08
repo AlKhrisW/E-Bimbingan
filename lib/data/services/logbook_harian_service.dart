@@ -19,7 +19,6 @@ class LogbookHarianService {
   }
 
   /// memperbarui status banyak logbook sekaligus (digunakan untuk auto-verification)
-  /// menggunakan batch write untuk efisiensi dan atomicity (semua berhasil/semua gagal)
   Future<void> batchUpdateStatus({
     required List<String> logbookUids,
     required LogbookStatus newStatus,
@@ -42,25 +41,43 @@ class LogbookHarianService {
   }
 
   // ----------------------------------------------------------------------
-  // read (r)
+  // read (r) - SEKARANG MENGGUNAKAN FUTURE
   // ----------------------------------------------------------------------
 
-  /// mengambil semua logbook harian milik mahasiswa tertentu (untuk riwayat & progress)
-  Stream<List<LogbookHarianModel>> getLogbook(String mahasiswaUid, String dosenUid) {
-    return _logbookHarianCollection
-        .where('mahasiswaUid', isEqualTo: mahasiswaUid)
-        .where('dosenUid', isEqualTo: dosenUid)
-        .orderBy('tanggal', descending: true)
-        .snapshots()
-        .map((snapshot) {
+  /// mengambil semua logbook harian milik mahasiswa tertentu
+  Future<List<LogbookHarianModel>> getLogbookByMahasiswaUid(String mahasiswaUid) async {
+    try {
+      final snapshot = await _logbookHarianCollection
+          .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+          .orderBy('tanggal', descending: true)
+          .get();
+
       return snapshot.docs.map((doc) {
         return LogbookHarianModel.fromMap(doc.data()! as Map<String, dynamic>);
       }).toList();
-    });
+    } catch (e) {
+      throw Exception('gagal mengambil logbook mahasiswa: ${e.toString()}');
+    }
+  }
+  
+  /// mengambil logbook spesifik berdasarkan mahasiswa dan dosen
+  Future<List<LogbookHarianModel>> getLogbook(String mahasiswaUid, String dosenUid) async {
+    try {
+      final snapshot = await _logbookHarianCollection
+          .where('dosenUid', isEqualTo: dosenUid)
+          .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+          .orderBy('tanggal', descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        return LogbookHarianModel.fromMap(doc.data()! as Map<String, dynamic>);
+      }).toList();
+    } catch (e) {
+      throw Exception('gagal mengambil logbook spesifik: ${e.toString()}');
+    }
   }
 
-  /// mengambil logbook harian dalam rentang tanggal tertentu (untuk batch update)
-  /// tanggal harus dikonversi ke timestamp firestore sebelum query
+  /// mengambil logbook harian dalam rentang tanggal tertentu
   Future<List<LogbookHarianModel>> getLogbooksInDateRange({
     required String mahasiswaUid,
     required DateTime startDate,

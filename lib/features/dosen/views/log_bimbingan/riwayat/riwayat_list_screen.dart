@@ -2,31 +2,31 @@ import 'package:ebimbingan/features/dosen/widgets/dosen_header_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart';
-import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_filter.dart';
-import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_item.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
+import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/riwayat_filter.dart';
+import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/riwayat_item.dart';
 
-class DosenLogbookHarian extends StatefulWidget {
+class DosenRiwayatBimbingan extends StatefulWidget {
   final String mahasiswaUid;
 
-  const DosenLogbookHarian({
+  const DosenRiwayatBimbingan({
     super.key,
     required this.mahasiswaUid,
   });
 
   @override
-  State<DosenLogbookHarian> createState() => _DosenLogbookHarianState();
+  State<DosenRiwayatBimbingan> createState() => _DosenRiwayatBimbinganState();
 }
 
-class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
+class _DosenRiwayatBimbinganState extends State<DosenRiwayatBimbingan> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context
-          .read<DosenLogbookHarianViewModel>()
+          .read<DosenRiwayatBimbinganViewModel>()
           .pilihMahasiswa(widget.mahasiswaUid);
     });
   }
@@ -35,23 +35,25 @@ class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomUniversalAppbar(
-        judul: "Daftar Logbook Harian",
+        judul: "Daftar Logbook Bimbingan",
       ),
-      body: Consumer<DosenLogbookHarianViewModel>(
+      body: Consumer<DosenRiwayatBimbinganViewModel>(
         builder: (context, vm, child) {
+          final m = vm.selectedMahasiswa;
+
           return Column(
             children: [
-              if (vm.selectedMahasiswa != null)
+              if (m != null)
                 DosenHeaderCard(
-                  name: vm.selectedMahasiswa!.name,
-                  placement: vm.selectedMahasiswa!.placement ?? "-",
+                  name: m.name,
+                  placement: m.placement ?? '-',
                 )
               else
                 const Padding(
                   padding: EdgeInsets.all(20),
-                  child: CircularProgressIndicator(),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
-              const LogbookFilter(),
+              const RiwayatFilter(),
               const SizedBox(height: 8),
               Expanded(
                 child: _buildListContent(vm),
@@ -63,7 +65,7 @@ class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
     );
   }
 
-  Widget _buildListContent(DosenLogbookHarianViewModel vm) {
+  Widget _buildListContent(DosenRiwayatBimbinganViewModel vm) {
     if (vm.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -76,27 +78,29 @@ class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
     }
 
     Widget content;
-    
-    if (vm.logbooks.isEmpty) {
+
+    if (vm.riwayatList.isEmpty) {
       content = const DosenHalamanKosong(
-        icon: Icons.book_outlined,
-        message: "Belum ada logbook harian",
-        subMessage: "Mahasiswa belum mengisi logbook harian.",
+        icon: Icons.history_toggle_off,
+        message: "Belum ada riwayat bimbingan",
+        subMessage: "Mahasiswa belum memiliki data bimbingan",
       );
     } else {
       content = ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(), 
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
-        itemCount: vm.logbooks.length,
+        itemCount: vm.riwayatList.length,
         itemBuilder: (_, index) {
-          final logbook = vm.logbooks[index];
-          return LogbookItem(logbook: logbook);
+          final ajuan = vm.riwayatList[index];
+          return RiwayatItem(data: ajuan);
         },
       );
     }
 
     return RefreshIndicator(
-      onRefresh: () => vm.pilihMahasiswa(widget.mahasiswaUid),
+      onRefresh: () async {
+        await vm.refresh();
+      },
       child: content,
     );
   }
