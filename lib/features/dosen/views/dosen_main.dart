@@ -8,10 +8,6 @@ import '../../../data/models/user_model.dart';
 import '../navigation/dosen_navigation_config.dart';
 import '../../../core/widgets/custom_bottom_nav_shell.dart';
 
-// Services
-import 'package:ebimbingan/data/services/user_service.dart';
-import 'package:ebimbingan/data/services/firebase_auth_service.dart';
-
 // Dosen ViewModels
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_profil_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/ajuan_viewmodel.dart';
@@ -34,21 +30,8 @@ class DosenMain extends StatelessWidget {
     // BUNGKUS DENGAN MULTIPROVIDER
     return MultiProvider(
       providers: [
-        // 1. Profil & Mahasiswa (Butuh Service Injection)
-        ChangeNotifierProvider(
-          create: (_) => DosenProfilViewModel(
-            authService: FirebaseAuthService(),
-            userService: UserService(),
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => DosenMahasiswaViewModel(
-            authService: FirebaseAuthService(),
-            userService: UserService(),
-          ),
-        ),
-
-        // 2. Fitur Utama
+        ChangeNotifierProvider(create: (_) => DosenProfilViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenMahasiswaViewModel()),
         ChangeNotifierProvider(create: (_) => DosenLogbookHarianViewModel()),
         ChangeNotifierProvider(create: (_) => DosenAjuanViewModel()),
         ChangeNotifierProvider(create: (_) => DosenRiwayatAjuanViewModel()),

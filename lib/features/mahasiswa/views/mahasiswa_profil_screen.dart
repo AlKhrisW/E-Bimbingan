@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
@@ -48,6 +49,7 @@ class _MahasiswaProfilScreenState extends State<MahasiswaProfilScreen> {
       if (vm.mahasiswaData == null) return const Scaffold(body: Center(child: Text('Data tidak ditemukan')));
 
       final data = vm.mahasiswaData!;
+      final startDate = DateFormat('dd-MM-yyyy').format(data.startDate ?? DateTime.now());
 
       return Scaffold(
         backgroundColor: AppTheme.backgroundColor,
@@ -65,7 +67,7 @@ class _MahasiswaProfilScreenState extends State<MahasiswaProfilScreen> {
               _buildField('Program Studi', data.programStudi ?? '-'),
               _buildField('Nomor Telepon', data.phoneNumber ?? '-'),
               _buildField('Penempatan Magang', data.placement ?? '-'),
-              // _buildField('Tanggal Mulai', data.startDate ?? '-'),
+              _buildField('Tanggal Mulai', startDate),
             ],
           ),
         ),
