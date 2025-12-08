@@ -186,6 +186,7 @@ class MahasiswaLaporanScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'laporanFab',
         onPressed: () {
           Navigator.push(
             context,

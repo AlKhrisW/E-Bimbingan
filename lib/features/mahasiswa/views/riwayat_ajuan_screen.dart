@@ -109,6 +109,7 @@ class RiwayatAjuanScreen extends StatelessWidget {
       ),
 
       floatingActionButton: FloatingActionButton(
+        heroTag: 'ajuanFab',
         onPressed: () {
           Navigator.push(
             context,
