@@ -11,47 +11,26 @@ class LogBimbinganService {
       FirebaseFirestore.instance.collection('log_bimbingan');
   
   // ======================================================================
-  // ENCODE GAMBAR KE BASE64
+  // HELPERS (Encode/Decode)
   // ======================================================================
   
-  Future<String?> encodeImageToBase64({
-    required File? file,
-    required Uint8List? bytes,
-  }) async {
+  Future<String?> encodeImageToBase64(File file) async {
     try {
-      Uint8List imageBytes;
-      
-      if (kIsWeb && bytes != null) {
-        imageBytes = bytes;
-      } else if (file != null) {
-        imageBytes = await file.readAsBytes();
-      } else {
-        return null;
-      }
-      
+      final imageBytes = await file.readAsBytes();
       final base64String = base64Encode(imageBytes);
       
       if (base64String.length > 900000) {
-        throw Exception('Gambar terlalu besar. Maksimal ~800KB setelah di-encode.');
+        throw Exception('Ukuran gambar terlalu besar (Maksimal ~700KB).');
       }
-      
       return base64String;
-      
     } catch (e) {
-      throw Exception('Gagal encode gambar: $e');
+      throw Exception('Gagal memproses gambar: $e');
     }
   }
 
-  // ======================================================================
-  // DECODE BASE64 KE IMAGE
-  // ======================================================================
-  
   Uint8List? decodeBase64ToImage(String? base64String) {
     try {
-      if (base64String == null || base64String.isEmpty) {
-        return null;
-      }
-      
+      if (base64String == null || base64String.isEmpty) return null;
       return base64Decode(base64String);
     } catch (e) {
       return null;
@@ -80,27 +59,64 @@ class LogBimbinganService {
     }
   }
 
+
   // ======================================================================
-  // CRUD OPERATIONS
+  // UPDATE 1: KHUSUS MAHASISWA (Pengajuan/Revisi)
+  // ======================================================================
+  
+  Future<void> updateLogBimbinganMahasiswa({
+    required String logBimbinganUid,
+    required String ringkasanHasil,
+    required LogBimbinganStatus status,
+    required DateTime waktuPengajuan,
+    File? fileFoto,
+  }) async {
+    try {
+      Map<String, dynamic> dataToUpdate = {
+        'ringkasanHasil': ringkasanHasil,
+        'status': status.toString().split('.').last,
+        'waktuPengajuan': Timestamp.fromDate(waktuPengajuan),
+      };
+
+      if (fileFoto != null) {
+        String? base64Image = await encodeImageToBase64(fileFoto);
+        if (base64Image != null) {
+          dataToUpdate['lampiranUrl'] = base64Image;
+          dataToUpdate['fileName'] = fileFoto.path.split(Platform.pathSeparator).last;
+        }
+      }
+
+      await _logBimbinganCollection.doc(logBimbinganUid).update(dataToUpdate);
+      
+    } catch (e) {
+      throw Exception('Gagal update pengajuan: $e');
+    }
+  }
+
+  // ======================================================================
+  // UPDATE 2: KHUSUS DOSEN (Verifikasi)
   // ======================================================================
 
-  Future<void> updateLogBimbinganStatus({
+  Future<void> updateStatusVerifikasi({
     required String logBimbinganUid,
     required LogBimbinganStatus status,
     String? catatanDosen,
   }) async {
     try {
-      await _logBimbinganCollection.doc(logBimbinganUid).update({
+      Map<String, dynamic> dataToUpdate = {
         'status': status.toString().split('.').last,
         'catatanDosen': catatanDosen,
-      });
+      };
+
+      await _logBimbinganCollection.doc(logBimbinganUid).update(dataToUpdate);
+      
     } catch (e) {
-      throw Exception('Gagal update status: $e');
+      throw Exception('Gagal verifikasi bimbingan: $e');
     }
   }
   
   // =================================================================
-  // READ (FUTURE / GET)
+  // READ DATA (GETTERS)
   // =================================================================
 
   Future<List<LogBimbinganModel>> getLogBimbinganByMahasiswaUid(String mahasiswaUid) async {
@@ -114,7 +130,7 @@ class LogBimbinganService {
         return LogBimbinganModel.fromMap(doc.data()! as Map<String, dynamic>);
       }).toList();
     } catch (e) {
-      throw Exception('gagal mengambil log mahasiswa: ${e.toString()}');
+      throw Exception('Gagal mengambil data mahasiswa: $e');
     }
   }
 
@@ -130,7 +146,7 @@ class LogBimbinganService {
         return LogBimbinganModel.fromMap(doc.data()! as Map<String, dynamic>);
       }).toList();
     } catch (e) {
-      throw Exception('gagal mengambil log pending dosen: ${e.toString()}');
+      throw Exception('Gagal mengambil data pending dosen: $e');
     }
   }
 
@@ -146,7 +162,7 @@ class LogBimbinganService {
         return LogBimbinganModel.fromMap(doc.data()! as Map<String, dynamic>);
       }).toList();
     } catch (e) {
-      throw Exception('gagal mengambil riwayat spesifik: ${e.toString()}');
+      throw Exception('Gagal mengambil riwayat spesifik: $e');
     }
   }
 
@@ -159,7 +175,7 @@ class LogBimbinganService {
         return null;
       }
     } catch (e) {
-      throw Exception('gagal mengambil log bimbingan: ${e.toString()}');
+      throw Exception('Gagal mengambil detail log: $e');
     }
   }
 

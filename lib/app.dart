@@ -1,5 +1,6 @@
 // lib/app.dart
 
+import 'package:ebimbingan/features/mahasiswa/viewmodels/log_mingguan_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -40,6 +41,7 @@ class App extends StatelessWidget {
 
         // Provider Khusus Mahasiswa
         ChangeNotifierProvider(create: (_) => MahasiswaViewModel()),
+        ChangeNotifierProvider(create: (_) => MahasiswaLogMingguanViewModel()),
 
         // --- ADMIN ---
         ChangeNotifierProvider(create: (_) => AdminViewModel()),

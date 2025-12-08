@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../viewmodels/mahasiswa_laporan_viewmodel.dart';
+import '../../viewmodels/log_harian_viewmodel.dart';
 import '../../../../core/widgets/appbar/custom_universal_back_appbar.dart';
 
 class DetailLogbookHarianScreen extends StatelessWidget {

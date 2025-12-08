@@ -1,348 +1,157 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../data/models/user_model.dart';
-import '../../viewmodels/logbook_mingguan_viewmodel.dart';
-import '../../../../core/widgets/appbar/custom_appbar.dart';
-import 'tambah_log_mingguan_screen.dart';
+
+// Widgets Universal
+import 'package:ebimbingan/core/themes/app_theme.dart';
+import 'package:ebimbingan/core/widgets/custom_halaman_kosong.dart';
+import 'package:ebimbingan/core/widgets/appbar/custom_appBar.dart';
+
+// Models & ViewModel
+import '../../viewmodels/log_mingguan_viewmodel.dart';
+import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
+
+// Widgets Spesifik
+import '../../widgets/log_mingguan/mingguan_item_card.dart';
+import '../../widgets/log_mingguan/mingguan_filter_button.dart';
+
+// Screens untuk Navigasi
+import 'update_log_mingguan_screen.dart';
 import 'detail_logbook_mingguan_screen.dart';
 
-class MahasiswaLogbookScreen extends StatelessWidget {
-  final UserModel user;
+class MahasiswaLogMingguanScreen extends StatefulWidget {
+  const MahasiswaLogMingguanScreen({super.key});
 
-  const MahasiswaLogbookScreen({super.key, required this.user});
+  @override
+  State<MahasiswaLogMingguanScreen> createState() => _MahasiswaLogMingguanScreenState();
+}
+
+class _MahasiswaLogMingguanScreenState extends State<MahasiswaLogMingguanScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MahasiswaLogMingguanViewModel>().loadLogData();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => LogbookMingguanViewModel(mahasiswaUid: user.uid),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF7F8FA),
-        appBar: const CustomAppbar(judul: "Logbook Mingguan"),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Menunggu',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF111827),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Consumer<LogbookMingguanViewModel>(
-                builder: (context, viewModel, child) {
-                  return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                    stream: viewModel.ajuanBimbinganStream,
-                    builder: (context, ajuanSnapshot) {
-                      if (ajuanSnapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      if (ajuanSnapshot.hasError) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.error_outline, size: 60, color: Colors.red[300]),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Error: ${ajuanSnapshot.error}',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.red),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      if (!ajuanSnapshot.hasData || ajuanSnapshot.data!.docs.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.event_busy_outlined, size: 80, color: Colors.grey[400]),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Belum ada bimbingan yang disetujui',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Ajukan bimbingan terlebih dahulu\ndan tunggu persetujuan dosen',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                        stream: viewModel.logBimbinganStream,
-                        builder: (context, logSnapshot) {
-                          // Map logbook berdasarkan ajuanUid
-                          final Map<String, Map<String, dynamic>> logbookMap = {};
-                          
-                          if (logSnapshot.hasData) {
-                            for (var doc in logSnapshot.data!.docs) {
-                              final data = doc.data();
-                              final ajuanUid = data['ajuanUid'] as String?;
-                              
-                              if (ajuanUid != null) {
-                                logbookMap[ajuanUid] = {
-                                  'logBimbinganUid': doc.id,
-                                  'status': data['status'] ?? 'draft',
-                                  'ringkasanHasil': data['ringkasanHasil'] ?? '',
-                                  'catatanDosen': data['catatanDosen'],
-                                  'lampiranUrl': data['lampiranUrl'],
-                                  'waktuPengajuan': data['waktuPengajuan'],
-                                };
-                              }
-                            }
-                          }
-
-                          final allAjuan = ajuanSnapshot.data!.docs.map((doc) {
-                            final data = doc.data();
-                            final ajuanUid = doc.id;
-                            
-                            final logbook = logbookMap[ajuanUid];
-                            final status = logbook?['status'] ?? 'draft';
-
-                            return {
-                              'ajuanUid': ajuanUid,
-                              'mahasiswaUid': data['mahasiswaUid'],
-                              'dosenUid': data['dosenUid'],
-                              'namaMahasiswa': data['namaMahasiswa'] ?? '',
-                              'namaDosen': data['namaDosen'] ?? '',
-                              'topikBimbingan': data['topikBimbingan'] ??
-                                  data['judulTopik'] ??
-                                  'Konsultasi KLMN',
-                              'tanggal': data['tanggal'] ?? data['tanggalBimbingan'],
-                              'tanggalFormatted': data['tanggal'] != null
-                                  ? LogbookMingguanViewModel.formatTanggal(data['tanggal'])
-                                  : (data['tanggalBimbingan'] != null
-                                      ? LogbookMingguanViewModel.formatTanggal(data['tanggalBimbingan'])
-                                      : 'Tanggal tidak tersedia'),
-                              'status': status,
-                              'logBimbinganUid': logbook?['logBimbinganUid'],
-                              'ringkasanHasil': logbook?['ringkasanHasil'] ?? '',
-                            };
-                          }).toList();
-
-                          allAjuan.sort((a, b) {
-                            final aDate = a['tanggal'] as Timestamp?;
-                            final bDate = b['tanggal'] as Timestamp?;
-                            if (aDate == null || bDate == null) return 0;
-                            return bDate.toDate().compareTo(aDate.toDate());
-                          });
-
-                          return ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: allAjuan.length,
-                            itemBuilder: (context, index) {
-                              final ajuan = allAjuan[index];
-                              return _buildLogbookCard(context, ajuan);
-                            },
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
+      appBar: CustomAppbar(
+        judul: "Logbook Bimbingan",
       ),
-    );
-  }
-
-  Widget _buildLogbookCard(BuildContext context, Map<String, dynamic> ajuan) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () {
-          _handleCardTap(context, ajuan);
+      body: Consumer<MahasiswaLogMingguanViewModel>(
+        builder: (context, vm, child) {
+          return Column(
+            children: [
+              // 1. FILTER
+              const MahasiswaLogFilter(),
+              
+              const SizedBox(height: 8),
+              
+              // 2. LIST CONTENT
+              Expanded(
+                child: _buildListContent(vm),
+              ),
+            ],
+          );
         },
-        borderRadius: BorderRadius.circular(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Judul',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF9CA3AF),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        ajuan['topikBimbingan'] ?? 'Konsultasi KLMN',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Color(0xFF111827),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                buildStatusBadge(ajuan['status'] ?? 'draft'),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Text(
-                  'Tanggal Bimbingan: ',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF9CA3AF),
-                  ),
-                ),
-                Text(
-                  ajuan['tanggalFormatted'] ?? 'Tanggal tidak tersedia',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF111827),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  void _handleCardTap(BuildContext context, Map<String, dynamic> ajuan) {
-    final status = (ajuan['status'] ?? 'draft').toString().toLowerCase();
+  Widget _buildListContent(MahasiswaLogMingguanViewModel vm) {
+    // 1. Handle Loading
+    if (vm.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-    // Draft atau Rejected -> Buka form edit (TambahLogbookMingguanScreen)
-    if (status == 'draft' || status == 'rejected') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => TambahLogbookMingguanScreen(
-            ajuanData: ajuan,
-          ),
-        ),
-      );
-    } 
-    // Pending atau Approved -> Buka detail (read-only)
-    else if (status == 'pending' || status == 'approved') {
-      final logBimbinganUid = ajuan['logBimbinganUid'];
-      
-      if (logBimbinganUid == null || logBimbinganUid.isEmpty) {
-        // Jika tidak ada logBimbinganUid, tampilkan error
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Data logbook tidak ditemukan'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DetailLogbookMingguanScreen(
-            logBimbinganUid: logBimbinganUid,
+    // 2. Handle Error
+    if (vm.errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                vm.errorMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: vm.refresh,
+                child: const Text("Coba Lagi"),
+              )
+            ],
           ),
         ),
       );
     }
-  }
 
-  Widget buildStatusBadge(String status) {
-    Color bgColor;
-    Color dotColor;
-    String label;
+    // 3. Tentukan Content (Kosong atau List)
+    Widget content;
 
-    final statusLower = status.toLowerCase();
+    if (vm.filteredLogs.isEmpty) {
+      // TAMPILAN KOSONG
+      content = CustomHalamanKosong(
+        icon: Icons.history_edu,
+        message: "Tidak ada logbook",
+        subMessage: vm.activeFilter == null 
+            ? "Anda belum memiliki riwayat bimbingan"
+            : "Tidak ada data pada status ini",
+        height: 0.5,
+      );
+    } else {
+      // TAMPILAN LIST DATA
+      content = ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        itemCount: vm.filteredLogs.length,
+        itemBuilder: (_, index) {
+          final item = vm.filteredLogs[index];
+          
+          return MahasiswaLogItem(
+            data: item,
+            onTap: () async {
+              // --- LOGIKA NAVIGASI BERDASARKAN STATUS ---
+              
+              if (item.log.status == LogBimbinganStatus.draft || 
+                  item.log.status == LogBimbinganStatus.rejected) {
+                
+                // DRAFT / REVISI -> Ke Halaman Update
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => UpdateLogMingguanScreen(dataHelper: item),
+                  ),
+                );
+                
+                vm.refresh();
 
-    switch (statusLower) {
-      case "draft":
-        bgColor = const Color(0xFFFFF4E5);
-        dotColor = const Color(0xFFF59E0B);
-        label = "Belum dibuat";
-        break;
-
-      case "pending":
-        bgColor = const Color(0xFFE0F2FE);
-        dotColor = const Color(0xFF0284C7);
-        label = "Proses";
-        break;
-
-      case "approved":
-        bgColor = const Color(0xFFE6FEE7);
-        dotColor = const Color(0xFF16A34A);
-        label = "Diterima";
-        break;
-
-      case "rejected":
-        bgColor = const Color(0xFFFEE2E2);
-        dotColor = const Color(0xFFDC2626);
-        label = "Ditolak";
-        break;
-
-      default:
-        bgColor = Colors.grey.shade200;
-        dotColor = Colors.grey;
-        label = "Unknown";
+              } else {
+                
+                // PENDING / APPROVED -> Ke Halaman Detail
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DetailLogbookMingguanScreen(data: item),
+                  ),
+                );
+              }
+            },
+          );
+        },
+      );
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.circle, size: 8, color: dotColor),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: dotColor,
-              fontWeight: FontWeight.w600,
-              fontSize: 11,
-            ),
-          ),
-        ],
-      ),
+    return RefreshIndicator(
+      onRefresh: vm.refresh,
+      child: content,
     );
   }
 }

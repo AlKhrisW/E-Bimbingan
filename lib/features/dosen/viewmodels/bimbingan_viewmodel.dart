@@ -125,8 +125,7 @@ class DosenBimbinganViewModel extends ChangeNotifier {
       if (log == null) return null;
 
       // 2. Ambil data Mahasiswa
-      final UserModel? mahasiswa = await _userService.fetchUserByUid(log.mahasiswaUid);
-      if (mahasiswa == null) return null;
+      final UserModel mahasiswa = await _userService.fetchUserByUid(log.mahasiswaUid);
 
       // 3. Ambil data Ajuan Terkait
       final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(log.ajuanUid);
@@ -160,10 +159,10 @@ class DosenBimbinganViewModel extends ChangeNotifier {
 
       if (targetItem == null) throw Exception("Data log tidak ditemukan");
 
-      await _logService.updateLogBimbinganStatus(
+      await _logService.updateStatusVerifikasi(
         logBimbinganUid: logUid,
         status: LogBimbinganStatus.approved,
-        catatanDosen: "Disetujui",
+        catatanDosen: "",
       );
 
       await _notifService.sendNotification(
@@ -201,7 +200,7 @@ class DosenBimbinganViewModel extends ChangeNotifier {
 
       if (targetItem == null) throw Exception("Data log tidak ditemukan");
 
-      await _logService.updateLogBimbinganStatus(
+      await _logService.updateStatusVerifikasi(
         logBimbinganUid: logUid,
         status: LogBimbinganStatus.rejected,
         catatanDosen: catatan.trim(),

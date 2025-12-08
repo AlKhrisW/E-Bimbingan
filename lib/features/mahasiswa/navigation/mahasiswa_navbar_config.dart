@@ -34,7 +34,7 @@ List<NavItem> buildMahasiswaNavItems(UserModel user) {
     NavItem(
       label: "Bimbingan",
       icon: Icons.book_outlined,
-      screen: MahasiswaLogbookScreen(user: user),
+      screen: MahasiswaLogMingguanScreen(),
     ),
 
     NavItem(
