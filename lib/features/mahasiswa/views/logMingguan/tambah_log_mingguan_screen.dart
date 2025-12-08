@@ -7,10 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import '../viewmodels/logbook_mingguan_viewmodel.dart';
+import '../../viewmodels/logbook_mingguan_viewmodel.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
-import 'success_screen.dart';
-import '../../../data/services/log_bimbingan_service.dart';
+import '../../widgets/success_screen.dart';
+import '../../../../data/services/log_bimbingan_service.dart';
 
 class TambahLogbookMingguanScreen extends StatefulWidget {
   final Map<String, dynamic> ajuanData;

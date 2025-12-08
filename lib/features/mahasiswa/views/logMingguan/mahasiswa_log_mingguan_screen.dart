@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../data/models/user_model.dart';
-import '../viewmodels/logbook_mingguan_viewmodel.dart';
-import '../../../core/widgets/appbar/custom_appbar.dart';
-import 'tambah_logbook_mingguan_screen.dart';
+import '../../../../data/models/user_model.dart';
+import '../../viewmodels/logbook_mingguan_viewmodel.dart';
+import '../../../../core/widgets/appbar/custom_appbar.dart';
+import 'tambah_log_mingguan_screen.dart';
 import 'detail_logbook_mingguan_screen.dart';
 
 class MahasiswaLogbookScreen extends StatelessWidget {

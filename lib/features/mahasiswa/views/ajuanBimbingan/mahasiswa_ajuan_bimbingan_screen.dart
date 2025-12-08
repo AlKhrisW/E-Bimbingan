@@ -2,12 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../core/widgets/appbar/custom_appbar.dart';
-import '../../../data/models/user_model.dart';
-import '../widgets/mahasiswa_navbar_config.dart';
-import '../viewmodels/ajuan_bimbingan_viewmodel.dart';
-import '../../../data/models/ajuan_bimbingan_model.dart';
-import 'mahasiswa_ajuan_screen.dart';
+import '../../../../core/widgets/appbar/custom_appbar.dart';
+import '../../../../data/models/user_model.dart';
+import '../../widgets/mahasiswa_navbar_config.dart';
+import '../../viewmodels/ajuan_bimbingan_viewmodel.dart';
+import '../../../../data/models/ajuan_bimbingan_model.dart';
+import 'tambah_ajuan_bimbingan_screen.dart';
 import 'detail_ajuan_screen.dart';
 
 class RiwayatAjuanScreen extends StatelessWidget {

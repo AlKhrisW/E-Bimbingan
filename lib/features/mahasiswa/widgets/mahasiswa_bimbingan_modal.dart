@@ -3,9 +3,9 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
 import '../../../core/utils/navigation/app_navigator.dart';
-import '../views/mahasiswa_ajuan_screen.dart';
-import '../views/mahasiswa_laporan_screen.dart';
-import '../views/mahasiswa_logbook_screen.dart';
+import 'package:ebimbingan/features/mahasiswa/views/ajuanBimbingan/tambah_ajuan_bimbingan_screen.dart';
+import 'package:ebimbingan/features/mahasiswa/views/logHarian/mahasiswa_log_harian_screen.dart';
+import 'package:ebimbingan/features/mahasiswa/views/logMingguan/mahasiswa_log_mingguan_screen.dart';
 
 class MahasiswaBimbinganModal {
   static void show(UserModel user) {

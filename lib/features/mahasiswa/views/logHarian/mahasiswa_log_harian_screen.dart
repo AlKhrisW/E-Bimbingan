@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../data/models/user_model.dart';
-import '../../../core/widgets/appbar/custom_appbar.dart';
-import '../viewmodels/mahasiswa_laporan_viewmodel.dart';
-import 'tambah_logbook_harian.dart';
-import '../widgets/report_harian_item.dart';
+import '../../../../data/models/user_model.dart';
+import '../../../../core/widgets/appbar/custom_appbar.dart';
+import '../../viewmodels/mahasiswa_laporan_viewmodel.dart';
+import 'tambah_log_harian_screen.dart';
+import '../../widgets/report_harian_item.dart';
 import 'detail_logbook_harian.dart';
 
 class MahasiswaLaporanScreen extends StatelessWidget {

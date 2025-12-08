@@ -1,9 +1,9 @@
 // lib/features/mahasiswa/pages/detail_ajuan_screen.dart
 
 import 'package:flutter/material.dart';
-import '../../../data/models/ajuan_bimbingan_model.dart';
-import '../../../data/models/user_model.dart';
-import '../viewmodels/ajuan_bimbingan_viewmodel.dart';
+import '../../../../data/models/ajuan_bimbingan_model.dart';
+import '../../../../data/models/user_model.dart';
+import '../../viewmodels/ajuan_bimbingan_viewmodel.dart';
 
 class DetailAjuanScreen extends StatefulWidget {
   final AjuanBimbinganModel ajuan;

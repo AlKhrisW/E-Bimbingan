@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodels/mahasiswa_viewmodel.dart';
+import '../../viewmodels/mahasiswa_viewmodel.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 

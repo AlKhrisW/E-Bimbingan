@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
-import '../../../data/services/log_bimbingan_service.dart';
-import '../../../data/models/log_bimbingan_model.dart';
+import '../../../../data/services/log_bimbingan_service.dart';
+import '../../../../data/models/log_bimbingan_model.dart';
 
 class DetailLogbookMingguanScreen extends StatefulWidget {
   final String logBimbinganUid;

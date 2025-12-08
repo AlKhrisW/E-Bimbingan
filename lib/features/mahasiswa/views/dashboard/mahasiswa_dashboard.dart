@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import '../../../data/models/user_model.dart';
+import '../../../../data/models/user_model.dart';
 
 class CircularProgressPainter extends CustomPainter {
   final List<Color> colors;

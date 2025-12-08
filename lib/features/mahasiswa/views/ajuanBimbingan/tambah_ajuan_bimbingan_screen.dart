@@ -1,10 +1,10 @@
+import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../data/models/user_model.dart';
-import '../../../data/models/ajuan_bimbingan_model.dart';
-import '../../../core/widgets/appbar/custom_universal_back_appbar.dart';
-
-import 'success_screen.dart';
+import 'package:ebimbingan/data/models/user_model.dart';
+import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
+import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appbar.dart';
+import 'package:ebimbingan/features/mahasiswa/widgets/success_screen.dart';
 
 class MahasiswaAjuanScreen extends StatefulWidget {
   final UserModel user;
