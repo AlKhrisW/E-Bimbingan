@@ -4,27 +4,79 @@ import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
+import 'package:ebimbingan/core/widgets/custom_image_preview.dart';
 import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_tolak_dialog.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_viewmodel.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 
 class DosenLogbookDetail extends StatelessWidget {
-  final HelperLogBimbingan data; 
+  // Ubah menjadi nullable
+  final HelperLogBimbingan? data; 
 
   const DosenLogbookDetail({
     super.key,
-    required this.data, 
+    this.data, // Tidak required
   });
 
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<DosenBimbinganViewModel>(context, listen: false);
 
+    // 1. Cek Data dari Constructor (Cara Lama/Manual)
+    if (data != null) {
+      return _buildMainContent(context, vm, data!);
+    }
+
+    // 2. Cek Data dari Arguments (Route/Notifikasi)
+    final args = ModalRoute.of(context)?.settings.arguments;
+
+    // Jika Arguments berupa Objek Helper (Navigasi manual)
+    if (args is HelperLogBimbingan) {
+      return _buildMainContent(context, vm, args);
+    }
+
+    // Jika Arguments berupa String ID (Navigasi via Notifikasi)
+    if (args is String) {
+      return FutureBuilder<HelperLogBimbingan?>(
+        future: vm.getLogDetail(args),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              appBar: CustomUniversalAppbar(judul: "Detail Log Bimbingan"),
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          if (snapshot.hasError || !snapshot.hasData) {
+            return Scaffold(
+              appBar: const CustomUniversalAppbar(judul: "Detail Log Bimbingan"),
+              body: Center(
+                child: Text(
+                  "Data log tidak ditemukan.\nError: ${snapshot.error ?? ''}",
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+
+          return _buildMainContent(context, vm, snapshot.data!);
+        },
+      );
+    }
+
+    return const Scaffold(
+      appBar: CustomUniversalAppbar(judul: "Detail Log Bimbingan"),
+      body: Center(child: Text("Kesalahan navigasi")),
+    );
+  }
+
+  /// WIDGET TERPISAH: UI UTAMA
+  Widget _buildMainContent(BuildContext context, DosenBimbinganViewModel vm, HelperLogBimbingan contentData) {
     final tanggalPengajuan = DateFormat('EEEE, dd MMMM yyyy HH:mm', 'id_ID')
-        .format(data.log.waktuPengajuan);
+        .format(contentData.log.waktuPengajuan);
     final tanggalBimbingan = DateFormat('dd MMMM yyyy', 'id_ID')
-        .format(data.ajuan.tanggalBimbingan);
+        .format(contentData.ajuan.tanggalBimbingan);
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -35,19 +87,29 @@ class DosenLogbookDetail extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            BuildField(label: "Nama", value: data.mahasiswa.name),
-            BuildField(label: "Tempat Penempatan", value: data.mahasiswa.placement ?? "-"),
-            BuildField(label: "Topik Kegiatan", value: data.ajuan.judulTopik),
+            BuildField(label: "Nama", value: contentData.mahasiswa.name),
+            BuildField(label: "Tempat Penempatan", value: contentData.mahasiswa.placement ?? "-"),
+            BuildField(label: "Topik Kegiatan", value: contentData.ajuan.judulTopik),
             BuildField(label: "Tanggal Bimbingan", value: tanggalBimbingan),
-            BuildField(label: "Waktu Bimbingan", value: data.ajuan.waktuBimbingan),
-            BuildField(label: "Metode Bimbingan", value: data.ajuan.metodeBimbingan),            
+            BuildField(label: "Waktu Bimbingan", value: contentData.ajuan.waktuBimbingan),
+            BuildField(label: "Metode Bimbingan", value: contentData.ajuan.metodeBimbingan),            
             BuildField(label: "Tanggal Penulisan", value: tanggalPengajuan),
-            BuildField(label: "Ringkasan Hasil Bimbingan", value: data.log.ringkasanHasil),
+            BuildField(label: "Ringkasan Hasil Bimbingan", value: contentData.log.ringkasanHasil),
             
-            if (data.log.lampiranUrl != null && data.log.lampiranUrl!.isNotEmpty)
-              BuildField(label: "Lampiran", value: data.log.lampiranUrl!),
+            const Text(
+              "Lampiran / Bukti",
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+            
+            const SizedBox(height: 6),
 
-            const SizedBox(height: 40), 
+            ImagePreviewWidget(base64Image: contentData.log.lampiranUrl),
+
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -67,6 +129,7 @@ class DosenLogbookDetail extends StatelessWidget {
           ),
           child: Row(
             children: [
+              // TOMBOL VERIFIKASI
               Expanded(
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
@@ -81,10 +144,10 @@ class DosenLogbookDetail extends StatelessWidget {
                   icon: const Icon(Icons.check, color: Colors.green),
                   label: const Text("Verifikasi",
                       style: TextStyle(color: Colors.green)),
-                  onPressed: data.log.status != LogBimbinganStatus.pending
+                  onPressed: contentData.log.status != LogBimbinganStatus.pending
                       ? null
                       : () async {
-                          await vm.verifikasiLog(data.log.logBimbinganUid);
+                          await vm.verifikasiLog(contentData.log.logBimbinganUid);
                           if (context.mounted) Navigator.pop(context);
                         },
                 ),
@@ -92,6 +155,7 @@ class DosenLogbookDetail extends StatelessWidget {
               
               const SizedBox(width: 12),
               
+              // TOMBOL REVISI (TOLAK)
               Expanded(
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
@@ -106,7 +170,7 @@ class DosenLogbookDetail extends StatelessWidget {
                   icon: const Icon(Icons.edit_note, color: Colors.orange),
                   label: const Text("Revisi",
                       style: TextStyle(color: Colors.orange)),
-                  onPressed: data.log.status != LogBimbinganStatus.pending
+                  onPressed: contentData.log.status != LogBimbinganStatus.pending
                     ? null
                     : () {
                         showDialog(
@@ -115,7 +179,7 @@ class DosenLogbookDetail extends StatelessWidget {
                           builder: (_) {
                             return TolakAjuanDialog(
                               onConfirm: (catatan) async {
-                                await vm.tolakLog(data.log.logBimbinganUid, catatan);
+                                await vm.tolakLog(contentData.log.logBimbinganUid, catatan);
                                 if (context.mounted) Navigator.pop(context);
                               },
                             );

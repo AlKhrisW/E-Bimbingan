@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:ebimbingan/core/utils/auth_utils.dart'; // Import AuthUtils
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
-import 'package:ebimbingan/data/services/firebase_auth_service.dart';
 
-class DosenMahasiswaViewModel extends ChangeNotifier {
-  final UserService _userService;
-  final FirebaseAuthService _authService;
-
-  DosenMahasiswaViewModel({
-    required UserService userService,
-    required FirebaseAuthService authService,
-  })  : _userService = userService,
-        _authService = authService;
+class DosenMahasiswaListViewModel extends ChangeNotifier {
+  // Inisialisasi service secara internal
+  final UserService _userService = UserService();
 
   // =================================================================
   // STATE
@@ -26,13 +20,21 @@ class DosenMahasiswaViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  void clearData() {
+    _mahasiswaList = [];
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   // =================================================================
   // LOAD DATA
   // =================================================================
 
   Future<void> loadMahasiswaBimbingan() async {
-    final currentUser = _authService.getCurrentUser();
-    if (currentUser == null) {
+    final uid = AuthUtils.currentUid;
+    
+    if (uid == null) {
       _errorMessage = "Tidak ada user yang login";
       notifyListeners();
       return;
@@ -43,7 +45,7 @@ class DosenMahasiswaViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _mahasiswaList = await _userService.fetchMahasiswaByDosenUid(currentUser.uid);
+      _mahasiswaList = await _userService.fetchMahasiswaByDosenUid(uid);
     } catch (e) {
       _errorMessage = "Gagal memuat daftar mahasiswa: $e";
       _mahasiswaList = [];

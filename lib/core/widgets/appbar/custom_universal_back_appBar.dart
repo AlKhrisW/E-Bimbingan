@@ -1,3 +1,4 @@
+import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import '../custom_button_back.dart';
 
@@ -8,7 +9,8 @@ class CustomUniversalAppbar extends StatelessWidget implements PreferredSizeWidg
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.backgroundColor,
+      surfaceTintColor: AppTheme.backgroundColor,
       elevation: 0,
       centerTitle: true,
       leading: const CustomBackButton(),

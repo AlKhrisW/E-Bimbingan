@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 
-class DosenHalamanKosong extends StatelessWidget {
+class CustomHalamanKosong extends StatelessWidget {
   final IconData icon;
   final String message;
   final String? subMessage;
   final double iconSize;
+  final double height;
 
-  const DosenHalamanKosong({
+  const CustomHalamanKosong({
     super.key,
     required this.icon,
     required this.message,
     this.subMessage,
     this.iconSize = 60.0,
+    required this.height,
   });
 
   @override
@@ -19,7 +21,7 @@ class DosenHalamanKosong extends StatelessWidget {
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.5,
+        height: MediaQuery.of(context).size.height * height,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

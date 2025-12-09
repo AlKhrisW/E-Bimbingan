@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ebimbingan/data/models/logbook_harian_model.dart';
-import 'package:ebimbingan/features/dosen/views/log_harian/detail_screen.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 
 class LogbookItem extends StatelessWidget {
   final LogbookHarianModel logbook;
+  final VoidCallback? onTap;
 
-  const LogbookItem({super.key, required this.logbook});
+  const LogbookItem({super.key, required this.logbook, required this.onTap});
 
   bool get isVerified => logbook.status == LogbookStatus.verified;
 
@@ -48,13 +48,7 @@ class LogbookItem extends StatelessWidget {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => LogbookHarianDetail(logbook: logbook),
-              ),
-            );
-          },
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(

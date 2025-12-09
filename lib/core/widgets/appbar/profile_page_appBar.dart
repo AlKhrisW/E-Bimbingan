@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../logout_bottom_sheet.dart';
-import '../../themes/app_theme.dart';
+import 'package:ebimbingan/core/themes/app_theme.dart';
 
 class ProfilePageAppbar extends StatelessWidget implements PreferredSizeWidget {
   final Future<void> Function(BuildContext context) onLogout;
@@ -13,8 +13,8 @@ class ProfilePageAppbar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.white,
+      backgroundColor: AppTheme.backgroundColor,
+      surfaceTintColor: AppTheme.backgroundColor,
       foregroundColor: Colors.black,
       centerTitle: true,
       elevation: 0,

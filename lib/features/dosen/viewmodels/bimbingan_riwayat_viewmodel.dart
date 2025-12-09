@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
+import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart'; // Pastikan import model ajuan
 import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
 import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
@@ -32,6 +33,15 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
+
+  void clearData() {
+    _riwayatListSource = [];
+    _activeFilter = null;
+    _selectedMahasiswa = null;
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
 
   // =================================================================
   // GETTERS
@@ -111,6 +121,37 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
   Future<void> refresh() async {
     if (_selectedMahasiswa != null) {
       await pilihMahasiswa(_selectedMahasiswa!.uid);
+    }
+  }
+
+  // =================================================================
+  // NEW: FETCH SINGLE DETAIL (Untuk Notifikasi)
+  // =================================================================
+  
+  /// Mengambil data lengkap (Log + Mahasiswa + Ajuan) berdasarkan ID Log.
+  Future<HelperLogBimbingan?> getLogDetail(String logUid) async {
+    try {
+      // 1. Ambil data Log
+      final LogBimbinganModel? log = await _logService.getLogBimbinganByUid(logUid);
+      if (log == null) return null;
+
+      // 2. Ambil data Mahasiswa
+      final UserModel? mahasiswa = await _userService.fetchUserByUid(log.mahasiswaUid);
+      if (mahasiswa == null) return null;
+
+      // 3. Ambil data Ajuan Terkait
+      final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(log.ajuanUid);
+      if (ajuan == null) return null;
+
+      // 4. Return wrapper
+      return HelperLogBimbingan(
+        log: log,
+        mahasiswa: mahasiswa,
+        ajuan: ajuan,
+      );
+    } catch (e) {
+      debugPrint("Error fetching log detail: $e");
+      return null;
     }
   }
 }

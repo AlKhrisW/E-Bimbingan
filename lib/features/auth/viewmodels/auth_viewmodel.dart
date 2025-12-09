@@ -1,29 +1,36 @@
+// lib/features/auth/viewmodels/auth_viewmodel.dart
+
 import 'package:flutter/material.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 import '../../../data/models/user_model.dart';
 import '../../../data/services/firebase_auth_service.dart';
 import '../../../data/services/firestore_service.dart';
-
+import '../../../data/services/user_service.dart';
 class AuthViewModel with ChangeNotifier {
   // --- dependency injection ---
-  // dependensi sekarang final dan wajib diinisialisasi
   final FirebaseAuthService _authService;
   final FirestoreService _firestoreService;
+  final UserService _userService;
 
   bool _isLoading = false;
   String? _errorMessage;
 
-  // 1. konstruktor publik (untuk penggunaan provider normal)
+  // 1. konstruktor publik
   AuthViewModel()
     : _authService = FirebaseAuthService(),
-      _firestoreService = FirestoreService();
+      _firestoreService = FirestoreService(),
+      _userService = UserService();
 
-  // 2. konstruktor internal/named (untuk unit testing/injeksi mock)
+  // 2. konstruktor internal/named (untuk unit testing)
   @visibleForTesting
   AuthViewModel.internal({
     required FirebaseAuthService authService,
     required FirestoreService firestoreService,
+    required UserService userService,
   }) : _authService = authService,
-       _firestoreService = firestoreService;
+       _firestoreService = firestoreService,
+       _userService = userService;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -71,6 +78,8 @@ class AuthViewModel with ChangeNotifier {
       if (user != null) {
         final userModel = await _firestoreService.getUserData(user.uid);
 
+        _saveFcmToken(user.uid);
+
         _setLoading(false);
         return userModel;
       }
@@ -88,10 +97,27 @@ class AuthViewModel with ChangeNotifier {
     return null;
   }
 
+  // Helper method untuk menyimpan token (Private)
+  Future<void> _saveFcmToken(String uid) async {
+    try {
+      String? token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        await _userService.saveDeviceToken(uid, token);
+      }
+    } catch (e) {
+      print("Warning: Gagal menyimpan token FCM di ViewModel: $e");
+    }
+  }
+
   // Logic Logout
   Future<void> logout() async {
     _setLoading(true);
     try {
+      final currentUser = _authService.getCurrentUser();
+      if (currentUser != null) {
+        await _userService.removeDeviceToken(currentUser.uid);
+      }
+
       await _authService.signOut();
     } catch (e) {
       print("Error saat logout: $e");

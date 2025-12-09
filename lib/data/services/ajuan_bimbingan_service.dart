@@ -52,10 +52,11 @@ class AjuanBimbinganService {
     }
   }
 
-  Future<List<AjuanBimbinganModel>> getAjuanByMahasiswaUid(String mahasiswaUid) async {
+  Future<List<AjuanBimbinganModel>> getAjuanByMahasiswaUid(String mahasiswaUid, String dosenUid) async {
     try {
       final snapshot = await _ajuanCollection
           .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+          .where('dosenUid', isEqualTo: dosenUid)
           .orderBy('waktuDiajukan', descending: true)
           .get();
 

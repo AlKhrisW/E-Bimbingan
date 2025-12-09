@@ -1,6 +1,8 @@
+import 'package:ebimbingan/core/widgets/appbar/dashboard_page_appBar.dart';
+import 'package:ebimbingan/features/notifikasi/views/notifikasi_screen.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
-import '../../../data/models/user_model.dart';
+import '../../../../data/models/user_model.dart';
 
 class CircularProgressPainter extends CustomPainter {
   final List<Color> colors;
@@ -50,7 +52,19 @@ class MahasiswaDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      appBar: DashboardPageAppBar(
+        name: user.name,
+        placement: user.placement ?? "-",
+        photoUrl: null,
+        onNotificationTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => NotificationPage(),
+            ),
+          );
+        },
+      ),
 
 
       body: SafeArea(
@@ -59,55 +73,6 @@ class MahasiswaDashboard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              //---------------- HEADER ----------------
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 26,
-                        backgroundColor: Colors.blue.shade600,
-                        child: Text(
-                          user.name.isNotEmpty ? user.name[0].toUpperCase() : "U",
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "${user.name.split(" ")[0]} 👋",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade900,
-                            ),
-                          ),
-                          Text(
-                            "Sistem Informasi Bisnis",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.notifications_none),
-                    onPressed: () {},
-                  )
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
               //---------------- JADWAL BIMBINGAN ----------------
               const Text(
                 "Jadwal Bimbingan",
