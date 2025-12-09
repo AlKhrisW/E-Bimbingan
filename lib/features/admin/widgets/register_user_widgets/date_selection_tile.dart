@@ -1,44 +1,54 @@
-// TODO Implement this library.
-// lib/features/admin/widgets/date_selection_tile.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '/../../../core/themes/app_theme.dart';
 
 class DateSelectionTile extends StatelessWidget {
   final DateTime? startDate;
+  final TextEditingController controller; // Controller teks
   final bool isEnabled;
   final VoidCallback onTap;
 
   const DateSelectionTile({
     super.key,
     required this.startDate,
+    required this.controller, // Diterima
     required this.isEnabled,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Gunakan warna primary untuk ikon dan border jika field enabled
+    final color = isEnabled ? AppTheme.primaryColor : Colors.grey.shade400;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(
-          Icons.calendar_month,
-          color: isEnabled ? AppTheme.primaryColor : Colors.grey,
+      child: TextFormField(
+        controller: controller, // Menggunakan controller untuk menampilkan teks
+        readOnly: true, // Tidak bisa diketik manual
+        enabled: isEnabled,
+        onTap: isEnabled ? onTap : null, // Memanggil date picker
+        style: TextStyle(
+          color: (startDate == null && isEnabled)
+              ? Colors.grey.shade600
+              : Colors.black87,
         ),
-        title: Text(
-          'Tanggal Mulai Magang: ${startDate == null ? "Pilih Tanggal" : DateFormat('dd MMMM yyyy').format(startDate!)}',
-          style: TextStyle(
-            color: isEnabled ? Colors.black87 : Colors.grey.shade600,
+        decoration: InputDecoration(
+          labelText: 'Tanggal Mulai Magang',
+          prefixIcon: Icon(Icons.calendar_month, color: color),
+          suffixIcon: Icon(Icons.arrow_drop_down, color: color),
+          // Border yang konsisten
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: color),
           ),
         ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: isEnabled ? Colors.black87 : Colors.grey,
-        ),
-        onTap: isEnabled ? onTap : null,
+        validator: (value) {
+          if (isEnabled && (value == null || value.isEmpty)) {
+            return 'Tanggal wajib dipilih.';
+          }
+          return null;
+        },
       ),
     );
   }

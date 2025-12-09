@@ -1,5 +1,3 @@
-// lib/features/admin/widgets/register_role_fields.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../data/models/user_model.dart';
@@ -13,10 +11,12 @@ class RegisterRoleFields extends StatelessWidget {
   final String selectedRole;
   final bool isEditMode;
   final bool isDosenListLoading;
-  
+
   // Mahasiswa fields
   final TextEditingController nimNipController;
   final TextEditingController placementController;
+  final TextEditingController
+  startDateTextController; // Controller teks tanggal
   final DateTime? startDate;
   final UserModel? selectedDosen;
   final List<UserModel> dosenList;
@@ -35,6 +35,7 @@ class RegisterRoleFields extends StatelessWidget {
     required this.isDosenListLoading,
     required this.nimNipController,
     required this.placementController,
+    required this.startDateTextController, // Diterima
     required this.startDate,
     required this.selectedDosen,
     required this.dosenList,
@@ -47,8 +48,6 @@ class RegisterRoleFields extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isNimNipEnabled = !isEditMode;
-
     if (selectedRole == 'Mahasiswa') {
       return Column(
         children: [
@@ -57,7 +56,7 @@ class RegisterRoleFields extends StatelessWidget {
             label: 'NIM',
             icon: Icons.badge,
             type: TextInputType.number,
-            enabled: isNimNipEnabled,
+            enabled: true, // Selalu enable
           ),
           AdminTextField(
             controller: placementController,
@@ -66,9 +65,9 @@ class RegisterRoleFields extends StatelessWidget {
           ),
           DateSelectionTile(
             startDate: startDate,
-            isEnabled: true, // Selalu true karena sudah ada di logic Mahasiswa
+            controller: startDateTextController, // Diteruskan
+            isEnabled: true,
             onTap: () async {
-              // Kita perlu memindahkan date picker logic ke sini atau ke screen
               final DateTime? picked = await showDatePicker(
                 context: context,
                 initialDate: startDate ?? DateTime.now(),
@@ -95,7 +94,7 @@ class RegisterRoleFields extends StatelessWidget {
             label: 'NIP',
             icon: Icons.badge,
             type: TextInputType.number,
-            enabled: isNimNipEnabled,
+            enabled: true, // Selalu enable
           ),
           JabatanDropdownField(
             jabatanOptions: jabatanOptions,

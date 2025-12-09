@@ -1,4 +1,3 @@
-// integration_test/common/test_helpers.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,16 +12,19 @@ Future<void> closeOnboarding(WidgetTester tester) async {
   final nextBtn = find.byIcon(Icons.arrow_forward_ios);
 
   if (tester.any(loginHeader)) return;
+
   if (tester.any(skip)) {
     await tester.tap(skip);
     await tester.pumpAndSettle();
     return;
   }
+
   if (tester.any(masuk)) {
     await tester.tap(masuk.first);
     await tester.pumpAndSettle();
     return;
   }
+
   for (int i = 0; i < 3; i++) {
     if (tester.any(masuk)) break;
     if (tester.any(nextBtn)) {
@@ -30,10 +32,12 @@ Future<void> closeOnboarding(WidgetTester tester) async {
       await tester.pumpAndSettle();
     }
   }
+
   if (tester.any(masuk)) {
     await tester.tap(masuk.first);
     await tester.pumpAndSettle();
   }
+
   expect(
     loginHeader,
     findsOneWidget,
@@ -79,55 +83,61 @@ Future<void> verifyMahasiswaDashboard(WidgetTester tester) async {
 /// =========================== LOGOUT ===========================
 /// =============================================================
 Future<void> logoutViaProfile(WidgetTester tester) async {
-  // Pastikan sudah di tab Akun/Profil
   await tester.pumpAndSettle(const Duration(milliseconds: 500));
 
-  // >>> 1. TAMBAH LANGKAH INI: Navigasi ke tab Akun/Profile <<<
+  // 1. Navigasi ke tab Akun (baik dari local maupun remote)
   final profileTab = find.text('Akun');
   if (profileTab.evaluate().isNotEmpty) {
     print('Navigasi ke tab Akun...');
     await tester.tap(profileTab.first);
-    await tester.pumpAndSettle(const Duration(seconds: 1)); // Tunggu navigasi
+    // Gunakan 2 detik (dari local) → lebih aman daripada 1 detik (remote)
+    await tester.pumpAndSettle(const Duration(seconds: 2));
   } else {
-    // Fallback/Warning jika tab Akun tidak ditemukan, mungkin tampilan berbeda
-    print('⚠️ Tab Akun tidak ditemukan, mencoba melanjutkan.');
+    print('Warning: Tab Akun tidak ditemukan, mencoba melanjutkan.');
   }
 
-  // 2. Tap ikon logout di AppBar
-  // Langkah ini sekarang akan berhasil karena kita sudah di tab Akun
+  // 2. VALIDASI halaman Profil (dari local kamu – penting!)
+  expect(
+    find.text('Profil'),
+    findsWidgets,
+    reason: 'Gagal pindah/verifikasi halaman Profil sebelum mencari logout.',
+  );
+
+  // 3. Tap ikon logout
   final logoutIcon = find.byIcon(Icons.logout);
   expect(
     logoutIcon,
     findsOneWidget,
-    reason: 'Ikon logout tidak ditemukan di AppBar Profil',
+    reason: 'Ikon logout tidak ditemukan di AppBar Profil '
+        '(Pastikan ikon dimuat di AppBar MahasiswaProfilScreen)',
   );
-
   await tester.tap(logoutIcon);
-  await tester.pumpAndSettle(); // Tunggu BottomSheet muncul
+  await tester.pumpAndSettle();
 
-  // 3. Tap tombol "Logout" yang ada di dalam BottomSheet
-  final logoutButtonInSheet = find.descendant(
-    of: find.byType(BottomSheet),
-    matching: find.text('Logout'),
-  );
+  // 4. Tap tombol Logout di BottomSheet
+  // Gabungan terbaik: coba cari di dalam BottomSheet dulu (remote), fallback ke ElevatedButton (local)
+  Finder confirmButton = find.widgetWithText(ElevatedButton, 'Logout');
 
-  final confirmButton = logoutButtonInSheet.evaluate().isNotEmpty
-      ? logoutButtonInSheet.first
-      : find.text('Logout').last;
+  if (confirmButton.evaluate().isEmpty) {
+    final inSheet = find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.text('Logout'),
+    );
+    confirmButton = inSheet.evaluate().isNotEmpty ? inSheet.first : find.text('Logout').last;
+  }
 
   expect(
     confirmButton,
     findsOneWidget,
     reason: 'Tombol "Logout" di BottomSheet tidak ditemukan',
   );
-
   await tester.tap(confirmButton);
   await tester.pumpAndSettle(const Duration(seconds: 2));
 
-  // 4. Pastikan sudah kembali ke halaman login
+  // 5. Verifikasi kembali ke login
   expect(
     find.text('Selamat Datang').or(find.text('Masuk ke akun Anda')),
-    findsWidgets, // bisa salah satu
+    findsWidgets,
     reason: 'Gagal kembali ke halaman login setelah logout',
   );
 
@@ -138,9 +148,7 @@ Future<void> logoutViaProfile(WidgetTester tester) async {
 /// ===================== FINDER EXTENSIONS ======================
 /// =============================================================
 extension FinderX on Finder {
-  Finder or(Finder other) {
-    return _OrFinder(this, other);
-  }
+  Finder or(Finder other) => _OrFinder(this, other);
 }
 
 class _OrFinder extends Finder {
