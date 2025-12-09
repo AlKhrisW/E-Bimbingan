@@ -48,10 +48,14 @@ class _MahasiswaLogHarianScreenState extends State<MahasiswaLogHarianScreen> {
         builder: (context, vm, child) {
           return CustomAddFab(
             onPressed: () async {
+              final harianVm = context.read<MahasiswaLogHarianViewModel>();
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const MahasiswaTambahLogHarianScreen(),
+                  builder: (_) => ChangeNotifierProvider.value(
+                    value: harianVm,
+                    child: MahasiswaTambahLogHarianScreen(),
+                  ),
                 ),
               );
               vm.refresh();
@@ -115,10 +119,14 @@ class _MahasiswaLogHarianScreenState extends State<MahasiswaLogHarianScreen> {
           return MahasiswaLogHarianItem(
             data: item,
             onTap: () {
+              final harianVm = context.read<MahasiswaLogHarianViewModel>();
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => MahasiswaDetailLogHarianScreen(dataHelper: item),
+                  builder: (_) => ChangeNotifierProvider.value(
+                    value: harianVm,
+                    child: MahasiswaDetailLogHarianScreen(dataHelper: item),
+                  ),
                 ),
               );
             },

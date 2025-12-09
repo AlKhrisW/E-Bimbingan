@@ -45,9 +45,27 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
         .toList();
   }
 
-  void setFilter(LogbookStatus? status) {
-    _activeFilter = status;
-    notifyListeners();
+  // =================================================================
+  // HELPER: GET DOSEN NAME
+  // =================================================================
+
+  Future<String> getDosenNameForCurrentUser() async {
+    final uid = AuthUtils.currentUid;
+    if (uid == null) return "Sesi berakhir";
+
+    try {
+      final mahasiswa = await _userService.fetchUserByUid(uid);
+      
+      if (mahasiswa.dosenUid == null || mahasiswa.dosenUid!.isEmpty) {
+        return "Belum memiliki Dosen Pembimbing";
+      }
+
+      final dosen = await _userService.fetchUserByUid(mahasiswa.dosenUid!);
+      return dosen.name;
+
+    } catch (e) {
+      return "Gagal memuat info dosen";
+    }
   }
 
   // =================================================================
@@ -113,6 +131,11 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+  
+  void setFilter(LogbookStatus? status) {
+    _activeFilter = status;
+    notifyListeners();
   }
 
   Future<void> refresh() async {
@@ -184,26 +207,28 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
   }
 
   // =================================================================
-  // ACTION: HAPUS LOGBOOK
+  // NEW: FETCH SINGLE DETAIL (Untuk Notifikasi)
   // =================================================================
 
-  Future<bool> deleteLogbook(String logbookUid) async {
-    _isLoading = true;
-    notifyListeners();
-
+  /// Mengambil data lengkap (Logbook + Dosen) berdasarkan ID Logbook.
+  Future<MahasiswaHarianHelper?> getLogbookDetail(String logbookUid) async {
     try {
-      await _logbookService.deleteLogbookHarian(logbookUid);
+      // 1. Ambil data Logbook by ID
+      final LogbookHarianModel? log = await _logbookService.getLogbookById(logbookUid);
       
-      // Update UI Lokal (Optimistic)
-      _logbookList.removeWhere((item) => item.logbook.logbookHarianUid == logbookUid);
-      
-      return true;
+      if (log == null) return null;
+
+      // 2. Ambil data Dosen
+      final dosen = await _userService.fetchUserByUid(log.dosenUid);
+
+      // 3. Return wrapper
+      return MahasiswaHarianHelper(
+        logbook: log,
+        dosen: dosen,
+      );
     } catch (e) {
-      _errorMessage = "Gagal menghapus logbook: $e";
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      debugPrint("Error fetching logbook detail: $e");
+      return null;
     }
   }
 }

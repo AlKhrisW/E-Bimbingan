@@ -1,346 +1,284 @@
-import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ebimbingan/data/models/user_model.dart';
-import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
-import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appbar.dart';
-import 'package:ebimbingan/features/mahasiswa/widgets/success_screen.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
-class MahasiswaAjuanScreen extends StatefulWidget {
-  final UserModel user;
+// Core & Themes
+import 'package:ebimbingan/core/themes/app_theme.dart';
+import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
+import 'package:ebimbingan/core/widgets/custom_form_text_area.dart';
+import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 
-  const MahasiswaAjuanScreen({
-    super.key,
-    required this.user,
-  });
+// ViewModel
+import '../../viewmodels/ajuan_bimbingan_viewmodel.dart';
+import '../../widgets/success_screen.dart';
+
+class MahasiswaTambahAjuanScreen extends StatefulWidget {
+  const MahasiswaTambahAjuanScreen({super.key});
 
   @override
-  State<MahasiswaAjuanScreen> createState() => _MahasiswaAjuanScreenState();
+  State<MahasiswaTambahAjuanScreen> createState() => _MahasiswaTambahAjuanScreenState();
 }
 
-class _MahasiswaAjuanScreenState extends State<MahasiswaAjuanScreen> {
-  final TextEditingController mahasiswaController = TextEditingController();
-  final TextEditingController dosenController = TextEditingController();
-  final TextEditingController topikController = TextEditingController();
-  final TextEditingController metodeController = TextEditingController();
-  final TextEditingController waktuController = TextEditingController();
-  final TextEditingController tanggalController = TextEditingController();
+class _MahasiswaTambahAjuanScreenState extends State<MahasiswaTambahAjuanScreen> {
+  final _formKey = GlobalKey<FormState>();
 
-  bool _isLoading = false;
+  // Controllers
+  late TextEditingController _topikController;
+  late TextEditingController _metodeController;
 
-  String? topikError;
-  String? metodeError;
-  String? waktuError;
-  String? tanggalError;
-
-  DateTime? pickedTanggal;
+  // State
+  DateTime _pickedTanggal = DateTime.now();
+  TimeOfDay _pickedTime = const TimeOfDay(hour: 09, minute: 00); // Default jam 9 pagi
+  String _dosenName = "Memuat...";
 
   @override
   void initState() {
     super.initState();
-    mahasiswaController.text = widget.user.name ?? "";
-    _loadDosenName();
+    _topikController = TextEditingController();
+    _metodeController = TextEditingController();
+    
+    // Load nama dosen via ViewModel
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchDosenInfo();
+    });
+  }
+
+  Future<void> _fetchDosenInfo() async {
+    final name = await context.read<MahasiswaAjuanBimbinganViewModel>().getDosenNameForCurrentUser();
+    if (mounted) {
+      setState(() => _dosenName = name);
+    }
   }
 
   @override
   void dispose() {
-    mahasiswaController.dispose();
-    dosenController.dispose();
-    topikController.dispose();
-    metodeController.dispose();
-    waktuController.dispose();
-    tanggalController.dispose();
+    _topikController.dispose();
+    _metodeController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadDosenName() async {
-    try {
-      final dosenUid = widget.user.dosenUid;
-
-      if (dosenUid == null || dosenUid.isEmpty) {
-        dosenController.text = "Tidak ada dosen pembimbing";
-        return;
-      }
-
-      final doc = await FirebaseFirestore.instance
-          .collection("users")
-          .doc(dosenUid)
-          .get();
-
-      if (!doc.exists) {
-        dosenController.text = "Dosen tidak ditemukan";
-        return;
-      }
-
-      final data = doc.data()!;
-      final dosenName = data['name'] ??
-          data['nama'] ??
-          data['full_name'] ??
-          data['namalengkap'] ??
-          "Nama dosen tidak tersedia";
-
-      dosenController.text = dosenName;
-    } catch (e) {
-      dosenController.text = "Gagal memuat nama dosen";
-    }
-  }
-
-  Future<void> _pickTime() async {
-    final TimeOfDay? picked =
-        await showTimePicker(context: context, initialTime: TimeOfDay.now());
-
-    if (picked != null) {
-      setState(() {
-        waktuController.text =
-            "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
-        waktuError = null;
-      });
-    }
-  }
-
+  // Picker Tanggal
   Future<void> _pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: pickedTanggal ?? DateTime.now(),
-      firstDate: DateTime(2000),
+      initialDate: _pickedTanggal,
+      firstDate: DateTime.now(),
       lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(primary: AppTheme.primaryColor),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null) {
-      setState(() {
-        pickedTanggal = picked;
-        tanggalController.text =
-            "${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}";
-        tanggalError = null;
-      });
+      setState(() => _pickedTanggal = picked);
     }
   }
 
-  bool _validateForm() {
-    bool isValid = true;
-
-    setState(() {
-      if (topikController.text.isEmpty) {
-        topikError = "Topik bimbingan harus diisi";
-        isValid = false;
-      } else {
-        topikError = null;
-      }
-
-      if (metodeController.text.isEmpty) {
-        metodeError = "Metode bimbingan harus diisi";
-        isValid = false;
-      } else {
-        metodeError = null;
-      }
-
-      if (waktuController.text.isEmpty) {
-        waktuError = "Waktu harus diisi";
-        isValid = false;
-      } else {
-        waktuError = null;
-      }
-
-      if (tanggalController.text.isEmpty || pickedTanggal == null) {
-        tanggalError = "Tanggal harus diisi";
-        isValid = false;
-      } else {
-        tanggalError = null;
-      }
-    });
-
-    return isValid;
-  }
-
-  Future<void> _submitAjuan() async {
-    if (!_validateForm()) return;
-
-    if (widget.user.dosenUid == null || widget.user.dosenUid!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Mahasiswa belum punya dosen pembimbing!")),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final ajuan = AjuanBimbinganModel(
-        ajuanUid: "",
-        mahasiswaUid: widget.user.uid ?? "",
-        dosenUid: widget.user.dosenUid ?? "",
-        judulTopik: topikController.text,
-        metodeBimbingan: metodeController.text,
-        waktuBimbingan: waktuController.text,
-        tanggalBimbingan: pickedTanggal!,
-        status: AjuanStatus.proses,
-        waktuDiajukan: DateTime.now(),
-        keterangan: null,
-      );
-
-      final docRef = await FirebaseFirestore.instance
-          .collection("ajuan_bimbingan")
-          .add(ajuan.toMap());
-
-      await docRef.update({"ajuanUid": docRef.id});
-
-      if (!mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const SuccessScreen(
-            message: "Ajuan Bimbingan Berhasil Diajukan",
+  // Picker Waktu
+  Future<void> _pickTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _pickedTime,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(primary: AppTheme.primaryColor),
           ),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
+          child: child!,
+        );
+      },
+    );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gagal mengirim ajuan: $e")),
-      );
-
-      setState(() => _isLoading = false);
+    if (picked != null) {
+      setState(() => _pickedTime = picked);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Format Display
+    final dateDisplay = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(_pickedTanggal);
+    final timeDisplay = "${_pickedTime.hour.toString().padLeft(2, '0')} : ${_pickedTime.minute.toString().padLeft(2, '0')}";
+
     return Scaffold(
-      appBar: const CustomUniversalAppbar(judul: "Ajuan Bimbingan"),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _label("Mahasiswa"),
-            _readonlyField(controller: mahasiswaController),
-
-            _label("Dosen Pembimbing"),
-            _readonlyField(controller: dosenController),
-
-            _label("Topik Bimbingan"),
-            _inputField(
-              controller: topikController,
-              hint: "Contoh: Revisi Bab 2",
-              errorText: topikError,
-              onChanged: (_) {
-                if (topikError != null) setState(() => topikError = null);
-              },
-            ),
-
-            _label("Metode Bimbingan"),
-            _inputField(
-              controller: metodeController,
-              hint: "Contoh: Tatap muka / Zoom / Online",
-              errorText: metodeError,
-              onChanged: (_) {
-                if (metodeError != null) setState(() => metodeError = null);
-              },
-            ),
-
-            _label("Waktu Bimbingan"),
-            TextField(
-              controller: waktuController,
-              readOnly: true,
-              onTap: _pickTime,
-              decoration: _decoration().copyWith(
-                hintText: "Klik untuk memilih waktu",
-                errorText: waktuError,
-              ),
-            ),
-
-            _label("Tanggal Bimbingan"),
-            TextField(
-              controller: tanggalController,
-              readOnly: true,
-              onTap: _pickDate,
-              decoration: _decoration().copyWith(
-                hintText: "Klik untuk memilih tanggal",
-                errorText: tanggalError,
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _submitAjuan,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      backgroundColor: AppTheme.backgroundColor,
+      appBar: const CustomUniversalAppbar(judul: "Ajuan Bimbingan Baru"),
+      body: Consumer<MahasiswaAjuanBimbinganViewModel>(
+        builder: (context, vm, child) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // --- BAGIAN 1: INFO TUJUAN ---
+                  BuildField(
+                    label: "Dosen Pembimbing",
+                    value: _dosenName,
                   ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text(
-                        "Submit",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+
+                  const SizedBox(height: 16),
+
+                  // --- BAGIAN 2: WAKTU & TANGGAL ---
+                  Row(
+                    children: [
+                      // Kolom Tanggal
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Tanggal",
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 6),
+                            InkWell(
+                              onTap: _pickDate,
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey.shade400),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.calendar_month, color: Colors.grey, size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        dateDisplay, 
+                                        style: const TextStyle(fontSize: 13),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      
+                      const SizedBox(width: 12),
+                      
+                      // Kolom Jam
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Jam",
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 6),
+                            InkWell(
+                              onTap: _pickTime,
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey.shade400),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.access_time, color: Colors.grey, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(timeDisplay, style: const TextStyle(fontSize: 13)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // --- BAGIAN 3: INPUT DATA ---
+                  CustomTextArea(
+                    controller: _topikController,
+                    label: "Topik Bimbingan",
+                    hint: "Contoh: Konsultasi Bab 2 tentang Metodologi",
+                    minLines: 1,
+                    maxLines: 2,
+                    validator: (v) => (v == null || v.isEmpty) ? "Topik wajib diisi" : null,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  CustomTextArea(
+                    controller: _metodeController,
+                    label: "Rencana Metode Bimbingan",
+                    hint: "Contoh: Tatap Muka di Ruang Dosen / Google Meet",
+                    minLines: 2,
+                    maxLines: 3,
+                    validator: (v) => (v == null || v.isEmpty) ? "Metode wajib diisi" : null,
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // --- BAGIAN 4: SUBMIT ---
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: vm.isLoading ? null : () async {
+                        if (!_formKey.currentState!.validate()) return;
+
+                        // Konversi TimeOfDay ke String format (HH:mm)
+                        final formattedTime = "${_pickedTime.hour.toString().padLeft(2, '0')}:${_pickedTime.minute.toString().padLeft(2, '0')}";
+
+                        // Action ViewModel
+                        final success = await vm.submitAjuan(
+                          judulTopik: _topikController.text,
+                          metodeBimbingan: _metodeController.text,
+                          tanggalBimbingan: _pickedTanggal,
+                          waktuBimbingan: formattedTime,
+                        );
+
+                        if (success && context.mounted) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SuccessScreen(
+                                message: "Ajuan Bimbingan Berhasil Dikirim",
+                              ),
+                            ),
+                          );
+                        } else if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(vm.errorMessage ?? "Gagal mengirim ajuan")),
+                          );
+                        }
+                      },
+                      child: vm.isLoading
+                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text("Kirim Ajuan", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _label(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 6),
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
-    );
-  }
-
-  Widget _readonlyField({required TextEditingController controller}) {
-    return TextField(
-      controller: controller,
-      readOnly: true,
-      decoration: _decoration(),
-    );
-  }
-
-  Widget _inputField({
-    required TextEditingController controller,
-    String? hint,
-    String? errorText,
-    Function(String)? onChanged,
-  }) {
-    return TextField(
-      controller: controller,
-      onChanged: onChanged,
-      decoration:
-          _decoration().copyWith(hintText: hint, errorText: errorText),
-    );
-  }
-
-  InputDecoration _decoration() {
-    return InputDecoration(
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.blue),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.blue, width: 2),
+          );
+        },
       ),
     );
   }

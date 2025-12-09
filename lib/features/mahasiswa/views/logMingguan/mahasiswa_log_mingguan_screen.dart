@@ -123,11 +123,16 @@ class _MahasiswaLogMingguanScreenState extends State<MahasiswaLogMingguanScreen>
               if (item.log.status == LogBimbinganStatus.draft || 
                   item.log.status == LogBimbinganStatus.rejected) {
                 
+                final mingguanVm = context.read<MahasiswaLogMingguanViewModel>();
+                
                 // DRAFT / REVISI -> Ke Halaman Update
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => UpdateLogMingguanScreen(dataHelper: item),
+                    builder: (_) => ChangeNotifierProvider.value(
+                      value: mingguanVm,
+                      child: UpdateLogMingguanScreen(dataHelper: item),
+                    ),
                   ),
                 );
                 

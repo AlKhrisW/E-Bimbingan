@@ -8,6 +8,7 @@ import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/services/notification_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
+import 'package:ebimbingan/data/services/user_service.dart'; // [PENTING] Tambah ini
 
 // Models
 import 'package:ebimbingan/data/models/notification_model.dart';
@@ -17,16 +18,14 @@ import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 class NotificationViewModel extends ChangeNotifier {
   // --- DEPENDENCIES ---
   final NotificationService _notifService = NotificationService();
-  
-  // Service tambahan untuk pengecekan status data sebelum navigasi
   final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
   final LogBimbinganService _logService = LogBimbinganService();
+  final UserService _userService = UserService(); // [PENTING] Service User
 
   // =================================================================
   // GETTERS (STREAM)
   // =================================================================
   
-  /// Mengambil stream notifikasi real-time khusus user yang login
   Stream<QuerySnapshot> get notificationStream {
     final uid = AuthUtils.currentUid;
     if (uid == null) {
@@ -36,7 +35,7 @@ class NotificationViewModel extends ChangeNotifier {
   }
 
   // =================================================================
-  // BASIC ACTIONS (Baca & Hapus)
+  // BASIC ACTIONS
   // =================================================================
 
   Future<void> markAsRead(String docId) async {
@@ -55,20 +54,16 @@ class NotificationViewModel extends ChangeNotifier {
   }
 
   // =================================================================
-  // SMART NAVIGATION LOGIC (Fitur Utama)
+  // SMART NAVIGATION LOGIC (PERBAIKAN UTAMA)
   // =================================================================
 
-  /// Menangani klik pada notifikasi:
-  /// 1. Tandai sudah dibaca
-  /// 2. Cek status data di server (Loading...)
-  /// 3. Arahkan ke halaman Validasi (jika butuh aksi) atau Riwayat (jika sudah selesai)
   Future<void> handleNotificationTap(BuildContext context, NotificationModel notif) async {
-    // 1. Tandai dibaca di background (Fire and Forget)
+    // 1. Tandai dibaca
     if (!notif.isRead) {
       _notifService.markAsRead(notif.id);
     }
 
-    // 2. Tampilkan Loading Indicator (karena kita harus fetch data dulu)
+    // 2. Loading...
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -76,76 +71,104 @@ class NotificationViewModel extends ChangeNotifier {
     );
 
     try {
+      // [BARU] 3. Cek Role User Saat Ini
+      final uid = AuthUtils.currentUid;
+      if (uid == null) throw Exception("User tidak terlogin");
+      
+      final user = await _userService.fetchUserByUid(uid);
+      final isMahasiswa = user.role == 'mahasiswa'; // Asumsi string role
+
       String routeName = '';
       Object? arguments;
 
       switch (notif.type) {
         // -----------------------------------------------------------
-        // KASUS 1: AJUAN BIMBINGAN (Judul/Jadwal)
+        // KASUS 1: AJUAN BIMBINGAN
         // -----------------------------------------------------------
         case 'ajuan':
         case 'ajuan_status':
         case 'info_jadwal':
         case 'reminder':
-          // Fetch data ajuan terbaru dari server
           final ajuan = await _ajuanService.getAjuanByUid(notif.relatedId);
           
           if (ajuan != null) {
-            arguments = notif.relatedId;
+            arguments = notif.relatedId; // Kirim ID saja (String)
 
-            if (ajuan.status == AjuanStatus.proses) {
-              routeName = '/detail_ajuan_validasi'; 
+            if (isMahasiswa) {
+              // --- ROUTE KHUSUS MAHASISWA ---
+              // Arahkan ke screen detail mahasiswa yang sudah diperbaiki sebelumnya
+              routeName = '/mahasiswa_detail_ajuan'; 
             } else {
-              routeName = '/detail_ajuan_riwayat';
+              // --- ROUTE KHUSUS DOSEN ---
+              if (ajuan.status == AjuanStatus.proses) {
+                routeName = '/detail_ajuan_validasi'; 
+              } else {
+                routeName = '/detail_ajuan_riwayat';
+              }
             }
           }
           break;
 
         // -----------------------------------------------------------
-        // KASUS 2: LOG BIMBINGAN (Mingguan)
+        // KASUS 2: LOG MINGGUAN (Bimbingan)
         // -----------------------------------------------------------
         case 'log_bimbingan':
         case 'log_status':
           final log = await _logService.getLogBimbinganByUid(notif.relatedId);
           if (log != null) {
-            arguments = notif.relatedId;
-            // Jika status PENDING/DRAFT -> Masuk halaman Validasi
-            if (log.status == LogBimbinganStatus.pending || log.status == LogBimbinganStatus.draft) {
-              routeName = '/detail_log_validasi';
+            arguments = notif.relatedId; // Kirim ID saja (String)
+
+            if (isMahasiswa) {
+              // --- ROUTE KHUSUS MAHASISWA ---
+              routeName = '/mahasiswa_detail_log_mingguan';
             } else {
-              routeName = '/detail_log_riwayat';
+              // --- ROUTE KHUSUS DOSEN ---
+              if (log.status == LogBimbinganStatus.pending || log.status == LogBimbinganStatus.draft) {
+                routeName = '/detail_log_validasi';
+              } else {
+                routeName = '/detail_log_riwayat';
+              }
             }
           }
           break;
 
         // -----------------------------------------------------------
-        // KASUS 3: LOGBOOK HARIAN (Tidak ada validasi khusus)
+        // KASUS 3: LOGBOOK HARIAN
         // -----------------------------------------------------------
         case 'logbook_harian':
-          routeName = '/detail_logbook_harian';
+          // Cek apakah data masih ada
+          // (Opsional: fetch dulu untuk memastikan tidak null)
           arguments = notif.relatedId;
+
+          if (isMahasiswa) {
+             routeName = '/mahasiswa_detail_log_harian';
+          } else {
+             // Dosen biasanya melihat di rekap, tapi jika ada detail khusus:
+             routeName = '/dosen_detail_log_harian';
+          }
           break;
 
         default:
           print("Tipe notifikasi tidak dikenal: ${notif.type}");
       }
 
-      // 3. Tutup Loading & Lakukan Navigasi
+      // 4. Navigasi
       if (context.mounted) {
-        Navigator.pop(context); // Tutup dialog loading
+        Navigator.pop(context); // Tutup loading
 
         if (routeName.isNotEmpty) {
+          debugPrint("Navigating to: $routeName with args: $arguments");
           Navigator.pushNamed(context, routeName, arguments: arguments);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Data terkait tidak ditemukan atau telah dihapus")),
+            const SnackBar(content: Text("Data terkait tidak ditemukan/terhapus")),
           );
         }
       }
 
     } catch (e) {
       if (context.mounted) {
-        Navigator.pop(context); // Tutup loading jika error
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Terjadi kesalahan: $e")),
         );

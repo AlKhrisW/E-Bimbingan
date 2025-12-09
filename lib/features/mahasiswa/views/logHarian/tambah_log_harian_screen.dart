@@ -9,18 +9,11 @@ import 'package:ebimbingan/core/widgets/custom_form_text_area.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 
 // ViewModel & Models
-import 'package:ebimbingan/data/models/user_model.dart';
-import 'package:ebimbingan/data/services/user_service.dart';
 import '../../viewmodels/log_harian_viewmodel.dart';
 import '../../widgets/success_screen.dart';
 
 class MahasiswaTambahLogHarianScreen extends StatefulWidget {
-  final UserModel? currentUser; 
-
-  const MahasiswaTambahLogHarianScreen({
-    super.key, 
-    this.currentUser
-  });
+  const MahasiswaTambahLogHarianScreen({super.key});
 
   @override
   State<MahasiswaTambahLogHarianScreen> createState() => _MahasiswaTambahLogHarianScreenState();
@@ -36,14 +29,24 @@ class _MahasiswaTambahLogHarianScreenState extends State<MahasiswaTambahLogHaria
   // State
   DateTime _pickedTanggal = DateTime.now();
   String _dosenName = "Memuat..."; 
-  final UserService _userService = UserService();
 
   @override
   void initState() {
     super.initState();
     _judulController = TextEditingController();
     _deskripsiController = TextEditingController();
-    _loadDosenName();
+    
+    // Load nama dosen via ViewModel
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchDosenInfo();
+    });
+  }
+
+  Future<void> _fetchDosenInfo() async {
+    final name = await context.read<MahasiswaLogHarianViewModel>().getDosenNameForCurrentUser();
+    if (mounted) {
+      setState(() => _dosenName = name);
+    }
   }
 
   @override
@@ -51,25 +54,6 @@ class _MahasiswaTambahLogHarianScreenState extends State<MahasiswaTambahLogHaria
     _judulController.dispose();
     _deskripsiController.dispose();
     super.dispose();
-  }
-
-  /// Mengambil nama dosen berdasarkan profil user yang login
-  Future<void> _loadDosenName() async {
-    UserModel? user = widget.currentUser;
-
-    if (user?.dosenUid == null || user!.dosenUid!.isEmpty) {
-      if (mounted) setState(() => _dosenName = "Belum memiliki Dosen Pembimbing");
-      return;
-    }
-
-    try {
-      final dosen = await _userService.fetchUserByUid(user.dosenUid!);
-      if (mounted) {
-        setState(() => _dosenName = dosen.name);
-      }
-    } catch (e) {
-      if (mounted) setState(() => _dosenName = "Gagal memuat info dosen");
-    }
   }
 
   Future<void> _pickDate() async {

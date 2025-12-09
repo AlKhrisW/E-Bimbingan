@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
+import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 
-class MahasiswaMingguanStatus extends StatelessWidget {
-  final LogBimbinganStatus status;
+class MahasiswaAjuanStatus extends StatelessWidget {
+  final AjuanStatus status;
 
-  const MahasiswaMingguanStatus({
+  const MahasiswaAjuanStatus({
     super.key,
     required this.status,
   });
@@ -17,7 +17,7 @@ class MahasiswaMingguanStatus extends StatelessWidget {
     IconData icon;
 
     switch (status) {
-      case LogBimbinganStatus.approved:
+      case AjuanStatus.disetujui:
         // HIJAU
         bgColor = const Color(0xFFE6FEE7); 
         textColor = const Color(0xFF16A34A);
@@ -25,28 +25,21 @@ class MahasiswaMingguanStatus extends StatelessWidget {
         icon = Icons.check_circle;
         break;
 
-      case LogBimbinganStatus.rejected:
+      case AjuanStatus.ditolak:
         // MERAH
         bgColor = const Color(0xFFFEE2E2); 
         textColor = const Color(0xFFDC2626);
-        text = "Perlu Revisi";
+        text = "Ditolak";
         icon = Icons.cancel;
         break;
 
-      case LogBimbinganStatus.pending:
+      case AjuanStatus.proses:
         // ORANGE
-        bgColor = const Color(0xFFFFF7ED); // Orange muda banget
-        textColor = const Color(0xFFC2410C); // Orange tua
+        bgColor = const Color(0xFFFFF7ED);
+        textColor = const Color(0xFFC2410C);
         text = "Menunggu Persetujuan";
         icon = Icons.hourglass_top;
         break;
-
-      default: // Draft
-        // ABU-ABU
-        bgColor = Colors.grey[200]!;
-        textColor = Colors.grey[700]!;
-        text = "Draft";
-        icon = Icons.edit_note;
     }
 
     return Container(

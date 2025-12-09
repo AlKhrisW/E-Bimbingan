@@ -85,7 +85,7 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // --- BAGIAN 1: STATUS BADGE ---
-                  StatusBadgeWidget(status: log.status),
+                  MahasiswaMingguanStatus(status: log.status),
             
                   const SizedBox(height: 20),
                   
@@ -103,9 +103,7 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
                     value: ajuan.metodeBimbingan
                   ),
                   
-                  const SizedBox(height: 10),
-                  const Divider(thickness: 1),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
 
                   // --- BAGIAN 3: EDITABLE FORM ---
                   CustomTextArea(

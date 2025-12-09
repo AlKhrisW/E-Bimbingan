@@ -73,7 +73,7 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
       } else {
         // 2. Kumpulkan ID Unik untuk Ajuan & Dosen
         final Set<String> ajuanUids = logs.map((e) => e.ajuanUid).toSet();
-        final Set<String> dosenUids = logs.map((e) => e.dosenUid).toSet(); // [BARU]
+        final Set<String> dosenUids = logs.map((e) => e.dosenUid).toSet();
         
         // 3. Fetch Data secara Paralel (Ajuan + Dosen)
         final results = await Future.wait([
@@ -93,7 +93,7 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
             if (ajuan != null) ajuan.ajuanUid: ajuan
         };
 
-        final Map<String, UserModel> dosenMap = { // [BARU]
+        final Map<String, UserModel> dosenMap = {
           for (var dosen in fetchedDosens) 
             if (dosen != null) dosen.uid: dosen
         };
@@ -176,6 +176,37 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
       _errorMessage = "Gagal mengirim logbook: $e";
       notifyListeners();
       return false;
+    }
+  }
+
+  // =================================================================
+  // NEW: FETCH SINGLE DETAIL (Untuk Notifikasi)
+  // =================================================================
+
+  /// Mengambil data lengkap (Log + Ajuan + Dosen) berdasarkan ID Log Mingguan.
+  Future<MahasiswaMingguanHelper?> getLogbookDetail(String logUid) async {
+    try {
+      // 1. Ambil data Log Mingguan by ID
+      final LogBimbinganModel? log = await _logService.getLogBimbinganByUid(logUid);
+      if (log == null) return null;
+
+      // 2. Ambil data Ajuan (Parent dari log ini)
+      final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(log.ajuanUid);
+      if (ajuan == null) return null;
+
+      // 3. Ambil data Dosen
+      final UserModel? dosen = await _userService.fetchUserByUid(log.dosenUid);
+      if (dosen == null) return null;
+
+      // 4. Return wrapper
+      return MahasiswaMingguanHelper(
+        log: log,
+        ajuan: ajuan,
+        dosen: dosen,
+      );
+    } catch (e) {
+      debugPrint("Error fetching mingguan detail: $e");
+      return null;
     }
   }
 }

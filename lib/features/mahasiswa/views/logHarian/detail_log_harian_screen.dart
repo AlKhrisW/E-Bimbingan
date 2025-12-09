@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart'; // Import Provider
 
 // Themes & Widgets Universal
 import 'package:ebimbingan/core/themes/app_theme.dart';
@@ -9,6 +10,9 @@ import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart
 
 // Models
 import 'package:ebimbingan/data/models/wrapper/mahasiswa_helper_harian.dart';
+
+// ViewModels
+import 'package:ebimbingan/features/mahasiswa/viewmodels/log_harian_viewmodel.dart'; // Pastikan import VM
 
 class MahasiswaDetailLogHarianScreen extends StatelessWidget {
   final MahasiswaHarianHelper? dataHelper;
@@ -20,21 +24,51 @@ class MahasiswaDetailLogHarianScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Panggil ViewModel
+    final vm = Provider.of<MahasiswaLogHarianViewModel>(context, listen: false);
+
     // 1. Cek jika data dikirim langsung via Constructor
     if (dataHelper != null) {
       return _buildMainContent(context, dataHelper!);
     }
 
-    // 2. Cek jika data dikirim via Route Arguments
+    // 2. Cek args dari Navigator
     final args = ModalRoute.of(context)?.settings.arguments;
 
+    // A. Jika args sudah berupa Object Helper (Navigasi manual)
     if (args is MahasiswaHarianHelper) {
       return _buildMainContent(context, args);
     }
 
+    // B. Jika args berupa String ID (Dari Notifikasi / Deep Link)
+    if (args is String) {
+      return FutureBuilder<MahasiswaHarianHelper?>(
+        future: vm.getLogbookDetail(args),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              appBar: CustomUniversalAppbar(judul: "Detail Logbook"),
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          if (snapshot.hasError || !snapshot.hasData) {
+            return Scaffold(
+              appBar: const CustomUniversalAppbar(judul: "Detail Logbook"),
+              body: Center(
+                child: Text("Data tidak ditemukan.\nError: ${snapshot.error ?? ''}"),
+              ),
+            );
+          }
+
+          return _buildMainContent(context, snapshot.data!);
+        },
+      );
+    }
+
     // 3. Fallback jika data tidak ditemukan
     return Scaffold(
-      appBar: CustomUniversalAppbar(judul: "Detail Logbook"),
+      appBar: const CustomUniversalAppbar(judul: "Detail Logbook"),
       body: const Center(
         child: Text("Data logbook tidak ditemukan"),
       ),
@@ -50,7 +84,7 @@ class MahasiswaDetailLogHarianScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: CustomUniversalAppbar(
+      appBar: const CustomUniversalAppbar(
         judul: "Detail Logbook Harian", 
       ),
       body: SingleChildScrollView(
@@ -59,7 +93,7 @@ class MahasiswaDetailLogHarianScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // --- STATUS BADGE ---
-            MahasiswaLogHarianStatus(status: log.status),
+            MahasiswaHarianStatus(status: log.status),
             
             const SizedBox(height: 20),
 

@@ -28,7 +28,7 @@ List<NavItem> buildMahasiswaNavItems(UserModel user) {
     NavItem(
       label: "Ajuan",
       icon: Icons.assignment_outlined,
-       screen: RiwayatAjuanScreen(user: user),
+       screen: MahasiswaAjuanBimbinganScreen(),
     ),
 
     NavItem(
