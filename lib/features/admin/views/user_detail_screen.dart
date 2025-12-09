@@ -1,9 +1,8 @@
-// lib/features/admin/views/user_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/widgets/custom_button_back.dart'; 
-import '../widgets/detail_info_row.dart';
+import '../../../core/widgets/custom_button_back.dart';
+import '../widgets/detail/detail_outline_field.dart'; // Widget detail modern
 import '../../../../data/models/user_model.dart';
 import '../../../core/themes/app_theme.dart';
 import 'register_user_screen.dart';
@@ -15,27 +14,31 @@ class UserDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // tentukan detail spesifik berdasarkan role
+    // Tentukan label dan nilai NIM/NIP
+    String nimNipLabel = user.role == 'dosen' ? 'NIP' : 'NIM';
+    String nimNipValue = user.nim ?? user.nip ?? 'N/A';
+
+    // Tentukan detail spesifik untuk Magang/Dosen (yang bukan info dasar)
     List<Widget> specificDetails = [];
     String subTitle = '';
 
     if (user.role == 'mahasiswa') {
       subTitle = 'Mahasiswa - ${user.programStudi ?? 'N/A'}';
       specificDetails = [
-        DetailInfoRow(label: 'NIM', value: user.nim ?? 'N/A', icon: Icons.badge),
-        DetailInfoRow(
+        // Hanya informasi Magang/Pembimbing di sini
+        DetailOutlineField(
           label: 'Penempatan Magang',
           value: user.placement ?? 'Belum Ditentukan',
           icon: Icons.business,
         ),
-        DetailInfoRow(
+        DetailOutlineField(
           label: 'Tgl Mulai Magang',
           value: user.startDate != null
               ? DateFormat('dd MMMM yyyy').format(user.startDate!)
               : 'N/A',
           icon: Icons.calendar_month,
         ),
-        DetailInfoRow(
+        DetailOutlineField(
           label: 'Dosen Pembimbing UID',
           value: user.dosenUid ?? 'Belum Direlasikan',
           icon: Icons.people,
@@ -44,8 +47,8 @@ class UserDetailScreen extends StatelessWidget {
     } else if (user.role == 'dosen') {
       subTitle = 'Dosen - ${user.jabatan ?? 'N/A'}';
       specificDetails = [
-        DetailInfoRow(label: 'NIP', value: user.nip ?? 'N/A', icon: Icons.badge),
-        DetailInfoRow(
+        // Hanya informasi Jabatan di sini
+        DetailOutlineField(
           label: 'Jabatan Fungsional',
           value: user.jabatan ?? 'N/A',
           icon: Icons.work,
@@ -54,18 +57,55 @@ class UserDetailScreen extends StatelessWidget {
     } else {
       // admin atau role lain
       subTitle = 'Administrator Sistem';
-      specificDetails = [
-        DetailInfoRow(
-          label: 'NIP/NIM',
-          value: user.nim ?? user.nip ?? 'N/A',
-          icon: Icons.badge,
-        ),
-      ];
+      // specificDetails kosong
     }
+
+    // --- INFORMASI DASAR AKUN (Urutan Baru) ---
+    List<Widget> generalDetails = [
+      // 1. Role
+      DetailOutlineField(
+        label: 'Role',
+        value: user.role.substring(0, 1).toUpperCase() + user.role.substring(1),
+        icon: Icons.assignment_ind,
+      ),
+
+      // 2. NIM/NIP (Memastikan label dan value benar)
+      DetailOutlineField(
+        label: nimNipLabel,
+        value: nimNipValue,
+        icon: Icons.badge,
+      ),
+
+      // 3. Program Studi (Hanya untuk Mahasiswa)
+      if (user.role == 'mahasiswa')
+        DetailOutlineField(
+          label: 'Program Studi',
+          value:
+              user.programStudi ??
+              'N/A', // <-- Pastikan ini memanggil programStudi
+          icon: Icons.school,
+        ),
+
+      // 4. Email
+      DetailOutlineField(
+        label: 'E-Mail',
+        value: user.email,
+        icon: Icons.email,
+      ), // <-- Pastikan ini memanggil email
+      // 5. No. Telepon
+      DetailOutlineField(
+        label: 'No. Telepon',
+        value:
+            user.phoneNumber ?? 'N/A', // <-- Pastikan ini memanggil phoneNumber
+        icon: Icons.phone,
+      ),
+    ];
+    // ----------------------------------------
 
     return Scaffold(
       appBar: AppBar(
-        leading: const CustomBackButton(), // custom back button yang cantik & konsisten
+        leading: const CustomBackButton(),
+        centerTitle: true,
         title: const Text(
           'Detail Pengguna',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
@@ -77,13 +117,11 @@ class UserDetailScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit, color: AppTheme.primaryColor),
             onPressed: () {
-              Navigator.of(context)
-                  .push(
-                    MaterialPageRoute(
-                      builder: (_) => RegisterUserScreen(userToEdit: user),
-                    ),
-                  )
-                  .then((_) => Navigator.pop(context)); // refresh setelah edit
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => RegisterUserScreen(userToEdit: user),
+                ),
+              );
             },
           ),
         ],
@@ -93,26 +131,43 @@ class UserDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // header profil
+            // Header Profil
             Center(
               child: Column(
                 children: [
-                  const CircleAvatar(
-                    radius: 40,
-                    backgroundColor: AppTheme.primaryColor,
-                    child: Icon(Icons.person, size: 40, color: Colors.white),
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      border: Border.all(
+                        color: AppTheme.primaryColor,
+                        width: 2,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.person,
+                      size: 48,
+                      color: AppTheme.primaryColor,
+                    ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 16),
                   Text(
                     user.name,
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black87,
+                    ),
                   ),
                   Text(
                     subTitle,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -120,36 +175,31 @@ class UserDetailScreen extends StatelessWidget {
 
             const Divider(height: 40),
 
-            // informasi dasar akun
+            // Informasi Dasar Akun
             Text(
               'Informasi Dasar Akun',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 12),
-            DetailInfoRow(label: 'E-Mail', value: user.email, icon: Icons.email),
-            DetailInfoRow(
-              label: 'No. Telepon',
-              value: user.phoneNumber ?? 'N/A',
-              icon: Icons.phone,
-            ),
+            const SizedBox(height: 16),
 
-            // program studi hanya untuk mahasiswa
-            if (user.isMahasiswa)
-              DetailInfoRow(
-                label: 'Program Studi',
-                value: user.programStudi ?? 'N/A',
-                icon: Icons.school,
-              ),
+            // List Informasi Dasar (Sesuai Urutan Baru)
+            ...generalDetails,
 
             const Divider(height: 30),
 
             // detail spesifik role
             if (specificDetails.isNotEmpty) ...[
               Text(
-                'Detail Tugas & Penempatan',
-                style: Theme.of(context).textTheme.titleLarge,
+                user.role == 'mahasiswa'
+                    ? 'Detail Magang & Pembimbing'
+                    : 'Detail Fungsional Dosen',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               ...specificDetails,
             ],
 

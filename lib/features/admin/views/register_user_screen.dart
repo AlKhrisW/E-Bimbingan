@@ -1,9 +1,10 @@
-// lib/features/admin/views/register_user_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart'; // Import untuk DateFormat
+
 import '../../../../data/models/user_model.dart';
 import '../../../core/themes/app_theme.dart';
-import '../../../core/widgets/custom_button_back.dart'; // <-- tambahan import
+import '../../../core/widgets/custom_button_back.dart';
 import '../viewmodels/admin_user_management_viewmodel.dart';
 import '../widgets/admin_text_field.dart';
 import '../widgets/register_user_widgets/register_user_widgets.dart';
@@ -26,7 +27,8 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
   final _phoneController = TextEditingController();
   final _nimNipController = TextEditingController();
   final _placementController = TextEditingController();
-  final _prodiController = TextEditingController();
+  final _startDateTextController =
+      TextEditingController(); // Controller teks tanggal
 
   // state dinamis
   String _selectedRole = 'Mahasiswa';
@@ -35,9 +37,15 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
   bool _isDosenListLoading = true;
   DateTime? _startDate;
   String? _selectedJabatan;
+  String? _selectedProdi; // State untuk Prodi yang dipilih
   bool _isEditMode = false;
 
   final List<String> _roles = ['Mahasiswa', 'Dosen', 'Admin'];
+  final List<String> _prodiOptions = [
+    // Daftar Program Studi
+    'Sistem Informasi Bisnis',
+    'Teknik Informatika',
+  ];
   final List<String> _jabatanOptions = [
     'Asisten Ahli',
     'Lektor',
@@ -67,7 +75,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
     _phoneController.dispose();
     _nimNipController.dispose();
     _placementController.dispose();
-    _prodiController.dispose();
+    _startDateTextController.dispose();
     super.dispose();
   }
 
@@ -81,16 +89,20 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
           user.role.substring(0, 1).toUpperCase() + user.role.substring(1);
 
       if (user.role == 'mahasiswa') {
-        _prodiController.text = user.programStudi ?? '';
+        _selectedProdi = user.programStudi;
         _nimNipController.text = user.nim ?? '';
         _placementController.text = user.placement ?? '';
         _startDate = user.startDate;
+        if (_startDate != null) {
+          _startDateTextController.text = DateFormat(
+            'dd MMMM yyyy',
+          ).format(_startDate!);
+        } else {
+          _startDateTextController.clear();
+        }
       } else if (user.role == 'dosen') {
-        _prodiController.clear();
         _nimNipController.text = user.nip ?? '';
         _selectedJabatan = user.jabatan;
-      } else {
-        _prodiController.clear();
       }
     }
   }
@@ -142,6 +154,8 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
     if (_selectedRole == 'Mahasiswa' && _selectedDosen == null) return;
     if (_selectedRole == 'Mahasiswa' && _startDate == null) return;
     if (_selectedRole == 'Dosen' && _selectedJabatan == null) return;
+    if (_selectedRole == 'Mahasiswa' && _selectedProdi == null)
+      return; // Validasi Prodi
 
     final viewModel = Provider.of<AdminUserManagementViewModel>(
       context,
@@ -152,9 +166,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
       'email': _safeTrim(_emailController.text)!,
       'name': _safeTrim(_nameController.text)!,
       'role': _selectedRole.toLowerCase(),
-      'programStudi': _selectedRole == 'Mahasiswa'
-          ? _safeTrim(_prodiController.text)
-          : null,
+      'programStudi': _selectedRole == 'Mahasiswa' ? _selectedProdi : null,
       'phoneNumber': _safeTrim(_phoneController.text),
       'nim': _selectedRole == 'Mahasiswa'
           ? _safeTrim(_nimNipController.text)
@@ -225,11 +237,10 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: const CustomBackButton(), // <-- ganti jadi custom back button
+        leading: const CustomBackButton(),
+        centerTitle: true, // Judul di tengah
         title: Text(
-          widget.userToEdit == null
-              ? 'Tambah User'
-              : 'Edit User: ${widget.userToEdit?.name}',
+          widget.userToEdit == null ? 'Tambah Pengguna Baru' : 'Edit Pengguna',
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -270,9 +281,11 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                             _selectedRole = val!;
                             _nimNipController.clear();
                             _placementController.clear();
-                            _prodiController.clear();
+                            _selectedProdi = null; // reset prodi
                             _selectedJabatan = null;
                             _startDate = null;
+                            _startDateTextController
+                                .clear(); // clear text tanggal
                             _selectedDosen = _dosenList.isNotEmpty
                                 ? _dosenList.first
                                 : null;
@@ -283,10 +296,27 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
               ),
 
               if (_selectedRole == 'Mahasiswa')
-                AdminTextField(
-                  controller: _prodiController,
-                  label: 'Program Studi/Jurusan',
-                  icon: Icons.school,
+                // Menggunakan Dropdown untuk Program Studi
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(
+                      labelText: 'Program Studi/Jurusan',
+                      prefixIcon: Icon(Icons.school),
+                    ),
+                    value: _selectedProdi,
+                    items: _prodiOptions.map((prodi) {
+                      return DropdownMenuItem(value: prodi, child: Text(prodi));
+                    }).toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedProdi = val;
+                      });
+                    },
+                    validator: (value) =>
+                        value == null ? 'Program Studi wajib dipilih.' : null,
+                    isExpanded: true,
+                  ),
                 ),
 
               AdminTextField(
@@ -294,7 +324,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                 label: 'E-Mail',
                 icon: Icons.email,
                 type: TextInputType.emailAddress,
-                enabled: !_isEditMode,
+                enabled: true, // Selalu enable
               ),
 
               AdminTextField(
@@ -331,11 +361,19 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                 nimNipController: _nimNipController,
                 placementController: _placementController,
                 startDate: _startDate,
+                startDateTextController:
+                    _startDateTextController, // Meneruskan Controller
                 selectedDosen: _selectedDosen,
                 dosenList: _dosenList,
                 jabatanOptions: _jabatanOptions,
                 selectedJabatan: _selectedJabatan,
-                onDateSelected: (d) => setState(() => _startDate = d),
+                onDateSelected: (d) => setState(() {
+                  _startDate = d;
+                  // Update text controller saat tanggal dipilih
+                  _startDateTextController.text = d != null
+                      ? DateFormat('dd MMMM yyyy').format(d)
+                      : '';
+                }),
                 onDosenChanged: (d) => setState(() => _selectedDosen = d),
                 onJabatanChanged: (j) => setState(() => _selectedJabatan = j),
               ),
