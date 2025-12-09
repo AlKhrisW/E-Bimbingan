@@ -5,15 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
 
 // Models
+import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/wrapper/mahasiswa_helper_mingguan.dart';
 
 // Services
+import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 
 class MahasiswaLogMingguanViewModel extends ChangeNotifier {
+  final UserService _userService = UserService();
   final LogBimbinganService _logService = LogBimbinganService();
   final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
 
@@ -61,47 +64,59 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. Ambil semua Log milik Mahasiswa
+      // 1. Ambil Log Bimbingan
       final List<LogBimbinganModel> logs = 
           await _logService.getLogBimbinganByMahasiswaUid(uid);
 
       if (logs.isEmpty) {
         _allLogs = [];
       } else {
-        // 2. Kumpulkan Ajuan UID yang unik
+        // 2. Kumpulkan ID Unik untuk Ajuan & Dosen
         final Set<String> ajuanUids = logs.map((e) => e.ajuanUid).toSet();
+        final Set<String> dosenUids = logs.map((e) => e.dosenUid).toSet(); // [BARU]
         
-        // 3. Fetch data Ajuan secara paralel (Batch Fetch)
-        final List<AjuanBimbinganModel?> fetchedAjuans = await Future.wait(
-          ajuanUids.map((id) => _ajuanService.getAjuanByUid(id))
-        );
+        // 3. Fetch Data secara Paralel (Ajuan + Dosen)
+        final results = await Future.wait([
+          // Fetch Ajuans
+          Future.wait(ajuanUids.map((id) => _ajuanService.getAjuanByUid(id))),
+          // Fetch Dosens
+          Future.wait(dosenUids.map((id) => _userService.fetchUserByUid(id))),
+        ]);
 
-        // 4. Buat Map untuk pencarian cepat (Logika sama persis dengan Dosen VM)
+        // 4. Casting hasil fetch
+        final List<AjuanBimbinganModel?> fetchedAjuans = results[0] as List<AjuanBimbinganModel?>;
+        final List<UserModel?> fetchedDosens = results[1] as List<UserModel?>;
+
+        // 5. Buat Map untuk akses cepat (O(1))
         final Map<String, AjuanBimbinganModel> ajuanMap = {
           for (var ajuan in fetchedAjuans) 
             if (ajuan != null) ajuan.ajuanUid: ajuan
         };
 
-        // 5. Gabungkan Log dengan Ajuan (Helper Factory)
+        final Map<String, UserModel> dosenMap = { // [BARU]
+          for (var dosen in fetchedDosens) 
+            if (dosen != null) dosen.uid: dosen
+        };
+
+        // 6. Gabungkan Data ke Helper
         final List<MahasiswaMingguanHelper> combinedData = [];
 
         for (var log in logs) {
-          // Cari ajuan yang sesuai dengan log ini di dalam Map
           final ajuan = ajuanMap[log.ajuanUid];
+          final dosen = dosenMap[log.dosenUid];
 
-          // Jika ajuan ditemukan, masukkan ke list helper
-          // (Data yang tidak lengkap/corrupt tidak akan ditampilkan agar aman)
-          if (ajuan != null) {
+          if (ajuan != null && dosen != null) {
             combinedData.add(
               MahasiswaMingguanHelper(
                 log: log, 
-                ajuan: ajuan // Input sekarang Single Object, bukan Map lagi
+                ajuan: ajuan,
+                dosen: dosen,
               )
             );
           }
         }
 
-        // 6. Sorting: Prioritas Draft & Revisi di atas
+        // 7. Sorting
         combinedData.sort((a, b) {
           int priority(LogBimbinganStatus s) {
             if (s == LogBimbinganStatus.draft) return 0;

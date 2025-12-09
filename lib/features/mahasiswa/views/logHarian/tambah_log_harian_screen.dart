@@ -1,289 +1,216 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../core/widgets/appbar/custom_universal_back_appbar.dart';
-import '../../../../data/models/logbook_harian_model.dart';
-import '../../../../data/models/user_model.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
+// Core & Themes
+import 'package:ebimbingan/core/themes/app_theme.dart';
+import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
+import 'package:ebimbingan/core/widgets/custom_form_text_area.dart';
+import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
+
+// ViewModel & Models
+import 'package:ebimbingan/data/models/user_model.dart';
+import 'package:ebimbingan/data/services/user_service.dart';
+import '../../viewmodels/log_harian_viewmodel.dart';
 import '../../widgets/success_screen.dart';
 
-class TambahLogbookHarianScreen extends StatefulWidget {
-  final UserModel user;
+class MahasiswaTambahLogHarianScreen extends StatefulWidget {
+  final UserModel? currentUser; 
 
-  const TambahLogbookHarianScreen({super.key, required this.user});
+  const MahasiswaTambahLogHarianScreen({
+    super.key, 
+    this.currentUser
+  });
 
   @override
-  State<TambahLogbookHarianScreen> createState() => _TambahLogbookHarianScreenState();
+  State<MahasiswaTambahLogHarianScreen> createState() => _MahasiswaTambahLogHarianScreenState();
 }
 
-class _TambahLogbookHarianScreenState extends State<TambahLogbookHarianScreen> {
-  final TextEditingController mahasiswaController = TextEditingController();
-  final TextEditingController dosenController = TextEditingController();
-  final TextEditingController judulController = TextEditingController();
-  final TextEditingController deskripsiController = TextEditingController();
-  final TextEditingController tanggalController = TextEditingController();
-
-  bool _isLoading = false;
-  String? judulError;
-  String? deskripsiError;
-  String? tanggalError;
-
-  DateTime pickedTanggal = DateTime.now();
+class _MahasiswaTambahLogHarianScreenState extends State<MahasiswaTambahLogHarianScreen> {
+  final _formKey = GlobalKey<FormState>();
+  
+  // Controllers
+  late TextEditingController _judulController;
+  late TextEditingController _deskripsiController;
+  
+  // State
+  DateTime _pickedTanggal = DateTime.now();
+  String _dosenName = "Memuat..."; 
+  final UserService _userService = UserService();
 
   @override
   void initState() {
     super.initState();
-    mahasiswaController.text = widget.user.name ?? "";
+    _judulController = TextEditingController();
+    _deskripsiController = TextEditingController();
     _loadDosenName();
-    tanggalController.text =
-        "${pickedTanggal.day.toString().padLeft(2, '0')}-${pickedTanggal.month.toString().padLeft(2, '0')}-${pickedTanggal.year}";
   }
 
   @override
   void dispose() {
-    mahasiswaController.dispose();
-    dosenController.dispose();
-    judulController.dispose();
-    deskripsiController.dispose();
-    tanggalController.dispose();
+    _judulController.dispose();
+    _deskripsiController.dispose();
     super.dispose();
   }
 
+  /// Mengambil nama dosen berdasarkan profil user yang login
   Future<void> _loadDosenName() async {
+    UserModel? user = widget.currentUser;
+
+    if (user?.dosenUid == null || user!.dosenUid!.isEmpty) {
+      if (mounted) setState(() => _dosenName = "Belum memiliki Dosen Pembimbing");
+      return;
+    }
+
     try {
-      final dosenUid = widget.user.dosenUid;
-
-      if (dosenUid == null || dosenUid.isEmpty) {
-        dosenController.text = "Tidak ada dosen pembimbing";
-        return;
+      final dosen = await _userService.fetchUserByUid(user.dosenUid!);
+      if (mounted) {
+        setState(() => _dosenName = dosen.name);
       }
-
-      final doc =
-          await FirebaseFirestore.instance.collection("users").doc(dosenUid).get();
-
-      if (!doc.exists) {
-        dosenController.text = "Dosen tidak ditemukan";
-        return;
-      }
-
-      final data = doc.data()!;
-      final dosenName = data['name'] ?? data['full_name'] ?? "Nama dosen tidak tersedia";
-      dosenController.text = dosenName;
     } catch (e) {
-      print("Error load dosen: $e");
-      dosenController.text = "Gagal memuat nama dosen";
+      if (mounted) setState(() => _dosenName = "Gagal memuat info dosen");
     }
   }
 
   Future<void> _pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: pickedTanggal,
-      firstDate: DateTime(2000),
+      initialDate: _pickedTanggal,
+      firstDate: DateTime(2020),
       lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(primary: AppTheme.primaryColor),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null) {
-      setState(() {
-        pickedTanggal = picked;
-        tanggalController.text =
-            "${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}";
-        tanggalError = null;
-      });
-    }
-  }
-
-  bool _validateForm() {
-    bool isValid = true;
-    setState(() {
-      judulError = judulController.text.isEmpty ? "Judul topik harus diisi" : null;
-      deskripsiError = deskripsiController.text.isEmpty ? "Deskripsi harus diisi" : null;
-      tanggalError = tanggalController.text.isEmpty ? "Tanggal harus diisi" : null;
-
-      if (judulError != null || deskripsiError != null || tanggalError != null) {
-        isValid = false;
-      }
-    });
-    return isValid;
-  }
-
-  Future<void> _submitLogbook() async {
-    if (!_validateForm()) return;
-
-    if (widget.user.dosenUid == null || widget.user.dosenUid!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Mahasiswa belum punya dosen pembimbing!")),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final logbook = LogbookHarianModel(
-        logbookHarianUid: "",
-        mahasiswaUid: widget.user.uid ?? "",
-        dosenUid: widget.user.dosenUid ?? "",
-        judulTopik: judulController.text,
-        tanggal: pickedTanggal,
-        deskripsi: deskripsiController.text,
-        status: LogbookStatus.draft,
-      );
-
-      final docRef = await FirebaseFirestore.instance
-          .collection("logbook_harian")
-          .add(logbook.toMap());
-
-      await docRef.update({"logbookHarianUid": docRef.id});
-
-      if (!mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const SuccessScreen(
-            message: "Logbook Harian Berhasil Disimpan",
-          ),
-        ),
-      );
-    } catch (e) {
-      print("Gagal submit logbook: $e");
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gagal mengirim logbook: $e")),
-      );
-
-      setState(() => _isLoading = false);
+      setState(() => _pickedTanggal = picked);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final dateDisplay = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(_pickedTanggal);
+
     return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       appBar: const CustomUniversalAppbar(judul: "Tambah Logbook Harian"),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _label("Mahasiswa"),
-            _readonlyField(controller: mahasiswaController),
-
-            _label("Dosen Pembimbing"),
-            _readonlyField(controller: dosenController),
-
-            _label("Judul Topik"),
-            _inputField(
-              controller: judulController,
-              hint: "Contoh: Revisi Bab 2",
-              errorText: judulError,
-              onChanged: (v) {
-                if (v.isNotEmpty && judulError != null) setState(() => judulError = null);
-              },
-            ),
-
-            _label("Deskripsi Kegiatan"),
-            _inputField(
-              controller: deskripsiController,
-              hint: "Contoh: Mengerjakan bab 2 metode penelitian",
-              errorText: deskripsiError,
-              maxLines: 5,
-              onChanged: (v) {
-                if (v.isNotEmpty && deskripsiError != null) setState(() => deskripsiError = null);
-              },
-            ),
-
-            _label("Tanggal"),
-            TextField(
-              controller: tanggalController,
-              readOnly: true,
-              onTap: _pickDate,
-              decoration: _decoration().copyWith(
-                hintText: "Klik untuk memilih tanggal",
-                errorText: tanggalError,
-                errorBorder: tanggalError != null
-                    ? OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red, width: 2),
-                      )
-                    : null,
-              ),
-            ),
-
-            const SizedBox(height: 30),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _submitLogbook,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      body: Consumer<MahasiswaLogHarianViewModel>(
+        builder: (context, vm, child) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // --- BAGIAN 1: INFO TUJUAN (DOSEN) ---
+                  BuildField(
+                    label: "Dosen Pembimbing", 
+                    value: _dosenName
                   ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text(
-                        "Submit",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+
+                  const SizedBox(height: 16),
+                  
+                  // --- BAGIAN 2: TANGGAL ---
+                  const Text(
+                    "Tanggal Kegiatan",
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 6),
+                  InkWell(
+                    onTap: _pickDate,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade400),
                       ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(dateDisplay, style: const TextStyle(fontSize: 14)),
+                          const Icon(Icons.calendar_month, color: Colors.grey),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // --- BAGIAN 3: INPUT DATA ---
+                  CustomTextArea(
+                    controller: _judulController,
+                    label: "Topik Kegiatan",
+                    hint: "Contoh: Revisi Bab 1",
+                    minLines: 1,
+                    maxLines: 2,
+                    validator: (v) => (v == null || v.isEmpty) ? "Wajib diisi" : null,
+                  ),
+                  
+                  const SizedBox(height: 16),
+
+                  CustomTextArea(
+                    controller: _deskripsiController,
+                    label: "Deskripsi Kegiatan",
+                    hint: "Jelaskan detail kegiatan...",
+                    minLines: 6,
+                    maxLines: 10,
+                    validator: (v) => (v == null || v.isEmpty) ? "Wajib diisi" : null,
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // --- BAGIAN 4: SUBMIT ---
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: vm.isLoading ? null : () async {
+                        if (!_formKey.currentState!.validate()) return;
+                        
+                        // Action ViewModel
+                        final success = await vm.tambahLogbook(
+                          judulTopik: _judulController.text,
+                          deskripsi: _deskripsiController.text,
+                          tanggal: _pickedTanggal,
+                        );
+
+                        if (success && context.mounted) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SuccessScreen(message: "Logbook Berhasil Disimpan"),
+                            ),
+                          );
+                        } else if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(vm.errorMessage ?? "Gagal menyimpan")),
+                          );
+                        }
+                      },
+                      child: vm.isLoading
+                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text("Simpan Logbook", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
-
-  Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(top: 16, bottom: 6),
-        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
-      );
-
-  Widget _readonlyField({required TextEditingController controller}) => TextField(
-        controller: controller,
-        readOnly: true,
-        decoration: _decoration(),
-      );
-
-  Widget _inputField({
-    required TextEditingController controller,
-    String? hint,
-    String? errorText,
-    Function(String)? onChanged,
-    int maxLines = 1,
-  }) =>
-      TextField(
-        controller: controller,
-        onChanged: onChanged,
-        maxLines: maxLines,
-        decoration: _decoration().copyWith(hintText: hint, errorText: errorText),
-      );
-
-  InputDecoration _decoration() => InputDecoration(
-        filled: true,
-        fillColor: Colors.white,
-        hintStyle: const TextStyle(color: Colors.grey),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.blue),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.blue, width: 2),
-        ),
-      );
 }

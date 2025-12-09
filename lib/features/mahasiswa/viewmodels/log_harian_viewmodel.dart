@@ -1,123 +1,209 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../../../data/models/logbook_harian_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; 
 
-class MahasiswaLaporanViewModel extends ChangeNotifier {
-  final String mahasiswaUid;
+// Utils
+import 'package:ebimbingan/core/utils/auth_utils.dart';
 
-  MahasiswaLaporanViewModel({required this.mahasiswaUid});
+// Models
+import 'package:ebimbingan/data/models/user_model.dart';
+import 'package:ebimbingan/data/models/logbook_harian_model.dart';
+import 'package:ebimbingan/data/models/wrapper/mahasiswa_helper_harian.dart';
 
-  // ===================== STREAM LAPORAN =====================
-  Stream<QuerySnapshot> get laporanStream {
-    return FirebaseFirestore.instance
-        .collection("logbook_harian")
-        .where("mahasiswaUid", isEqualTo: mahasiswaUid)
-        .orderBy("tanggal", descending: true)
-        .snapshots();
-  }
+// Services
+import 'package:ebimbingan/data/services/user_service.dart';
+import 'package:ebimbingan/data/services/logbook_harian_service.dart';
 
-  // Convert QuerySnapshot ke List<Map>
-  List<Map<String, dynamic>> mapLaporan(QuerySnapshot snapshot) {
-    return snapshot.docs.map((doc) {
-      final data = doc.data() as Map<String, dynamic>;
-      return {
-        "id": doc.id,
-        "tanggalRaw": data["tanggal"],
-        "tanggal": formatTanggal(data["tanggal"]),
-        "judulTopik": data["judulTopik"] ?? "",
-        "deskripsi": data["deskripsi"] ?? "",
-      };
-    }).toList();
-  }
+class MahasiswaLogHarianViewModel extends ChangeNotifier {
+  final LogbookHarianService _logbookService = LogbookHarianService();
+  final UserService _userService = UserService();
 
-  // Optional: convert ke List<LogbookHarianModel>
-  List<LogbookHarianModel> mapToModel(QuerySnapshot snapshot) {
-    return snapshot.docs.map((doc) {
-      final data = doc.data() as Map<String, dynamic>;
-      return LogbookHarianModel.fromMap({
-        ...data,
-        "logbookHarianUid": doc.id,
-      });
-    }).toList();
-  }
+  // =================================================================
+  // STATE
+  // =================================================================
 
-  // Group laporan by tanggal
-  Map<String, List<Map<String, dynamic>>> groupByTanggal(List<Map<String, dynamic>> laporan) {
-    Map<String, List<Map<String, dynamic>>> grouped = {};
-    for (var item in laporan) {
-      final tgl = item["tanggal"];
-      if (!grouped.containsKey(tgl)) grouped[tgl] = [];
-      grouped[tgl]!.add(item);
+  List<MahasiswaHarianHelper> _logbookList = [];
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  LogbookStatus? _activeFilter;
+  LogbookStatus? get activeFilter => _activeFilter;
+
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  // =================================================================
+  // GETTERS
+  // =================================================================
+
+  List<MahasiswaHarianHelper> get logbooks {
+    if (_activeFilter == null) {
+      return _logbookList;
     }
-    return grouped;
+    return _logbookList
+        .where((item) => item.logbook.status == _activeFilter)
+        .toList();
   }
 
-  // ===================== USER FETCHING =====================
-  Future<Map<String, dynamic>> getUserByUid(String uid) async {
-    final doc = await FirebaseFirestore.instance.collection("users").doc(uid).get();
-    if (!doc.exists) return {};
-    return doc.data() as Map<String, dynamic>;
+  void setFilter(LogbookStatus? status) {
+    _activeFilter = status;
+    notifyListeners();
   }
 
-  // ===================== DETAIL LOGBOOK =====================
-  Future<Map<String, dynamic>> getLogbookHarianDetail(String logbookUid) async {
-    final doc = await FirebaseFirestore.instance.collection("logbook_harian").doc(logbookUid).get();
-    if (!doc.exists) throw Exception("Logbook tidak ditemukan");
+  // =================================================================
+  // LOAD DATA (Batch Fetching Pattern)
+  // =================================================================
 
-    final logbookData = doc.data() as Map<String, dynamic>;
+  Future<void> loadLogbooks() async {
+    // 1. Cek Login via AuthUtils
+    final uid = AuthUtils.currentUid;
+    if (uid == null) {
+      _errorMessage = "Sesi anda berakhir. Silakan login kembali.";
+      notifyListeners();
+      return;
+    }
 
-    final mahasiswaData = await getUserByUid(logbookData["mahasiswaUid"]);
-    final dosenData = await getUserByUid(logbookData["dosenUid"]);
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
 
-    return {
-      "logbook": logbookData,
-      "mahasiswa": mahasiswaData,
-      "dosen": dosenData,
-    };
+    try {
+      // 2. Ambil List Logbook Harian (Raw Data)
+      final List<LogbookHarianModel> rawLogs = 
+          await _logbookService.getLogbookByMahasiswaUid(uid);
+
+      if (rawLogs.isEmpty) {
+        _logbookList = [];
+      } else {
+        final Set<String> dosenUids = rawLogs.map((e) => e.dosenUid).toSet();
+
+        final List<UserModel?> fetchedDosens = await Future.wait(
+          dosenUids.map((id) => _userService.fetchUserByUid(id))
+        );
+
+        final Map<String, UserModel> dosenMap = { 
+          for (var dosen in fetchedDosens) 
+            if (dosen != null) dosen.uid: dosen
+        };
+
+        final List<MahasiswaHarianHelper> wrappedList = [];
+
+        for (var log in rawLogs) {
+          final dosen = dosenMap[log.dosenUid];
+
+          if (dosen != null) {
+            wrappedList.add(
+              MahasiswaHarianHelper(
+                logbook: log,
+                dosen: dosen,
+              ),
+            );
+          }
+        }
+
+        wrappedList.sort((a, b) => b.logbook.tanggal.compareTo(a.logbook.tanggal));
+
+        _logbookList = wrappedList;
+      }
+
+    } catch (e) {
+      _errorMessage = "Gagal memuat logbook: $e";
+      _logbookList = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
-  // Optional: helper return LogbookHarianModel
-  Future<LogbookHarianModel> getLogbookHarianModel(String logbookUid) async {
-    final doc = await FirebaseFirestore.instance.collection("logbook_harian").doc(logbookUid).get();
-    if (!doc.exists) throw Exception("Logbook tidak ditemukan");
-
-    final data = doc.data() as Map<String, dynamic>;
-    return LogbookHarianModel.fromMap({
-      ...data,
-      "logbookHarianUid": doc.id,
-    });
+  Future<void> refresh() async {
+    await loadLogbooks();
   }
 
-  // ===================== FORMAT TANGGAL =====================
-  static String formatTanggal(Timestamp ts) {
-    final date = ts.toDate();
-    final now = DateTime.now();
+  // =================================================================
+  // ACTION: TAMBAH LOGBOOK
+  // =================================================================
 
-    final today = DateTime(now.year, now.month, now.day);
-    final thisDate = DateTime(date.year, date.month, date.day);
+  Future<bool> tambahLogbook({
+    required String judulTopik,
+    required String deskripsi,
+    required DateTime tanggal,
+  }) async {
+    final uid = AuthUtils.currentUid;
+    if (uid == null) {
+      _errorMessage = "Sesi berakhir.";
+      notifyListeners();
+      return false;
+    }
 
-    if (thisDate == today) return "Today";
-    if (thisDate == today.subtract(const Duration(days: 1))) return "Yesterday";
+    _isLoading = true;
+    notifyListeners();
 
-    return "${date.day} ${_namaBulan(date.month)}";
+    try {
+      if (judulTopik.isEmpty || deskripsi.isEmpty) {
+        throw Exception("Topik dan Deskripsi wajib diisi.");
+      }
+
+      // 1. Ambil Profil Mahasiswa untuk tahu siapa Dosen Pembimbingnya saat ini
+      final currentUser = await _userService.fetchUserByUid(uid);
+      final String? dosenUidTarget = currentUser.dosenUid;
+
+      if (dosenUidTarget == null || dosenUidTarget.isEmpty) {
+        throw Exception("Anda belum memiliki Dosen Pembimbing.");
+      }
+
+      // 2. Generate ID Unik
+      final newId = FirebaseFirestore.instance.collection('logbook_harian').doc().id;
+
+      // 3. Buat Object Model
+      final newLog = LogbookHarianModel(
+        logbookHarianUid: newId,
+        mahasiswaUid: uid,
+        dosenUid: dosenUidTarget,
+        judulTopik: judulTopik,
+        tanggal: tanggal,
+        deskripsi: deskripsi,
+        status: LogbookStatus.draft,
+      );
+
+      // 4. Simpan ke Firestore
+      await _logbookService.saveLogbookHarian(newLog);
+
+      // 5. Reload data agar list terupdate
+      await loadLogbooks();
+      
+      return true;
+
+    } catch (e) {
+      _errorMessage = "Gagal menambah logbook: $e";
+      notifyListeners();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
-  static String _namaBulan(int m) {
-    const bulan = [
-      "",
-      "Januari",
-      "Februari",
-      "Maret",
-      "April",
-      "Mei",
-      "Juni",
-      "Juli",
-      "Agustus",
-      "September",
-      "Oktober",
-      "November",
-      "Desember"
-    ];
-    return bulan[m];
+  // =================================================================
+  // ACTION: HAPUS LOGBOOK
+  // =================================================================
+
+  Future<bool> deleteLogbook(String logbookUid) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _logbookService.deleteLogbookHarian(logbookUid);
+      
+      // Update UI Lokal (Optimistic)
+      _logbookList.removeWhere((item) => item.logbook.logbookHarianUid == logbookUid);
+      
+      return true;
+    } catch (e) {
+      _errorMessage = "Gagal menghapus logbook: $e";
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

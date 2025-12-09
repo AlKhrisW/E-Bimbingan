@@ -1,6 +1,5 @@
 // lib/app.dart
 
-import 'package:ebimbingan/features/mahasiswa/viewmodels/log_mingguan_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -28,6 +27,8 @@ import 'features/admin/viewmodels/mapping/detail_mapping_vm.dart';
 
 // Mahasiswa ViewModels
 import 'features/mahasiswa/viewmodels/mahasiswa_viewmodel.dart';
+import 'features/mahasiswa/viewmodels/log_harian_viewmodel.dart';
+import 'features/mahasiswa/viewmodels/log_mingguan_viewmodel.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -42,6 +43,7 @@ class App extends StatelessWidget {
         // Provider Khusus Mahasiswa
         ChangeNotifierProvider(create: (_) => MahasiswaViewModel()),
         ChangeNotifierProvider(create: (_) => MahasiswaLogMingguanViewModel()),
+        ChangeNotifierProvider(create: (_) => MahasiswaLogHarianViewModel()),
 
         // --- ADMIN ---
         ChangeNotifierProvider(create: (_) => AdminViewModel()),

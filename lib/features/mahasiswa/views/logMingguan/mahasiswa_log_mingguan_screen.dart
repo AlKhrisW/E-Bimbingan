@@ -16,7 +16,7 @@ import '../../widgets/log_mingguan/mingguan_filter_button.dart';
 
 // Screens untuk Navigasi
 import 'update_log_mingguan_screen.dart';
-import 'detail_logbook_mingguan_screen.dart';
+import 'detail_log_mingguan_screen.dart';
 
 class MahasiswaLogMingguanScreen extends StatefulWidget {
   const MahasiswaLogMingguanScreen({super.key});
@@ -139,7 +139,7 @@ class _MahasiswaLogMingguanScreenState extends State<MahasiswaLogMingguanScreen>
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => DetailLogbookMingguanScreen(data: item),
+                    builder: (_) => DetailLogMingguanScreen(data: item),
                   ),
                 );
               }

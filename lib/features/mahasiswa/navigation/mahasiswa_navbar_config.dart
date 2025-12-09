@@ -22,7 +22,7 @@ List<NavItem> buildMahasiswaNavItems(UserModel user) {
     NavItem(
       label: "Progress",
       icon: Icons.timeline,
-      screen: MahasiswaLaporanScreen(user: user),
+      screen: MahasiswaLogHarianScreen(),
     ),
 
     NavItem(
