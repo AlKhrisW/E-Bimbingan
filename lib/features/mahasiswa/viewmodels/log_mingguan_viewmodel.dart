@@ -12,12 +12,14 @@ import 'package:ebimbingan/data/models/wrapper/mahasiswa_helper_mingguan.dart';
 
 // Services
 import 'package:ebimbingan/data/services/user_service.dart';
+import 'package:ebimbingan/data/services/notification_service.dart';
 import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 
 class MahasiswaLogMingguanViewModel extends ChangeNotifier {
   final UserService _userService = UserService();
   final LogBimbinganService _logService = LogBimbinganService();
+  final NotificationService _notifService = NotificationService();
   final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
 
   // =================================================================
@@ -35,6 +37,14 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
+
+  void clearData() {
+    _allLogs = [];
+    _activeFilter = null;
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
 
   // =================================================================
   // GETTERS (Filtered List)
@@ -157,10 +167,12 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
     required String ringkasanBaru,
     File? lampiranBaru,
   }) async {
+    final uid = AuthUtils.currentUid; 
     _isLoading = true;
     notifyListeners();
 
     try {
+      // 1. Simpan Update ke Database
       await _logService.updateLogBimbinganMahasiswa(
         logBimbinganUid: logUid,
         ringkasanHasil: ringkasanBaru,
@@ -168,6 +180,25 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
         waktuPengajuan: DateTime.now(),
         fileFoto: lampiranBaru,
       );
+
+      // --- [BARU] LOGIKA NOTIFIKASI ---
+      
+      // A. Ambil Data Log untuk tahu siapa Dosennya
+      final logData = await _logService.getLogBimbinganByUid(logUid);
+      
+      if (logData != null && uid != null) {
+        // B. Ambil Nama Mahasiswa
+        final currentUser = await _userService.fetchUserByUid(uid);
+        
+        // C. Kirim Notif ke Dosen
+        await _notifService.sendNotification(
+          recipientUid: logData.dosenUid,
+          title: "Log Bimbingan Diisi",
+          body: "${currentUser.name} telah mengisi hasil bimbingan. Mohon diperiksa.",
+          type: "log_mingguan_update",
+          relatedId: logUid,
+        );
+      }
 
       await loadLogData();
       return true;

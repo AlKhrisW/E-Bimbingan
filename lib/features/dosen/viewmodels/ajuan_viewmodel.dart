@@ -40,6 +40,13 @@ class DosenAjuanViewModel extends ChangeNotifier {
   String? _error;
   String? get error => _error;
 
+  void clearData() {
+    _daftarAjuan = [];
+    _isLoading = false;
+    _error = null;
+    notifyListeners();
+  }
+
   // =================================================================
   // LOAD DATA UTAMA (List Ajuan)
   // =================================================================

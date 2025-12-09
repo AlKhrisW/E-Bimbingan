@@ -9,6 +9,7 @@ import 'core/utils/navigation/app_navigator.dart';
 
 // Mahasiswa Routes
 import 'package:ebimbingan/features/mahasiswa/views/logHarian/detail_log_harian_screen.dart';
+import 'package:ebimbingan/features/mahasiswa/views/logMingguan/update_log_mingguan_screen.dart';
 import 'package:ebimbingan/features/mahasiswa/views/logMingguan/detail_log_mingguan_screen.dart';
 import 'package:ebimbingan/features/mahasiswa/views/ajuanBimbingan/detail_ajuan_bimbingan_screen.dart';
 
@@ -19,10 +20,26 @@ import 'package:ebimbingan/features/dosen/views/ajuan/riwayat/riwayat_detail_scr
 import 'package:ebimbingan/features/dosen/views/log_bimbingan/validasi/detail_screen.dart';
 import 'package:ebimbingan/features/dosen/views/log_bimbingan/riwayat/riwayat_detail_screen.dart';
 
-// Auth
+// Global Viewmodels
 import 'features/auth/viewmodels/auth_viewmodel.dart';
+import 'features/notifikasi/viewmodels/notifikasi_viewmodel.dart';
 
-// Admin
+// Mahasiswa Viewmodels
+import 'features/mahasiswa/viewmodels/mahasiswa_viewmodel.dart';
+import 'features/mahasiswa/viewmodels/log_mingguan_viewmodel.dart';
+import 'features/mahasiswa/viewmodels/log_harian_viewmodel.dart';
+import 'features/mahasiswa/viewmodels/ajuan_bimbingan_viewmodel.dart';
+
+// Dosen Viewmodels
+import 'features/dosen/viewmodels/ajuan_viewmodel.dart';
+import 'features/dosen/viewmodels/bimbingan_viewmodel.dart';
+import 'features/dosen/viewmodels/dosen_profil_viewmodel.dart';
+import 'features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
+import 'features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
+import 'features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
+import 'features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
+
+// Admin Viewmodels
 import 'features/admin/viewmodels/admin_viewmodel.dart';
 import 'features/admin/viewmodels/admin_profile_viewmodel.dart';
 import 'features/admin/viewmodels/admin_dashboard_viewmodel.dart';
@@ -37,10 +54,26 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Global Auth
+        // 1. GLOBAL CORE
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => NotificationViewModel()),
 
-        // --- ADMIN ---
+        // 2. MAHASISWA VIEWMODELS
+        ChangeNotifierProvider(create: (_) => MahasiswaViewModel()),
+        ChangeNotifierProvider(create: (_) => MahasiswaLogMingguanViewModel()),
+        ChangeNotifierProvider(create: (_) => MahasiswaLogHarianViewModel()),
+        ChangeNotifierProvider(create: (_) => MahasiswaAjuanBimbinganViewModel()),
+
+        // 3. DOSEN VIEWMODELS
+        ChangeNotifierProvider(create: (_) => DosenProfilViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenMahasiswaListViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenLogbookHarianViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenAjuanViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenRiwayatAjuanViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenBimbinganViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenRiwayatBimbinganViewModel()),
+
+        // 4. ADMIN VIEWMODELS
         ChangeNotifierProvider(create: (_) => AdminViewModel()),
         ChangeNotifierProvider(create: (_) => AdminProfileViewModel()),
         ChangeNotifierProvider(create: (_) => AdminDashboardViewModel()),
@@ -55,11 +88,11 @@ class App extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         home: const SplashScreen(),
         routes: {
-
           // Mahasiswa Routes
           '/mahasiswa_detail_ajuan': (context) => const MahasiswaDetailAjuanScreen(),
           '/mahasiswa_detail_log_mingguan': (context) => const DetailLogMingguanScreen(),
           '/mahasiswa_detail_log_harian': (context) => const MahasiswaDetailLogHarianScreen(),
+          '/mahasiswa_update_log_mingguan': (context) => const UpdateLogMingguanScreen(),
 
           // Dosen Routes
           // --- AJUAN BIMBINGAN ---
@@ -71,7 +104,7 @@ class App extends StatelessWidget {
           '/detail_log_riwayat': (context) => const DosenRiwayatBimbinganDetail(),
 
           // --- LOGBOOK HARIAN ---
-          '/detail_logbook_harian': (context) => const LogbookHarianDetail(),
+          '/dosen_detail_log_harian': (context) => const LogbookHarianDetail(),
         },
       ),
     );

@@ -17,11 +17,11 @@ import 'package:ebimbingan/data/models/wrapper/mahasiswa_helper_mingguan.dart';
 import 'package:ebimbingan/features/mahasiswa/viewmodels/log_mingguan_viewmodel.dart';
 
 class UpdateLogMingguanScreen extends StatefulWidget {
-  final MahasiswaMingguanHelper dataHelper;
+  final MahasiswaMingguanHelper? dataHelper;
 
   const UpdateLogMingguanScreen({
     super.key,
-    required this.dataHelper,
+    this.dataHelper,
   });
 
   @override
@@ -30,18 +30,79 @@ class UpdateLogMingguanScreen extends StatefulWidget {
 
 class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
   final _formKey = GlobalKey<FormState>();
+  
+  // Controller
   late TextEditingController _ringkasanController;
   
-  // State untuk Gambar
+  // State Data (Untuk menampung hasil fetch atau data konstruktor)
+  MahasiswaMingguanHelper? _loadedData; 
+  bool _isLoading = true; 
+  
+  // State Gambar
   File? _selectedFile;
   final LogBimbinganService _logService = LogBimbinganService(); 
 
   @override
   void initState() {
     super.initState();
-    _ringkasanController = TextEditingController(
-      text: widget.dataHelper.log.ringkasanHasil
-    );
+    _ringkasanController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initData();
+    });
+  }
+
+  Future<void> _initData() async {
+    final vm = Provider.of<MahasiswaLogMingguanViewModel>(context, listen: false);
+
+    // KASUS 1: Data dikirim via Constructor (Dari List Screen)
+    if (widget.dataHelper != null) {
+      _finalizeDataLoad(widget.dataHelper!);
+      return;
+    }
+
+    // KASUS 2: Cek Arguments Route (Dari Notifikasi)
+    final args = ModalRoute.of(context)?.settings.arguments;
+    
+    // A. Jika args berupa Object Helper (Navigasi manual via pushNamed)
+    if (args is MahasiswaMingguanHelper) {
+       _finalizeDataLoad(args);
+       return;
+    }
+
+    // B. Jika args berupa String ID (Dari Notifikasi / Deep Link)
+    if (args is String) {
+      // Fetch data ke server berdasarkan ID
+      final data = await vm.getLogbookDetail(args);
+      
+      if (data != null) {
+        _finalizeDataLoad(data);
+      } else {
+        // Handle jika data tidak ditemukan (misal terhapus)
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Data logbook tidak ditemukan")),
+          );
+          Navigator.pop(context); // Kembali
+        }
+      }
+    } else {
+      // Error: Tidak ada data maupun argumen valid
+      if (mounted) {
+        setState(() => _isLoading = false);
+        Navigator.pop(context);
+      }
+    }
+  }
+
+  // Fungsi helper untuk set data ke state dan controller
+  void _finalizeDataLoad(MahasiswaMingguanHelper data) {
+    if (!mounted) return;
+    setState(() {
+      _loadedData = data;
+      _ringkasanController.text = data.log.ringkasanHasil;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -50,7 +111,6 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
     super.dispose();
   }
 
-  // Fungsi Pilih Gambar
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final XFile? picked = await picker.pickImage(
@@ -68,13 +128,26 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final log = widget.dataHelper.log;
-    final ajuan = widget.dataHelper.ajuan;
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_loadedData == null) {
+      return const Scaffold(
+        body: Center(child: Text("Gagal memuat data logbook")),
+      );
+    }
+
+    final log = _loadedData!.log;
+    final ajuan = _loadedData!.ajuan;
+    final dosen = _loadedData!.dosen;
     final formatDate = DateFormat('dd MMMM yyyy', 'id_ID').format(ajuan.tanggalBimbingan);
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: CustomUniversalAppbar(judul: "Update Logbook"),
+      appBar: const CustomUniversalAppbar(judul: "Update Logbook"),
       body: Consumer<MahasiswaLogMingguanViewModel>(
         builder: (context, vm, child) {
           return SingleChildScrollView(
@@ -91,6 +164,10 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
                   
                   // --- BAGIAN 2: READ ONLY DATA ---
                   BuildField(
+                    label: "Dosen Pembimbing",
+                    value: dosen.name
+                  ),
+                  BuildField(
                     label: "Topik Bimbingan", 
                     value: ajuan.judulTopik
                   ),
@@ -102,6 +179,10 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
                     label: "Metode Bimbingan", 
                     value: ajuan.metodeBimbingan
                   ),
+                  BuildField(
+                    label: "Catatan Dosen",
+                    value: log.catatanDosen ?? "Tidak ada catatan dari dosen pembimbing",
+                  ),
                   
                   const SizedBox(height: 8),
 
@@ -109,7 +190,7 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
                   CustomTextArea(
                     controller: _ringkasanController,
                     label: "Ringkasan Hasil & Progres",
-                    hint: "Jelaskan hasil bimbingan dan progres skripsi Anda...",
+                    hint: "Jelaskan hasil bimbingan Anda...",
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) {
                         return "Ringkasan hasil wajib diisi";
@@ -131,7 +212,6 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
                   ),
                   const SizedBox(height: 8),
                   
-                  // Passing URL lama agar bisa dipreview jika user tidak upload foto baru
                   _buildImageSection(log.lampiranUrl),
 
                   const SizedBox(height: 40),
@@ -151,7 +231,6 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
                       onPressed: vm.isLoading ? null : () async {
                         if (!_formKey.currentState!.validate()) return;
 
-                        // Validasi Gambar: 
                         if (_selectedFile == null && (log.lampiranUrl == null || log.lampiranUrl!.isEmpty)) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text("Bukti kehadiran wajib diupload"))
@@ -159,7 +238,6 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
                           return;
                         }
 
-                        // Panggil Fungsi di ViewModel
                         final success = await vm.submitDraftOrRevisi(
                           logUid: log.logBimbinganUid, 
                           ringkasanBaru: _ringkasanController.text,
@@ -170,7 +248,8 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text("Logbook berhasil diajukan!"))
                           );
-                          Navigator.pop(context);
+                          // Kembali ke halaman sebelumnya
+                          Navigator.pop(context); 
                         }
                       },
                       child: vm.isLoading
@@ -198,21 +277,15 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
     );
   }
 
-  // Widget khusus untuk preview gambar
   Widget _buildImageSection(String? existingUrl) {
-    
-    // 1. Definisikan variabel widget untuk menampung konten gambar
     Widget imageContent;
 
-    // 2. Logika IF-ELSE untuk menentukan isi gambar
     if (_selectedFile != null) {
-      // User baru saja memilih file dari galeri
       imageContent = Image.file(
         _selectedFile!,
         fit: BoxFit.cover,
       );
     } else if (existingUrl != null && existingUrl.isNotEmpty) {
-      // Tidak ada file baru, tapi ada data gambar lama dari database
       imageContent = Image.memory(
         _logService.decodeBase64ToImage(existingUrl)!,
         fit: BoxFit.cover,
@@ -221,7 +294,6 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
         ),
       );
     } else {
-      // Tidak ada file baru dan tidak ada gambar lama (Kosong)
       imageContent = const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -234,10 +306,8 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
       );
     }
 
-    // 3. Return widget Container yang membungkus 'imageContent' hasil seleksi di atas
     return Column(
       children: [
-        // Area Preview
         Container(
           height: 220,
           width: double.infinity,
@@ -248,13 +318,10 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            // Masukkan variabel hasil if-else di sini
             child: imageContent, 
           ),
         ),
         const SizedBox(height: 12),
-        
-        // Tombol Ganti Foto
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(

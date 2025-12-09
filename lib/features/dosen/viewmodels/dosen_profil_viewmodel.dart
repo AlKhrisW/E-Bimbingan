@@ -1,4 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // [Wajib Import Provider]
+
+// Import ViewModel Fitur Dosen
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
+
+// Import standar lainnya
 import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/services/firebase_auth_service.dart';
@@ -22,6 +33,12 @@ class DosenProfilViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   
   String? get currentUserId => AuthUtils.currentUid;
+
+  void clearData() {
+    _dosenData = null;
+    _isLoading = false;
+    notifyListeners();
+  }
 
   // =================================================================
   // LOAD DATA
@@ -94,6 +111,7 @@ class DosenProfilViewModel extends ChangeNotifier {
   // =================================================================
 
   Future<void> logout() async {
+    clearData();
     try {
       await _authService.signOut();
     } catch (e) {
@@ -102,6 +120,15 @@ class DosenProfilViewModel extends ChangeNotifier {
   }
 
   Future<void> handleLogout(BuildContext context) async {
+    if (context.mounted) {
+      context.read<DosenAjuanViewModel>().clearData();
+      context.read<DosenBimbinganViewModel>().clearData();
+      context.read<DosenLogbookHarianViewModel>().clearData();
+      context.read<DosenMahasiswaListViewModel>().clearData();
+      context.read<DosenRiwayatAjuanViewModel>().clearData();
+      context.read<DosenRiwayatBimbinganViewModel>().clearData();
+    }
+    
     final navigator = Navigator.of(context);
 
     await logout();

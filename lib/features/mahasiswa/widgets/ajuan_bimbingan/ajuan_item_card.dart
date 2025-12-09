@@ -27,7 +27,7 @@ class MahasiswaAjuanItem extends StatelessWidget {
   String get statusText {
     switch (status) {
       case AjuanStatus.disetujui: return "Disetujui";
-      case AjuanStatus.ditolak: return "Revisi";
+      case AjuanStatus.ditolak: return "Ditolak";
       case AjuanStatus.proses: return "Menunggu";
     }
   }

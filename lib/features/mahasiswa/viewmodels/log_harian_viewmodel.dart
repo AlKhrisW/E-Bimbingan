@@ -11,10 +11,12 @@ import 'package:ebimbingan/data/models/wrapper/mahasiswa_helper_harian.dart';
 
 // Services
 import 'package:ebimbingan/data/services/user_service.dart';
+import 'package:ebimbingan/data/services/notification_service.dart';
 import 'package:ebimbingan/data/services/logbook_harian_service.dart';
 
 class MahasiswaLogHarianViewModel extends ChangeNotifier {
   final LogbookHarianService _logbookService = LogbookHarianService();
+  final NotificationService _notifService = NotificationService();
   final UserService _userService = UserService();
 
   // =================================================================
@@ -31,6 +33,14 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
+
+  void clearData() {
+    _logbookList = [];
+    _activeFilter = null;
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
 
   // =================================================================
   // GETTERS
@@ -166,7 +176,7 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
         throw Exception("Topik dan Deskripsi wajib diisi.");
       }
 
-      // 1. Ambil Profil Mahasiswa untuk tahu siapa Dosen Pembimbingnya saat ini
+      // 1. Ambil Profil Mahasiswa (untuk Nama & Dosen UID)
       final currentUser = await _userService.fetchUserByUid(uid);
       final String? dosenUidTarget = currentUser.dosenUid;
 
@@ -190,6 +200,16 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
 
       // 4. Simpan ke Firestore
       await _logbookService.saveLogbookHarian(newLog);
+
+      // --- [BARU] KIRIM NOTIFIKASI ---
+      await _notifService.sendNotification(
+        recipientUid: dosenUidTarget,
+        title: "Logbook Harian Baru",
+        body: "${currentUser.name} menambahkan logbook kegiatan: $judulTopik",
+        type: "log_harian_baru",
+        relatedId: newId,
+      );
+      // -------------------------------
 
       // 5. Reload data agar list terupdate
       await loadLogbooks();

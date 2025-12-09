@@ -71,7 +71,7 @@ class NotificationViewModel extends ChangeNotifier {
     );
 
     try {
-      // [BARU] 3. Cek Role User Saat Ini
+      // 3. Cek Role User Saat Ini
       final uid = AuthUtils.currentUid;
       if (uid == null) throw Exception("User tidak terlogin");
       
@@ -89,6 +89,8 @@ class NotificationViewModel extends ChangeNotifier {
         case 'ajuan_status':
         case 'info_jadwal':
         case 'reminder':
+        case 'ajuan_masuk':
+
           final ajuan = await _ajuanService.getAjuanByUid(notif.relatedId);
           
           if (ajuan != null) {
@@ -114,13 +116,19 @@ class NotificationViewModel extends ChangeNotifier {
         // -----------------------------------------------------------
         case 'log_bimbingan':
         case 'log_status':
+        case 'log_mingguan_update':
+
           final log = await _logService.getLogBimbinganByUid(notif.relatedId);
           if (log != null) {
             arguments = notif.relatedId; // Kirim ID saja (String)
 
             if (isMahasiswa) {
               // --- ROUTE KHUSUS MAHASISWA ---
-              routeName = '/mahasiswa_detail_log_mingguan';
+              if (log.status == LogBimbinganStatus.rejected || log.status == LogBimbinganStatus.draft) {
+                routeName = '/mahasiswa_update_log_mingguan';
+              } else {
+                routeName = '/mahasiswa_detail_log_mingguan';
+              }
             } else {
               // --- ROUTE KHUSUS DOSEN ---
               if (log.status == LogBimbinganStatus.pending || log.status == LogBimbinganStatus.draft) {
@@ -136,8 +144,8 @@ class NotificationViewModel extends ChangeNotifier {
         // KASUS 3: LOGBOOK HARIAN
         // -----------------------------------------------------------
         case 'logbook_harian':
-          // Cek apakah data masih ada
-          // (Opsional: fetch dulu untuk memastikan tidak null)
+        case 'log_harian_baru':
+
           arguments = notif.relatedId;
 
           if (isMahasiswa) {

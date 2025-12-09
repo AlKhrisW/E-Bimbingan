@@ -38,6 +38,13 @@ class DosenBimbinganViewModel extends ChangeNotifier {
   String? _error;
   String? get error => _error;
 
+  void clearData() {
+    _daftarLog = [];
+    _isLoading = false;
+    _error = null;
+    notifyListeners();
+  }
+
   // =================================================================
   // LOAD DATA UTAMA (List Pending)
   // =================================================================

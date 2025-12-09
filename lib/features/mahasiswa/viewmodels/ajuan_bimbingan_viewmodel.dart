@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -11,10 +12,12 @@ import 'package:ebimbingan/data/models/wrapper/mahasiswa_helper_ajuan.dart';
 
 // Services
 import 'package:ebimbingan/data/services/user_service.dart';
+import 'package:ebimbingan/data/services/notification_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 
 class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
   final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
+  final NotificationService _notifService = NotificationService();
   final UserService _userService = UserService();
 
   // =================================================================
@@ -32,6 +35,14 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
+
+  void clearData() {
+    _allAjuans = [];
+    _activeFilter = null;
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
 
   // =================================================================
   // GETTERS (Filtered List)
@@ -151,6 +162,10 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
   // ACTION: SUBMIT AJUAN
   // =================================================================
 
+  // =================================================================
+  // ACTION: SUBMIT AJUAN (DIPERBARUI)
+  // =================================================================
+
   Future<bool> submitAjuan({
     required String judulTopik,
     required String metodeBimbingan,
@@ -168,7 +183,7 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. Ambil User Profile untuk mendapatkan Dosen UID
+      // 1. Ambil User Profile 
       final currentUser = await _userService.fetchUserByUid(uid);
       final String? dosenUidTarget = currentUser.dosenUid;
 
@@ -177,7 +192,7 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
         throw Exception("Anda belum memiliki Dosen Pembimbing.");
       }
 
-      // 3. Generate ID Baru secara manual agar bisa disimpan di model
+      // 3. Generate ID Baru
       final newId = FirebaseFirestore.instance.collection('ajuan_bimbingan').doc().id;
 
       // 4. Buat Model
@@ -197,7 +212,17 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
       // 5. Simpan via Service
       await _ajuanService.saveAjuan(newAjuan);
 
-      // 6. Reload Data agar UI update
+      // --- [BARU] KIRIM NOTIFIKASI KE DOSEN ---
+      final dateStr = DateFormat('dd MMM').format(tanggalBimbingan);
+      await _notifService.sendNotification(
+        recipientUid: dosenUidTarget,
+        title: "Ajuan Bimbingan Baru",
+        body: "${currentUser.name} mengajukan bimbingan untuk tanggal $dateStr.",
+        type: "ajuan_masuk",
+        relatedId: newId,
+      );
+
+      // 6. Reload Data
       await loadAjuanData();
       return true;
 

@@ -31,6 +31,15 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  void clearData() {
+    _riwayatListSource = [];
+    _activeFilter = null;
+    _selectedMahasiswa = null;
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   // =================================================================
   // GETTERS
   // =================================================================

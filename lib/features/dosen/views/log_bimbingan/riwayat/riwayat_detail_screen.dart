@@ -1,12 +1,13 @@
-import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // Tambahkan provider
+import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
+import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
+import 'package:ebimbingan/core/widgets/custom_image_preview.dart';
 import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart'; // Import ViewModel
+import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
 
 class DosenRiwayatBimbinganDetail extends StatelessWidget {
   // Ubah menjadi nullable agar bisa kosong saat dari notifikasi
@@ -117,10 +118,22 @@ class DosenRiwayatBimbinganDetail extends StatelessWidget {
             BuildField(label: "Ringkasan Hasil Bimbingan", value: contentData.log.ringkasanHasil),
             BuildField(label: "Tanggal Penulisan", value: tanggalPengajuan),
             
-            if (contentData.log.lampiranUrl != null && contentData.log.lampiranUrl!.isNotEmpty)
-              BuildField(label: "Lampiran", value: contentData.log.lampiranUrl!),
+            const SizedBox(height: 10),
 
-            const SizedBox(height: 8),
+            const Text(
+              "Lampiran",
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+            
+            ImagePreviewWidget(base64Image: contentData.log.lampiranUrl),
+
+            const SizedBox(height: 20),
 
             Align(
               alignment: Alignment.center,

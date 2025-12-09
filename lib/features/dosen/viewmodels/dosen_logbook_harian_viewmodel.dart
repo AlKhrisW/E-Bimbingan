@@ -31,6 +31,15 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  void clearData() {
+    _logbookListSource = [];
+    _activeFilter = null;
+    _selectedMahasiswa = null;
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   // =================================================================
   // GETTERS
   // =================================================================

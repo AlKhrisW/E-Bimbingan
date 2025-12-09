@@ -19,13 +19,13 @@ class _DosenProgresState extends State<DosenProgres> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DosenMahasiswaViewModel>().loadMahasiswaBimbingan();
+      context.read<DosenMahasiswaListViewModel>().loadMahasiswaBimbingan();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DosenMahasiswaViewModel>(
+    return Consumer<DosenMahasiswaListViewModel>(
       builder: (context, vm, child) {
         if (vm.isLoading) {
           return Scaffold(

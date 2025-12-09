@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
+import 'package:ebimbingan/core/widgets/custom_image_preview.dart';
 import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_tolak_dialog.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_viewmodel.dart';
@@ -95,10 +96,20 @@ class DosenLogbookDetail extends StatelessWidget {
             BuildField(label: "Tanggal Penulisan", value: tanggalPengajuan),
             BuildField(label: "Ringkasan Hasil Bimbingan", value: contentData.log.ringkasanHasil),
             
-            if (contentData.log.lampiranUrl != null && contentData.log.lampiranUrl!.isNotEmpty)
-              BuildField(label: "Lampiran", value: contentData.log.lampiranUrl!),
+            const Text(
+              "Lampiran / Bukti",
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+            
+            const SizedBox(height: 6),
 
-            const SizedBox(height: 40), 
+            ImagePreviewWidget(base64Image: contentData.log.lampiranUrl),
+
+            const SizedBox(height: 40),
           ],
         ),
       ),

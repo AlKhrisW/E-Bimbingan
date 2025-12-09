@@ -18,13 +18,13 @@ class _DosenListMahasiswaBimbinganState extends State<DosenListMahasiswaBimbinga
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DosenMahasiswaViewModel>().loadMahasiswaBimbingan();
+      context.read<DosenMahasiswaListViewModel>().loadMahasiswaBimbingan();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DosenMahasiswaViewModel>(
+    return Consumer<DosenMahasiswaListViewModel>(
       builder: (context, vm, child) {
         
         if (vm.isLoading) {

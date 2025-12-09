@@ -1,4 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // [Wajib Import Provider]
+
+// Import ViewModel Fitur Mahasiswa
+import 'package:ebimbingan/features/mahasiswa/viewmodels/ajuan_bimbingan_viewmodel.dart';
+import 'package:ebimbingan/features/mahasiswa/viewmodels/log_mingguan_viewmodel.dart';
+import 'package:ebimbingan/features/mahasiswa/viewmodels/log_harian_viewmodel.dart';
+
+// Import standar lainnya
 import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/services/firebase_auth_service.dart';
@@ -23,6 +31,12 @@ class MahasiswaViewModel extends ChangeNotifier {
   
   // Menggunakan AuthUtils untuk mengambil UID
   String? get currentUserId => AuthUtils.currentUid;
+
+  void clearData() {
+    _mahasiswaData = null;
+    _isLoading = false;
+    notifyListeners();
+  }
 
   // =================================================================
   // LOAD DATA
@@ -101,6 +115,7 @@ class MahasiswaViewModel extends ChangeNotifier {
   // =================================================================
 
   Future<void> logout() async {
+    clearData();
     try {
       await _authService.signOut();
     } catch (e) {
@@ -109,6 +124,12 @@ class MahasiswaViewModel extends ChangeNotifier {
   }
 
   Future<void> handleLogout(BuildContext context) async {
+    if (context.mounted) {
+      context.read<MahasiswaAjuanBimbinganViewModel>().clearData();
+      context.read<MahasiswaLogMingguanViewModel>().clearData();
+      context.read<MahasiswaLogHarianViewModel>().clearData();
+    }
+    
     final navigator = Navigator.of(context);
 
     await logout();
