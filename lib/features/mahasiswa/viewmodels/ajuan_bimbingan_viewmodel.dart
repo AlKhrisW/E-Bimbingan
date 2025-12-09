@@ -6,6 +6,9 @@ import '../../../data/models/user_model.dart';
 class AjuanBimbinganViewModel extends ChangeNotifier {
   bool isLoading = false;
 
+  @visibleForTesting
+  FirebaseFirestore get firestoreInstance => FirebaseFirestore.instance;
+
   /// =====================================================
   /// SUBMIT AJUAN BIMBINGAN
   /// return null jika sukses
@@ -48,7 +51,7 @@ class AjuanBimbinganViewModel extends ChangeNotifier {
       // -----------------------------------------------------
       // SIMPAN KE FIRESTORE
       // -----------------------------------------------------
-      final docRef = await FirebaseFirestore.instance
+      final docRef = await firestoreInstance
           .collection("ajuan_bimbingan")
           .add(newAjuan.toMap());
 
@@ -73,7 +76,7 @@ class AjuanBimbinganViewModel extends ChangeNotifier {
     try {
       if (dosenUid.isEmpty) return "Tidak ada dosen pembimbing";
 
-      final doc = await FirebaseFirestore.instance
+      final doc = await firestoreInstance
           .collection("users")
           .doc(dosenUid)
           .get();
@@ -94,13 +97,13 @@ class AjuanBimbinganViewModel extends ChangeNotifier {
   /// GET RIWAYAT AJUAN MAHASISWA (Stream)
   /// =====================================================
   Stream<List<AjuanBimbinganModel>> getRiwayat(String mahasiswaUid) {
-    return FirebaseFirestore.instance
+    return firestoreInstance
         .collection("ajuan_bimbingan")
         .where("mahasiswaUid", isEqualTo: mahasiswaUid)
         .snapshots()
         .map((snap) {
           final List<AjuanBimbinganModel> list = [];
-          
+
           for (final doc in snap.docs) {
             try {
               final data = Map<String, dynamic>.from(doc.data());
@@ -110,14 +113,14 @@ class AjuanBimbinganViewModel extends ChangeNotifier {
               continue;
             }
           }
-          
+
           // Sort manual di memory
           list.sort((a, b) {
             if (a.tanggalBimbingan == null) return 1;
             if (b.tanggalBimbingan == null) return -1;
             return b.tanggalBimbingan!.compareTo(a.tanggalBimbingan!);
           });
-          
+
           return list;
         });
   }
@@ -137,7 +140,7 @@ class AjuanBimbinganViewModel extends ChangeNotifier {
 
       final data = Map<String, dynamic>.from(doc.data()!);
       data['ajuanUid'] = data['ajuanUid'] ?? doc.id;
-      
+
       return AjuanBimbinganModel.fromMap(data);
     } catch (e) {
       return null;
@@ -158,7 +161,7 @@ class AjuanBimbinganViewModel extends ChangeNotifier {
 
           final data = Map<String, dynamic>.from(doc.data()!);
           data['ajuanUid'] = data['ajuanUid'] ?? doc.id;
-          
+
           return AjuanBimbinganModel.fromMap(data);
         });
   }
