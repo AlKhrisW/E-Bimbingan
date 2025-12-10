@@ -77,6 +77,19 @@ class LogbookHarianService {
     }
   }
 
+  Future<LogbookHarianModel?> getLogbookById(String logbookId) async {
+    try {
+      final doc = await _logbookHarianCollection.doc(logbookId).get();
+      
+      if (doc.exists) {
+        return LogbookHarianModel.fromMap(doc.data()! as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// mengambil logbook harian dalam rentang tanggal tertentu
   Future<List<LogbookHarianModel>> getLogbooksInDateRange({
     required String mahasiswaUid,

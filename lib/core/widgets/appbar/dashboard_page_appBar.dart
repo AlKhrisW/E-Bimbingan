@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../themes/app_theme.dart';
+import 'package:ebimbingan/core/themes/app_theme.dart';
 
 class DashboardPageAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String name;
@@ -22,6 +22,7 @@ class DashboardPageAppBar extends StatelessWidget implements PreferredSizeWidget
 
     return AppBar(
       backgroundColor: AppTheme.backgroundColor,
+      surfaceTintColor: AppTheme.backgroundColor,
       elevation: 0,
       toolbarHeight: 80,
       automaticallyImplyLeading: false,

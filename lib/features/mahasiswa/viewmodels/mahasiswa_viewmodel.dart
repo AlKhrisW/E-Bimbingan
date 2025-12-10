@@ -1,37 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // [Wajib Import Provider]
+
+// Import ViewModel Fitur Mahasiswa
+import 'package:ebimbingan/features/mahasiswa/viewmodels/ajuan_bimbingan_viewmodel.dart';
+import 'package:ebimbingan/features/mahasiswa/viewmodels/log_mingguan_viewmodel.dart';
+import 'package:ebimbingan/features/mahasiswa/viewmodels/log_harian_viewmodel.dart';
+
+// Import standar lainnya
+import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/services/firebase_auth_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
 import '../../auth/views/login_page.dart';
 
 class MahasiswaViewModel extends ChangeNotifier {
-  final FirebaseAuthService _authService;
-  final UserService _userService;
+  final FirebaseAuthService _authService = FirebaseAuthService();
+  final UserService _userService = UserService();
 
-  MahasiswaViewModel({
-    required FirebaseAuthService authService,
-    required UserService userService,
-  })  : _authService = authService,
-        _userService = userService;
+  MahasiswaViewModel();
+
+  // =================================================================
+  // STATE
+  // =================================================================
 
   UserModel? _mahasiswaData;
   bool _isLoading = false;
 
   UserModel? get mahasiswaData => _mahasiswaData;
   bool get isLoading => _isLoading;
+  
+  // Menggunakan AuthUtils untuk mengambil UID
+  String? get currentUserId => AuthUtils.currentUid;
 
-  /// ----------------------------------------
-  /// Mengambil UID mahasiswa yang login saat ini
-  /// ----------------------------------------
-  String? get currentUserId {
-    return _authService.getCurrentUser()?.uid;
+  void clearData() {
+    _mahasiswaData = null;
+    _isLoading = false;
+    notifyListeners();
   }
 
-  /// ----------------------------------------
-  /// Memuat data mahasiswa berdasarkan UID
-  /// ----------------------------------------
+  // =================================================================
+  // LOAD DATA
+  // =================================================================
+
   Future<void> loadmahasiswaData() async {
-    final uid = currentUserId;
+    // Menggunakan AuthUtils
+    final uid = AuthUtils.currentUid;
     if (uid == null) return;
 
     _isLoading = true;
@@ -42,56 +55,48 @@ class MahasiswaViewModel extends ChangeNotifier {
       _mahasiswaData = data;
     } catch (e) {
       debugPrint("Error load mahasiswa data: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
-  /// ----------------------------------------
-  /// Refresh data manual
-  /// ----------------------------------------
   Future<void> refresh() async {
     await loadmahasiswaData();
   }
 
-  /// ----------------------------------------
-  /// Update profile fields (name, nip, email, phone)
-  /// ----------------------------------------
+  // =================================================================
+  // UPDATE PROFILE
+  // =================================================================
+
+  /// Update hanya Nama dan No HP (NIM dan Email dihapus sesuai permintaan)
   Future<void> updateProfile({
     String? name,
-    String? nip,
-    String? email,
     String? phoneNumber,
   }) async {
     if (_mahasiswaData == null) {
       throw 'Tidak ada data mahasiswa untuk diupdate.';
     }
 
+    // 1. Siapkan payload partial
+    final Map<String, dynamic> payload = {};
+    if (name != null) payload['name'] = name;
+    if (phoneNumber != null) payload['phone_number'] = phoneNumber;
+
+    if (payload.isEmpty) return;
+
     _isLoading = true;
     notifyListeners();
 
     try {
-      // create updated model using existing values for fields not provided
-      final updated = UserModel(
-        uid: _mahasiswaData!.uid,
-        name: name ?? _mahasiswaData!.name,
-        email: email ?? _mahasiswaData!.email,
-        role: _mahasiswaData!.role,
-        dosenUid: _mahasiswaData!.dosenUid,
-        nim: _mahasiswaData!.nim,
-        placement: _mahasiswaData!.placement,
-        startDate: _mahasiswaData!.startDate,
-        nip: nip ?? _mahasiswaData!.nip,
-        jabatan: _mahasiswaData!.jabatan,
-        programStudi: _mahasiswaData!.programStudi,
-        phoneNumber: phoneNumber ?? _mahasiswaData!.phoneNumber,
+      // 2. Kirim ke Firestore (hanya field yang berubah)
+      await _userService.updateUserMetadataPartial(_mahasiswaData!.uid, payload);
+
+      // 3. Update local state
+      _mahasiswaData = _mahasiswaData!.copyWith(
+        name: name,
+        phoneNumber: phoneNumber,
       );
-
-      await _userService.updateUserMetadata(updated);
-
-      // update local cache and notify
-      _mahasiswaData = updated;
     } catch (e) {
       debugPrint('Error updateProfile: $e');
       rethrow;
@@ -101,17 +106,16 @@ class MahasiswaViewModel extends ChangeNotifier {
     }
   }
 
-  // Convenience helpers
+  // Helper functions (NIM dan Email dihapus)
   Future<void> updateName(String name) => updateProfile(name: name);
-  Future<void> updateNip(String? nip) => updateProfile(nip: nip);
-  Future<void> updateEmail(String email) => updateProfile(email: email);
   Future<void> updatePhone(String phone) => updateProfile(phoneNumber: phone);
 
-  // ------------------------------------------------------------
+  // =================================================================
   // LOGOUT
-  // ------------------------------------------------------------
-  // Logic logout (hapus token dll)
+  // =================================================================
+
   Future<void> logout() async {
+    clearData();
     try {
       await _authService.signOut();
     } catch (e) {
@@ -119,11 +123,18 @@ class MahasiswaViewModel extends ChangeNotifier {
     }
   }
 
-  // Handle logout + navigate ke login
   Future<void> handleLogout(BuildContext context) async {
+    if (context.mounted) {
+      context.read<MahasiswaAjuanBimbinganViewModel>().clearData();
+      context.read<MahasiswaLogMingguanViewModel>().clearData();
+      context.read<MahasiswaLogHarianViewModel>().clearData();
+    }
+    
+    final navigator = Navigator.of(context);
+
     await logout();
 
-    Navigator.of(context).pushAndRemoveUntil(
+    navigator.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginPage()),
       (route) => false,
     );

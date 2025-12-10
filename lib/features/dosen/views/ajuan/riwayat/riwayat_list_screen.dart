@@ -4,9 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart';
-import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
+import 'package:ebimbingan/core/widgets/custom_halaman_kosong.dart';
 import 'package:ebimbingan/features/dosen/widgets/riwayat_ajuan/riwayat_filter.dart';
 import 'package:ebimbingan/features/dosen/widgets/riwayat_ajuan/riwayat_item.dart';
+import 'riwayat_detail_screen.dart';
 
 class DosenRiwayatAjuan extends StatefulWidget {
   final String mahasiswaUid;
@@ -80,10 +81,11 @@ class _DosenRiwayatAjuanState extends State<DosenRiwayatAjuan> {
     Widget content;
 
     if (vm.riwayatList.isEmpty) {
-      content = const DosenHalamanKosong(
+      content = const CustomHalamanKosong(
         icon: Icons.history_toggle_off,
         message: "Belum ada riwayat pengajuan",
         subMessage: "Mahasiswa belum pernah mengajukan bimbingan.",
+        height: 0.5,
       );
     } else {
       content = ListView.builder(
@@ -92,7 +94,21 @@ class _DosenRiwayatAjuanState extends State<DosenRiwayatAjuan> {
         itemCount: vm.riwayatList.length,
         itemBuilder: (_, index) {
           final ajuan = vm.riwayatList[index];
-          return RiwayatItem(data: ajuan);
+          return RiwayatItem(
+            data: ajuan,
+            onTap: () {
+              final vm = context.read<DosenRiwayatAjuanViewModel>();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ChangeNotifierProvider.value(
+                    value: vm, 
+                    child: DosenAjuanRiwayatDetail(data: ajuan),
+                  ),
+                ),
+              );
+            },
+          );
         },
       );
     }

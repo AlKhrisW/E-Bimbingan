@@ -1,3 +1,4 @@
+import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class CustomAppbar extends StatelessWidget implements PreferredSizeWidget {
@@ -13,7 +14,8 @@ class CustomAppbar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.backgroundColor,
+      surfaceTintColor: AppTheme.backgroundColor,
       elevation: 0,
       centerTitle: true,
       title: Text(

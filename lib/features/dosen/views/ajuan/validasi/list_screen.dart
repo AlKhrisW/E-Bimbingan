@@ -1,9 +1,9 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
+import 'package:ebimbingan/core/widgets/custom_halaman_kosong.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_ajuan_card.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/ajuan_viewmodel.dart'; //
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_viewmodel.dart';
 import 'detail_screen.dart';
 
 class DosenAjuan extends StatefulWidget {
@@ -34,10 +34,11 @@ class _DosenAjuanState extends State<DosenAjuan> {
         Widget content;
         
         if (vm.daftarAjuan.isEmpty) {
-          content = const DosenHalamanKosong(
+          content = const CustomHalamanKosong(
             icon: Icons.inbox,
             message: 'Tidak ada ajuan bimbingan',
             subMessage: 'Mahasiswa belum mengajukan topik bimbingan.',
+            height: 0.7,
           );
         } else {
           content = ListView.separated(
@@ -53,10 +54,15 @@ class _DosenAjuanState extends State<DosenAjuan> {
                 tanggalBimbingan: DateFormat('dd MMMM yyyy').format(m.ajuan.tanggalBimbingan),
                 waktuBimbingan: m.ajuan.waktuBimbingan,
                 onTap: () {
+                  final vm = context.read<DosenAjuanViewModel>(); 
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => DosenAjuanDetail(data: m),
+                      builder: (_) => ChangeNotifierProvider.value(
+                        value: vm, 
+                        child: DosenAjuanDetail(data: m),
+                      ),
                     ),
                   );
                 },

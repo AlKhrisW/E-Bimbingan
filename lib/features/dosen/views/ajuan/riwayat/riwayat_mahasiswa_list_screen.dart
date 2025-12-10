@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_mahasiswa_card.dart';
+import 'package:ebimbingan/core/widgets/custom_halaman_kosong.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
 import 'riwayat_list_screen.dart';
 
 class DosenListMahasiswaAjuan extends StatefulWidget {
@@ -17,13 +18,13 @@ class _DosenListMahasiswaAjuanState extends State<DosenListMahasiswaAjuan> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DosenMahasiswaViewModel>().loadMahasiswaBimbingan();
+      context.read<DosenMahasiswaListViewModel>().loadMahasiswaBimbingan();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DosenMahasiswaViewModel>(
+    return Consumer<DosenMahasiswaListViewModel>(
       builder: (context, vm, child) {
         
         if (vm.isLoading) {
@@ -33,10 +34,11 @@ class _DosenListMahasiswaAjuanState extends State<DosenListMahasiswaAjuan> {
         Widget content;
 
         if (vm.mahasiswaList.isEmpty) {
-          content = const DosenHalamanKosong(
+          content = const CustomHalamanKosong(
             icon: Icons.people_outline,
             message: 'Tidak ada mahasiswa',
             subMessage: 'Anda belum memiliki mahasiswa bimbingan.',
+            height: 0.7,
           );
         } else {
           content = ListView.separated(
@@ -51,11 +53,17 @@ class _DosenListMahasiswaAjuanState extends State<DosenListMahasiswaAjuan> {
                 placement: m.placement ?? '-',
                 mahasiswaUid: m.uid,
                 onTap: () {
+                  final riwayatVm = context.read<DosenRiwayatAjuanViewModel>();
+                  
+                  // 2. Navigasi dengan membawa ViewModel tersebut
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => DosenRiwayatAjuan(
-                        mahasiswaUid: m.uid,
+                      builder: (_) => ChangeNotifierProvider.value(
+                        value: riwayatVm, // Lempar instance yang benar
+                        child: DosenRiwayatAjuan(
+                          mahasiswaUid: m.uid,
+                        ),
                       ),
                     ),
                   );
