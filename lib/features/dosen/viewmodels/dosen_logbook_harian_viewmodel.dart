@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/models/logbook_harian_model.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
-import 'package:ebimbingan/data/models/wrapper/helper_log_harian.dart';
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_harian.dart';
 import 'package:ebimbingan/data/services/logbook_harian_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
 
@@ -40,6 +40,20 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
   // GETTERS
   // =================================================================
@@ -59,19 +73,19 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
 
   void setFilter(LogbookStatus? status) {
     _activeFilter = status;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   Future<void> pilihMahasiswa(String mahasiswaUid) async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
     final uid = AuthUtils.currentUid;
     if (uid == null) {
       _errorMessage = "Sesi habis, silakan login ulang";
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
@@ -97,8 +111,10 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
       _errorMessage = "Gagal memuat logbook: $e";
       _logbookListSource = [];
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 

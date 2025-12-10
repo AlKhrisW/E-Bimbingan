@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // [Wajib Import Provider]
+import 'package:provider/provider.dart';
 
 // Import ViewModel Fitur Mahasiswa
-import 'package:ebimbingan/features/mahasiswa/viewmodels/ajuan_bimbingan_viewmodel.dart';
-import 'package:ebimbingan/features/mahasiswa/viewmodels/log_mingguan_viewmodel.dart';
-import 'package:ebimbingan/features/mahasiswa/viewmodels/log_harian_viewmodel.dart';
+import 'ajuan_bimbingan_viewmodel.dart';
+import 'log_mingguan_viewmodel.dart';
+import 'log_harian_viewmodel.dart';
+import 'mahasiswa_dashboard_viewmodel.dart';
 
-// Import standar lainnya
-import 'package:ebimbingan/core/utils/auth_utils.dart';
-import 'package:ebimbingan/data/models/user_model.dart';
+// Import lainnya
 import 'package:ebimbingan/data/services/firebase_auth_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
+import 'package:ebimbingan/data/models/user_model.dart';
+import 'package:ebimbingan/core/utils/auth_utils.dart';
 import '../../auth/views/login_page.dart';
 
 class MahasiswaViewModel extends ChangeNotifier {
   final FirebaseAuthService _authService = FirebaseAuthService();
   final UserService _userService = UserService();
-
-  MahasiswaViewModel();
 
   // =================================================================
   // STATE
@@ -38,6 +37,20 @@ class MahasiswaViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
   // LOAD DATA
   // =================================================================
@@ -48,7 +61,7 @@ class MahasiswaViewModel extends ChangeNotifier {
     if (uid == null) return;
 
     _isLoading = true;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final data = await _userService.fetchUserByUid(uid);
@@ -56,8 +69,10 @@ class MahasiswaViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint("Error load mahasiswa data: $e");
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -86,7 +101,7 @@ class MahasiswaViewModel extends ChangeNotifier {
     if (payload.isEmpty) return;
 
     _isLoading = true;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       // 2. Kirim ke Firestore (hanya field yang berubah)
@@ -101,8 +116,10 @@ class MahasiswaViewModel extends ChangeNotifier {
       debugPrint('Error updateProfile: $e');
       rethrow;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -119,18 +136,21 @@ class MahasiswaViewModel extends ChangeNotifier {
     try {
       await _authService.signOut();
     } catch (e) {
-      await Future.delayed(const Duration(milliseconds: 500));
+      debugPrint("Error signing out: $e");
     }
   }
 
   Future<void> handleLogout(BuildContext context) async {
-    if (context.mounted) {
-      context.read<MahasiswaAjuanBimbinganViewModel>().clearData();
-      context.read<MahasiswaLogMingguanViewModel>().clearData();
-      context.read<MahasiswaLogHarianViewModel>().clearData();
-    }
-    
     final navigator = Navigator.of(context);
+
+    if (context.mounted) {
+        context.read<MahasiswaDashboardViewModel>().clearData();
+        context.read<MahasiswaAjuanBimbinganViewModel>().clearData();
+        context.read<MahasiswaLogMingguanViewModel>().clearData();
+        context.read<MahasiswaLogHarianViewModel>().clearData();
+    }
+
+    await Future.delayed(const Duration(milliseconds: 250));
 
     await logout();
 

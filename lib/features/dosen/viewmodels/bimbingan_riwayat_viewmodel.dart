@@ -4,7 +4,7 @@ import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart'; // Pastikan import model ajuan
-import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_mingguan.dart';
 import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
@@ -43,6 +43,20 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
   // GETTERS
   // =================================================================
@@ -62,19 +76,19 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
 
   void setFilter(LogBimbinganStatus? status) {
     _activeFilter = status;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   Future<void> pilihMahasiswa(String mahasiswaUid) async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
     final uid = AuthUtils.currentUid;
     if (uid == null) {
       _errorMessage = "Sesi habis";
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
@@ -113,8 +127,10 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
       _errorMessage = "Gagal memuat riwayat: $e";
       _riwayatListSource = [];
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 

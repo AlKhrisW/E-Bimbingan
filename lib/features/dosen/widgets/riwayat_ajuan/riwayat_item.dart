@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
-import 'package:ebimbingan/data/models/wrapper/helper_ajuan_bimbingan.dart';
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_ajuan.dart';
 
 class RiwayatItem extends StatelessWidget {
   final AjuanWithMahasiswa data;

@@ -42,6 +42,20 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
   // GETTERS
   // =================================================================
@@ -87,13 +101,13 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
     final uid = AuthUtils.currentUid;
     if (uid == null) {
       _errorMessage = "Sesi anda berakhir. Silakan login kembali.";
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       // 2. Ambil List Logbook Harian (Raw Data)
@@ -138,14 +152,16 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
       _errorMessage = "Gagal memuat logbook: $e";
       _logbookList = [];
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        _safeNotifyListeners();
+      }
     }
   }
   
   void setFilter(LogbookStatus? status) {
     _activeFilter = status;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   Future<void> refresh() async {
@@ -164,12 +180,12 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
     final uid = AuthUtils.currentUid;
     if (uid == null) {
       _errorMessage = "Sesi berakhir.";
-      notifyListeners();
+      _safeNotifyListeners();
       return false;
     }
 
     _isLoading = true;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       if (judulTopik.isEmpty || deskripsi.isEmpty) {
@@ -218,11 +234,13 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
 
     } catch (e) {
       _errorMessage = "Gagal menambah logbook: $e";
-      notifyListeners();
+      _safeNotifyListeners();
       return false;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 

@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
-import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_mingguan.dart';
 
 class RiwayatItem extends StatelessWidget {
   final HelperLogBimbingan data;

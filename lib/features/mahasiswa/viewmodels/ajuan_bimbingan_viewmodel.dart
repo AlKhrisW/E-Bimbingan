@@ -44,6 +44,20 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
   // GETTERS (Filtered List)
   // =================================================================
@@ -86,7 +100,7 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     final uid = AuthUtils.currentUid;
     if (uid == null) {
       _errorMessage = "Sesi anda telah berakhir. Silakan login kembali.";
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
@@ -94,7 +108,7 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
 
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       // 1. Ambil Raw Data Ajuan Bimbingan
@@ -144,14 +158,16 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
       _errorMessage = "Gagal memuat riwayat ajuan: $e";
       _allAjuans = [];
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
   void setFilter(AjuanStatus? status) {
     _activeFilter = status;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   Future<void> refresh() async {
@@ -160,10 +176,6 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
 
   // =================================================================
   // ACTION: SUBMIT AJUAN
-  // =================================================================
-
-  // =================================================================
-  // ACTION: SUBMIT AJUAN (DIPERBARUI)
   // =================================================================
 
   Future<bool> submitAjuan({
@@ -175,12 +187,12 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     final uid = AuthUtils.currentUid;
     if (uid == null) {
       _errorMessage = "Sesi berakhir.";
-      notifyListeners();
+      _safeNotifyListeners();
       return false;
     }
 
     _isLoading = true;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       // 1. Ambil User Profile 
@@ -228,11 +240,13 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
 
     } catch (e) {
       _errorMessage = "Gagal mengirim ajuan: $e";
-      notifyListeners();
+      _safeNotifyListeners();
       return false;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 

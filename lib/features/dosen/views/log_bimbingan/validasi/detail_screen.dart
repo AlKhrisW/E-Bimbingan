@@ -5,7 +5,7 @@ import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
 import 'package:ebimbingan/core/widgets/custom_image_preview.dart';
-import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_mingguan.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_tolak_dialog.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_viewmodel.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
