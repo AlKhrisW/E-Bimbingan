@@ -4,7 +4,7 @@ import 'package:provider/provider.dart'; // Jangan lupa import provider
 import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
-import 'package:ebimbingan/data/models/wrapper/helper_ajuan_bimbingan.dart';
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_ajuan.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart'; // Import ViewModel
 

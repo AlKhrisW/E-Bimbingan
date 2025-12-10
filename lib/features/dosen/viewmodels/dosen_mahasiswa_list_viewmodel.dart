@@ -27,6 +27,20 @@ class DosenMahasiswaListViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
   // LOAD DATA
   // =================================================================
@@ -36,13 +50,13 @@ class DosenMahasiswaListViewModel extends ChangeNotifier {
     
     if (uid == null) {
       _errorMessage = "Tidak ada user yang login";
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       _mahasiswaList = await _userService.fetchMahasiswaByDosenUid(uid);
@@ -50,8 +64,10 @@ class DosenMahasiswaListViewModel extends ChangeNotifier {
       _errorMessage = "Gagal memuat daftar mahasiswa: $e";
       _mahasiswaList = [];
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 

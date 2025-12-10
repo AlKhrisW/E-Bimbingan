@@ -6,7 +6,7 @@ import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
 // Import Helper
-import 'package:ebimbingan/data/models/wrapper/helper_log_harian.dart';
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_harian.dart';
 
 class LogbookHarianDetail extends StatelessWidget {
   // Ubah menjadi Wrapper Helper & Nullable

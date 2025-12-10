@@ -46,6 +46,20 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
   // GETTERS (Filtered List)
   // =================================================================
@@ -65,13 +79,13 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
     final uid = AuthUtils.currentUid;
     if (uid == null) {
       _errorMessage = "Sesi anda telah berakhir. Silakan login kembali.";
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       // 1. Ambil Log Bimbingan
@@ -144,14 +158,16 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
     } catch (e) {
       _errorMessage = "Gagal memuat logbook: $e";
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
   void setFilter(LogBimbinganStatus? status) {
     _activeFilter = status;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   Future<void> refresh() async {
@@ -169,7 +185,7 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
   }) async {
     final uid = AuthUtils.currentUid; 
     _isLoading = true;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       // 1. Simpan Update ke Database
@@ -205,7 +221,7 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
 
     } catch (e) {
       _errorMessage = "Gagal mengirim logbook: $e";
-      notifyListeners();
+      _safeNotifyListeners();
       return false;
     }
   }

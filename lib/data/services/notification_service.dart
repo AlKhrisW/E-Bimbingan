@@ -151,6 +151,9 @@ class NotificationService {
     required String title,
     required String body,
     required DateTime scheduledDate,
+    required String recipientUid,
+    required String relatedId,
+    String type = 'reminder',
   }) async {
     try {
       if (scheduledDate.isBefore(DateTime.now())) return;
@@ -173,7 +176,18 @@ class NotificationService {
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );
-      print("Reminder dijadwalkan: $scheduledDate");
+
+      await _firestore.collection('notifications').add({
+        'recipient_uid': recipientUid,
+        'sender_uid': FirebaseAuth.instance.currentUser?.uid,
+        'title': title,
+        'body': body, 
+        'type': type,
+        'related_id': relatedId,
+        'is_read': false,
+        'created_at': FieldValue.serverTimestamp(), 
+      });
+
     } catch (e) {
       print("Gagal schedule reminder: $e");
     }

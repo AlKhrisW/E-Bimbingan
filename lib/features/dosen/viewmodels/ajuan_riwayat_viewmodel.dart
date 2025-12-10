@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
-import 'package:ebimbingan/data/models/wrapper/helper_ajuan_bimbingan.dart'; 
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_ajuan.dart'; 
 import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 
@@ -40,6 +40,20 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
   // GETTERS
   // =================================================================
@@ -59,19 +73,19 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
 
   void setFilter(AjuanStatus? status) {
     _activeFilter = status;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   Future<void> pilihMahasiswa(String mahasiswaUid) async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
     final uid = AuthUtils.currentUid;
     if (uid == null) {
       _errorMessage = "Sesi habis, silakan login ulang";
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
@@ -103,8 +117,10 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
       _errorMessage = "Gagal memuat riwayat: $e";
       _riwayatListSource = [];
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 

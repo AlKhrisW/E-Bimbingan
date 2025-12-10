@@ -16,7 +16,7 @@ List<NavItem> buildMahasiswaNavItems(UserModel user) {
     NavItem(
       label: "Beranda",
       icon: Icons.home,
-      screen: MahasiswaDashboard(user: user),
+      screen: MahasiswaDashboardScreen(),
     ),
 
     NavItem(

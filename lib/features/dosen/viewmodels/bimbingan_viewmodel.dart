@@ -15,7 +15,7 @@ import 'package:ebimbingan/data/services/notification_service.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
-import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_mingguan.dart';
 
 class DosenBimbinganViewModel extends ChangeNotifier {
   final LogBimbinganService _logService = LogBimbinganService();
@@ -45,6 +45,20 @@ class DosenBimbinganViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
   // LOAD DATA UTAMA (List Pending)
   // =================================================================
@@ -52,13 +66,13 @@ class DosenBimbinganViewModel extends ChangeNotifier {
   Future<void> _loadLogPending() async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
     final uid = AuthUtils.currentUid;
     if (uid == null) {
       _error = 'User belum login';
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
@@ -68,7 +82,7 @@ class DosenBimbinganViewModel extends ChangeNotifier {
       if (data.isEmpty) {
         _daftarLog = [];
         _isLoading = false;
-        notifyListeners();
+        _safeNotifyListeners();
         return;
       }
 
@@ -115,8 +129,10 @@ class DosenBimbinganViewModel extends ChangeNotifier {
     } catch (e) {
       _error = 'Gagal memuat daftar log bimbingan: $e';
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -186,14 +202,14 @@ class DosenBimbinganViewModel extends ChangeNotifier {
       }
     } catch (e) {
       _error = 'Gagal verifikasi log: $e';
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
   Future<void> tolakLog(String logUid, String catatan) async {
     if (catatan.trim().isEmpty) {
       _error = 'Catatan penolakan wajib diisi';
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
@@ -226,7 +242,7 @@ class DosenBimbinganViewModel extends ChangeNotifier {
       }
     } catch (e) {
       _error = 'Gagal menolak log: $e';
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
