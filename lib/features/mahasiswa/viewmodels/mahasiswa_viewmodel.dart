@@ -29,7 +29,7 @@ class MahasiswaViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   
   // Menggunakan AuthUtils untuk mengambil UID
-  String? get currentUserId => AuthUtils.currentUid;
+  String? get currentUserId => AuthUtils().currentUid;
 
   void clearData() {
     _mahasiswaData = null;
@@ -57,7 +57,7 @@ class MahasiswaViewModel extends ChangeNotifier {
 
   Future<void> loadmahasiswaData() async {
     // Menggunakan AuthUtils
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) return;
 
     _isLoading = true;

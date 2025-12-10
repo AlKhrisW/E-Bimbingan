@@ -70,7 +70,7 @@ class DosenAjuanViewModel extends ChangeNotifier {
     _error = null;
     _safeNotifyListeners();
 
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) {
       _error = 'User belum login';
       _isLoading = false;
@@ -153,7 +153,7 @@ class DosenAjuanViewModel extends ChangeNotifier {
   // =================================================================
 
   Future<void> setujui(String ajuanUid) async {
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) return;
 
     try {
