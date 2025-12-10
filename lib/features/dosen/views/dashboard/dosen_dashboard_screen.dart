@@ -90,24 +90,6 @@ class _DosenDashboardState extends State<DosenDashboard> {
                       height: 170,
                       child: _buildJadwalList(vm),
                     ),
-
-                    const SizedBox(height: 24),
-                    
-                    // --- Placeholder Statistik ---
-                    const Text(
-                      "Statistik Bimbingan",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      height: 150,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: const Center(child: Text("Grafik Mahasiswa")),
-                    ),
                   ],
                 ),
               ),
@@ -169,7 +151,6 @@ class _DosenDashboardState extends State<DosenDashboard> {
           tanggal: tgl,
           jamMulai: item.ajuan.waktuBimbingan,
           topik: item.ajuan.judulTopik,
-          color: Colors.indigo, // Warna tema dosen
         );
       },
     );

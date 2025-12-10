@@ -1,11 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz_data;
-
 import 'user_service.dart';
 
 // Handler Background (Wajib Top Level)
@@ -20,55 +16,14 @@ class NotificationService {
   NotificationService._internal();
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  // Channel standar
-  final AndroidNotificationChannel _defaultChannel = const AndroidNotificationChannel(
-    'high_importance_channel',
-    'Notifikasi Aplikasi',
-    description: 'Channel utama aplikasi',
-    importance: Importance.max,
-  );
-
-  // Channel untuk Alarm/Reminder
-  final AndroidNotificationChannel _reminderChannel = const AndroidNotificationChannel(
-    'reminder_channel',
-    'Pengingat Jadwal',
-    description: 'Channel khusus pengingat',
-    importance: Importance.high,
-    playSound: true,
-  );
 
   // ========================================================================
   // 1. INITIALIZATION
   // ========================================================================
   Future<void> initialize() async {
-    // Init Timezone
-    tz_data.initializeTimeZones();
-
-    // Request Permission (iOS & Android 13+)
+    // Request Permission (Hanya untuk keperluan token FCM, tidak ada pop-up lokal)
     await _messaging.requestPermission(alert: true, badge: true, sound: true);
-
-    // Init Local Notif Settings
-    const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    
-    const DarwinInitializationSettings iosSettings =
-        DarwinInitializationSettings();
-
-    const InitializationSettings initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
-
-    await _localNotifications.initialize(initSettings);
-
-    // Create Channels (Android)
-    final platform = _localNotifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    await platform?.createNotificationChannel(_defaultChannel);
-    await platform?.createNotificationChannel(_reminderChannel);
 
     // Listen Token Refresh
     _messaging.onTokenRefresh.listen((newToken) async {
@@ -83,7 +38,7 @@ class NotificationService {
   // 2. FIRESTORE METHODS (Kirim & Baca)
   // ========================================================================
 
-  /// Kirim notifikasi ke User Lain (Masuk Database)
+  /// Kirim notifikasi ke User Lain (Masuk Database untuk Halaman Notifikasi)
   Future<void> sendNotification({
     required String recipientUid,
     required String title,
@@ -107,7 +62,7 @@ class NotificationService {
     }
   }
 
-  /// Stream Notifikasi (Untuk didengarkan oleh UI)
+  /// Stream Notifikasi (Untuk didengarkan oleh UI Halaman Notifikasi)
   Stream<QuerySnapshot> getNotificationsStream(String recipientUid) {
     return _firestore
         .collection('notifications')
@@ -139,57 +94,5 @@ class NotificationService {
       batch.update(doc.reference, {'is_read': true});
     }
     await batch.commit();
-  }
-
-  // ========================================================================
-  // 3. LOCAL ALARM / REMINDER
-  // ========================================================================
-
-  /// Jadwalkan Alarm Lokal (Universal)
-  Future<void> scheduleReminder({
-    required int id,
-    required String title,
-    required String body,
-    required DateTime scheduledDate,
-    required String recipientUid,
-    required String relatedId,
-    String type = 'reminder',
-  }) async {
-    try {
-      if (scheduledDate.isBefore(DateTime.now())) return;
-
-      await _localNotifications.zonedSchedule(
-        id,
-        title,
-        body,
-        tz.TZDateTime.from(scheduledDate, tz.local),
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            _reminderChannel.id,
-            _reminderChannel.name,
-            channelDescription: _reminderChannel.description,
-            importance: Importance.max,
-            priority: Priority.high,
-          ),
-        ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-      );
-
-      await _firestore.collection('notifications').add({
-        'recipient_uid': recipientUid,
-        'sender_uid': FirebaseAuth.instance.currentUser?.uid,
-        'title': title,
-        'body': body, 
-        'type': type,
-        'related_id': relatedId,
-        'is_read': false,
-        'created_at': FieldValue.serverTimestamp(), 
-      });
-
-    } catch (e) {
-      print("Gagal schedule reminder: $e");
-    }
   }
 }

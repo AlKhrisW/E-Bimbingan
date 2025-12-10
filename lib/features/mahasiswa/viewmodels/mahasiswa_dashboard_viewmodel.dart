@@ -11,14 +11,12 @@ import 'package:ebimbingan/data/models/wrapper/mahasiswa_helper_dashboard.dart';
 
 // Services
 import 'package:ebimbingan/data/services/user_service.dart';
-import 'package:ebimbingan/data/services/notification_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 
 class MahasiswaDashboardViewModel extends ChangeNotifier {
   final UserService _userService = UserService();
   final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
-  final NotificationService _notifService = NotificationService();
-
+  
   // =================================================================
   // STATE
   // =================================================================
@@ -106,7 +104,6 @@ class MahasiswaDashboardViewModel extends ChangeNotifier {
         
         if (_isDisposed) return;
         await _processWrapping(rawJadwal);
-        await _syncReminders(); 
       }
 
     } catch (e) {
@@ -163,34 +160,10 @@ class MahasiswaDashboardViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> _syncReminders() async {
-    for (var item in _jadwalList) {
-      try {
-        final DateTime jadwalBimbingan = item.ajuan.tanggalBimbingan;
-        final DateTime reminderTime = jadwalBimbingan.subtract(const Duration(days: 1));
-        
-        if (reminderTime.isAfter(DateTime.now())) {
-          await _notifService.scheduleReminder(
-            id: item.ajuan.ajuanUid.hashCode,
-            title: "Pengingat Bimbingan Besok",
-            body: "Jadwal dengan Dosen ${item.dosen.name} pukul ${item.ajuan.waktuBimbingan}",
-            scheduledDate: reminderTime,
-            recipientUid: item.ajuan.mahasiswaUid,
-            relatedId: item.ajuan.ajuanUid,
-            type: 'reminder',
-          );
-        }
-      } catch (e) {
-        debugPrint("Gagal sync reminder: $e");
-      }
-    }
-  }
-
   void _filterJadwalTime() {
     if (_currentUser?.dosenUid != null) {
        loadDashboardData(); 
     } else {
-      // Jika user null, matikan timer untuk keamanan
       _timer?.cancel();
       _timer = null;
     }
@@ -210,7 +183,6 @@ class MahasiswaDashboardViewModel extends ChangeNotifier {
       return now.isBefore(waktuSelesai);
     }).toList();
 
-    // Sorting tetap diperlukan untuk mengurutkan JAM (karena service hanya sort Tanggal)
     filtered.sort((a, b) {
       int compareDate = a.ajuan.tanggalBimbingan.compareTo(b.ajuan.tanggalBimbingan);
       

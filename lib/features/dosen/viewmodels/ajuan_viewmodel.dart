@@ -88,7 +88,6 @@ class DosenAjuanViewModel extends ChangeNotifier {
         return;
       }
 
-      // Ambil data user (mahasiswa) untuk setiap ajuan
       final mahasiswaUids = data.map((e) => e.mahasiswaUid).toSet();
 
       final List<UserModel> fetchedUsers = await Future.wait(
@@ -114,7 +113,6 @@ class DosenAjuanViewModel extends ChangeNotifier {
         }
       }
 
-      // Sort berdasarkan waktu (terbaru diatas)
       combinedData.sort((a, b) => b.ajuan.waktuDiajukan.compareTo(a.ajuan.waktuDiajukan));
       _daftarAjuan = combinedData;
 
@@ -132,19 +130,14 @@ class DosenAjuanViewModel extends ChangeNotifier {
   // FETCH SINGLE DETAIL (Untuk Notifikasi)
   // =================================================================
   
-  /// Mengambil data lengkap (Ajuan + Mahasiswa) berdasarkan ID.
-  /// Dipanggil oleh UI Detail saat dibuka melalui notifikasi.
   Future<AjuanWithMahasiswa?> getAjuanDetail(String ajuanUid) async {
     try {
-      // 1. Ambil data Ajuan by ID
       final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(ajuanUid);
       
       if (ajuan == null) return null;
 
-      // 2. Ambil data Mahasiswa
       final mahasiswa = await _userService.fetchUserByUid(ajuan.mahasiswaUid);
 
-      // 3. Return wrapper
       return AjuanWithMahasiswa(
         ajuan: ajuan,
         mahasiswa: mahasiswa,
@@ -164,13 +157,11 @@ class DosenAjuanViewModel extends ChangeNotifier {
     if (uid == null) return;
 
     try {
-      // Cari data lokal untuk referensi cepat (jika ada di list)
       AjuanWithMahasiswa? itemTarget;
       
       try {
         itemTarget = _daftarAjuan.firstWhere((element) => element.ajuan.ajuanUid == ajuanUid);
       } catch (_) {
-        // Jika tidak ketemu di list (kasus dibuka dari notifikasi), fetch manual
         itemTarget = await getAjuanDetail(ajuanUid);
       }
 
@@ -178,7 +169,6 @@ class DosenAjuanViewModel extends ChangeNotifier {
 
       final String newLogUid = FirebaseFirestore.instance.collection('log_bimbingan').doc().id;
 
-      // 1. Siapkan Log Bimbingan Baru (Status Draft)
        final newLog = LogBimbinganModel(
         logBimbinganUid: newLogUid,
         ajuanUid: ajuanUid,
@@ -191,17 +181,13 @@ class DosenAjuanViewModel extends ChangeNotifier {
         lampiranUrl: null,
       );
 
-      // 2. Update status Ajuan -> Disetujui
       await _ajuanService.updateAjuanStatus(
         ajuanUid: ajuanUid,
         status: AjuanStatus.disetujui,
       );
 
-      // 3. Simpan Log
       await _logService.saveLogBimbingan(newLog);
 
-      // 4. Kirim Notifikasi LANGSUNG ke Mahasiswa (Status Disetujui)
-      // Ini akan mentrigger POP-UP jika mahasiswa sedang membuka aplikasi (via listener foreground)
       await _notifService.sendNotification(
         recipientUid: itemTarget.ajuan.mahasiswaUid,
         title: "Ajuan Bimbingan Disetujui",
@@ -210,23 +196,6 @@ class DosenAjuanViewModel extends ChangeNotifier {
         relatedId: ajuanUid,
       );
 
-      // 5. Jadwalkan Reminder H-1 & Simpan ke Firestore
-      // Type 'reminder' akan difilter oleh listener agar TIDAK pop-up sekarang, tapi alarm sistem tetap jalan.
-      try {
-        await _notifService.scheduleReminder(
-          id: ajuanUid.hashCode,
-          title: "Pengingat Bimbingan Besok",
-          body: "Mahasiswa: ${itemTarget.mahasiswa.name} pukul ${itemTarget.ajuan.waktuBimbingan}",
-          scheduledDate: itemTarget.ajuan.tanggalBimbingan.subtract(const Duration(days: 1)),          
-          recipientUid: itemTarget.ajuan.mahasiswaUid,
-          relatedId: ajuanUid,
-          type: 'reminder', 
-        );
-      } catch (e) {
-        debugPrint("Gagal schedule reminder: $e");
-      }
-
-      // Refresh list jika sedang di halaman list
       if (_daftarAjuan.isNotEmpty) {
         await _loadAjuanProses();
       }
@@ -246,7 +215,6 @@ class DosenAjuanViewModel extends ChangeNotifier {
     }
 
     try {
-      // Logic pencarian data sama seperti setujui
       AjuanWithMahasiswa? itemTarget;
       try {
         itemTarget = _daftarAjuan.firstWhere((element) => element.ajuan.ajuanUid == ajuanUid);
@@ -256,14 +224,12 @@ class DosenAjuanViewModel extends ChangeNotifier {
 
       if (itemTarget == null) throw Exception("Data ajuan tidak ditemukan");
 
-      // 1. Update Status -> Ditolak
       await _ajuanService.updateAjuanStatus(
         ajuanUid: ajuanUid,
         status: AjuanStatus.ditolak,
         keterangan: keterangan.trim(),
       );
 
-      // 2. Kirim Notifikasi
       await _notifService.sendNotification(
         recipientUid: itemTarget.ajuan.mahasiswaUid,
         title: "Ajuan Bimbingan Ditolak",
@@ -272,7 +238,6 @@ class DosenAjuanViewModel extends ChangeNotifier {
         relatedId: ajuanUid,
       );
 
-      // Refresh list
       if (_daftarAjuan.isNotEmpty) {
         await _loadAjuanProses();
       }
