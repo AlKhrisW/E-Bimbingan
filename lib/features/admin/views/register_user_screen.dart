@@ -29,6 +29,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
   final _placementController = TextEditingController();
   final _startDateTextController =
       TextEditingController(); // Controller teks tanggal
+  final _endDateTextController = TextEditingController();
 
   // state dinamis
   String _selectedRole = 'Mahasiswa';
@@ -36,6 +37,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
   List<UserModel> _dosenList = [];
   bool _isDosenListLoading = true;
   DateTime? _startDate;
+  DateTime? _endDate;
   String? _selectedJabatan;
   String? _selectedProdi; // State untuk Prodi yang dipilih
   bool _isEditMode = false;
@@ -76,6 +78,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
     _nimNipController.dispose();
     _placementController.dispose();
     _startDateTextController.dispose();
+    _endDateTextController.dispose();
     super.dispose();
   }
 
@@ -99,6 +102,14 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
           ).format(_startDate!);
         } else {
           _startDateTextController.clear();
+        }
+        _endDate = user.endDate;
+        if (_endDate != null) {
+          _endDateTextController.text = DateFormat(
+            'dd MMMM yyyy',
+          ).format(_endDate!);
+        } else {
+          _endDateTextController.clear();
         }
       } else if (user.role == 'dosen') {
         _nimNipController.text = user.nip ?? '';
@@ -153,6 +164,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedRole == 'Mahasiswa' && _selectedDosen == null) return;
     if (_selectedRole == 'Mahasiswa' && _startDate == null) return;
+    if (_selectedRole == 'Mahasiswa' && _endDate == null) return;
     if (_selectedRole == 'Dosen' && _selectedJabatan == null) return;
     if (_selectedRole == 'Mahasiswa' && _selectedProdi == null)
       return; // Validasi Prodi
@@ -175,6 +187,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
           ? _safeTrim(_placementController.text)
           : null,
       'startDate': _selectedRole == 'Mahasiswa' ? _startDate : null,
+      'endDate': _selectedRole == 'Mahasiswa' ? _endDate : null,
       'dosenUid': _selectedRole == 'Mahasiswa' ? _selectedDosen?.uid : null,
       'nip': _selectedRole == 'Dosen'
           ? _safeTrim(_nimNipController.text)
@@ -194,6 +207,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
         nim: data['nim'] as String?,
         placement: data['placement'] as String?,
         startDate: data['startDate'] as DateTime?,
+        endDate: data['endDate'] as DateTime?,
         dosenUid: data['dosenUid'] as String?,
         nip: data['nip'] as String?,
         jabatan: data['jabatan'] as String?,
@@ -208,6 +222,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
         nim: data['nim'] as String?,
         placement: data['placement'] as String?,
         startDate: data['startDate'] as DateTime?,
+        endDate: data['endDate'] as DateTime?,
         dosenUid: data['dosenUid'] as String?,
         nip: data['nip'] as String?,
         jabatan: data['jabatan'] as String?,
@@ -284,8 +299,10 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                             _selectedProdi = null; // reset prodi
                             _selectedJabatan = null;
                             _startDate = null;
+                            _endDate = null;
                             _startDateTextController
                                 .clear(); // clear text tanggal
+                            _endDateTextController.clear();
                             _selectedDosen = _dosenList.isNotEmpty
                                 ? _dosenList.first
                                 : null;
@@ -363,6 +380,8 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                 startDate: _startDate,
                 startDateTextController:
                     _startDateTextController, // Meneruskan Controller
+                endDate: _endDate,
+                endDateTextController: _endDateTextController,
                 selectedDosen: _selectedDosen,
                 dosenList: _dosenList,
                 jabatanOptions: _jabatanOptions,
@@ -372,6 +391,12 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                   // Update text controller saat tanggal dipilih
                   _startDateTextController.text = d != null
                       ? DateFormat('dd MMMM yyyy').format(d)
+                      : '';
+                }),
+                onEndDateSelected: (e) => setState(() {
+                  _endDate = e;
+                  _endDateTextController.text = e != null
+                      ? DateFormat('dd MMMM yyyy').format(e)
                       : '';
                 }),
                 onDosenChanged: (d) => setState(() => _selectedDosen = d),

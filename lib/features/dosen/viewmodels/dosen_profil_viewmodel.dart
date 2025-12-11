@@ -33,7 +33,7 @@ class DosenProfilViewModel extends ChangeNotifier {
   UserModel? get dosenData => _dosenData;
   bool get isLoading => _isLoading;
   
-  String? get currentUserId => AuthUtils.currentUid;
+  String? get currentUserId => AuthUtils().currentUid;
 
   void clearData() {
     _dosenData = null;
@@ -61,7 +61,7 @@ class DosenProfilViewModel extends ChangeNotifier {
 
   Future<void> loadDosenData() async {
     // Menggunakan AuthUtils
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) return;
 
     _isLoading = true;

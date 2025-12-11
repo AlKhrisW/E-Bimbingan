@@ -76,7 +76,7 @@ class DosenDashboardViewModel extends ChangeNotifier {
 
   Future<void> loadDashboardData() async {
     // 1. Cek UID di awal
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) {
       _errorMessage = "Sesi berakhir.";
       _isLoading = false;
@@ -160,7 +160,7 @@ class DosenDashboardViewModel extends ChangeNotifier {
   }
 
   void _filterJadwalTime() {
-    if (_currentUser != null && AuthUtils.currentUid != null) {
+    if (_currentUser != null && AuthUtils().currentUid != null) {
        loadDashboardData(); 
     } else {
       // Jika user null, matikan timer untuk keamanan

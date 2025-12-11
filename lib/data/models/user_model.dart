@@ -6,7 +6,7 @@ class UserModel {
   final String name;
   final String email;
   final String role;
-  
+
   // Optional Fields
   final String? photoBase64;
   final String? phoneNumber;
@@ -17,6 +17,7 @@ class UserModel {
   final String? nim;
   final String? placement;
   final DateTime? startDate;
+  final DateTime? endDate;
   final String? programStudi;
 
   // Dosen Specific
@@ -35,6 +36,7 @@ class UserModel {
     this.nim,
     this.placement,
     this.startDate,
+    this.endDate,
     this.programStudi,
     this.nip,
     this.jabatan,
@@ -46,19 +48,20 @@ class UserModel {
       name: data['name'] ?? 'No Name',
       email: data['email'] ?? '',
       role: data['role'] ?? 'unknown',
-      
+
       // Global optionals
       photoBase64: data['photo_base64'],
       phoneNumber: data['phone_number'],
       fcmToken: data['fcm_token'],
-      
+
       // Mahasiswa fields
       dosenUid: data['dosen_uid'],
       nim: data['nim'],
       placement: data['placement'],
       startDate: _parseTimestamp(data['start_date']),
+      endDate: _parseTimestamp(data['end_date']),
       programStudi: data['program_studi'],
-      
+
       // Dosen fields
       nip: data['nip'],
       jabatan: data['jabatan'],
@@ -83,13 +86,11 @@ class UserModel {
         'placement': placement,
         'program_studi': programStudi,
         if (startDate != null) 'start_date': Timestamp.fromDate(startDate!),
+        if (endDate != null) 'end_date': Timestamp.fromDate(endDate!),
       },
 
       // Dosen specific
-      if (role == 'dosen') ...{
-        'nip': nip,
-        'jabatan': jabatan,
-      },
+      if (role == 'dosen') ...{'nip': nip, 'jabatan': jabatan},
     };
   }
 
@@ -117,10 +118,14 @@ class UserModel {
 
   String get roleLabel {
     switch (role) {
-      case 'admin': return 'Administrator';
-      case 'dosen': return 'Dosen Pembimbing';
-      case 'mahasiswa': return 'Mahasiswa';
-      default: return role;
+      case 'admin':
+        return 'Administrator';
+      case 'dosen':
+        return 'Dosen Pembimbing';
+      case 'mahasiswa':
+        return 'Mahasiswa';
+      default:
+        return role;
     }
   }
 
@@ -136,6 +141,7 @@ class UserModel {
     String? nim,
     String? placement,
     DateTime? startDate,
+    DateTime? endDate,
     String? nip,
     String? jabatan,
     String? programStudi,
@@ -152,6 +158,7 @@ class UserModel {
       nim: nim ?? this.nim,
       placement: placement ?? this.placement,
       startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
       nip: nip ?? this.nip,
       jabatan: jabatan ?? this.jabatan,
       programStudi: programStudi ?? this.programStudi,

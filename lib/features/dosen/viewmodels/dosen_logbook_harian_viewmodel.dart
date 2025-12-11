@@ -81,7 +81,7 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
     _errorMessage = null;
     _safeNotifyListeners();
 
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) {
       _errorMessage = "Sesi habis, silakan login ulang";
       _isLoading = false;
