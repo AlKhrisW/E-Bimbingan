@@ -74,7 +74,7 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
   // =================================================================
 
   Future<String> getDosenNameForCurrentUser() async {
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) return "Sesi berakhir";
 
     try {
@@ -98,7 +98,7 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
 
   Future<void> loadLogbooks() async {
     // 1. Cek Login via AuthUtils
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) {
       _errorMessage = "Sesi anda berakhir. Silakan login kembali.";
       _safeNotifyListeners();
@@ -177,7 +177,7 @@ class MahasiswaLogHarianViewModel extends ChangeNotifier {
     required String deskripsi,
     required DateTime tanggal,
   }) async {
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) {
       _errorMessage = "Sesi berakhir.";
       _safeNotifyListeners();

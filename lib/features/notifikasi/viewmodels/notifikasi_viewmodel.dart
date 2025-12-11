@@ -27,7 +27,7 @@ class NotificationViewModel extends ChangeNotifier {
   // =================================================================
   
   Stream<QuerySnapshot> get notificationStream {
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) {
       return const Stream.empty();
     }
@@ -47,7 +47,7 @@ class NotificationViewModel extends ChangeNotifier {
   }
 
   Future<void> markAllAsRead() async {
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid != null) {
       await _notifService.markAllAsRead(uid);
     }
@@ -72,7 +72,7 @@ class NotificationViewModel extends ChangeNotifier {
 
     try {
       // 3. Cek Role User Saat Ini
-      final uid = AuthUtils.currentUid;
+      final uid = AuthUtils().currentUid;
       if (uid == null) throw Exception("User tidak terlogin");
       
       final user = await _userService.fetchUserByUid(uid);
