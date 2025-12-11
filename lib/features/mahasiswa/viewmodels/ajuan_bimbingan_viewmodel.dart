@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart'; // Tambahkan untuk @visibleForTesting
 
 // Utils
 import 'package:ebimbingan/core/utils/auth_utils.dart';
@@ -15,10 +16,40 @@ import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/notification_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 
+// Definisikan tipe untuk ID generator
+typedef String IdGenerator();
+
 class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
-  final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
-  final NotificationService _notifService = NotificationService();
-  final UserService _userService = UserService();
+  // Field Services diubah menjadi final
+  final AjuanBimbinganService _ajuanService;
+  final NotificationService _notifService;
+  final UserService _userService;
+  final AuthUtils _authUtils;
+  final IdGenerator _idGenerator;
+
+  // Constructor Default (untuk kode aplikasi normal)
+  MahasiswaAjuanBimbinganViewModel()
+    : _ajuanService = AjuanBimbinganService(),
+      _notifService = NotificationService(),
+      _userService = UserService(),
+      _authUtils = AuthUtils(),
+      // Default ID generator menggunakan Firebase
+      _idGenerator = (() =>
+          FirebaseFirestore.instance.collection('ajuan_bimbingan').doc().id);
+
+  // Constructor Internal (untuk unit test)
+  @visibleForTesting
+  MahasiswaAjuanBimbinganViewModel.internal({
+    required AjuanBimbinganService ajuanService,
+    required NotificationService notifService,
+    required UserService userService,
+    required AuthUtils authUtils,
+    required IdGenerator idGenerator, // DI untuk ID generator
+  }) : _ajuanService = ajuanService,
+       _notifService = notifService,
+       _userService = userService,
+       _authUtils = authUtils,
+       _idGenerator = idGenerator;
 
   // =================================================================
   // STATE
@@ -66,7 +97,9 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     if (_activeFilter == null) {
       return _allAjuans;
     }
-    return _allAjuans.where((item) => item.ajuan.status == _activeFilter).toList();
+    return _allAjuans
+        .where((item) => item.ajuan.status == _activeFilter)
+        .toList();
   }
 
   // =================================================================
@@ -74,19 +107,18 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
   // =================================================================
 
   Future<String> getDosenNameForCurrentUser() async {
-    final uid = AuthUtils.currentUid;
+    final uid = _authUtils.currentUid; // Menggunakan DI
     if (uid == null) return "Sesi berakhir";
 
     try {
       final mahasiswa = await _userService.fetchUserByUid(uid);
-      
+
       if (mahasiswa.dosenUid == null || mahasiswa.dosenUid!.isEmpty) {
         return "Belum memiliki Dosen Pembimbing";
       }
 
       final dosen = await _userService.fetchUserByUid(mahasiswa.dosenUid!);
       return dosen.name;
-
     } catch (e) {
       return "Gagal memuat info dosen";
     }
@@ -97,7 +129,7 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
   // =================================================================
 
   Future<void> loadAjuanData() async {
-    final uid = AuthUtils.currentUid;
+    final uid = _authUtils.currentUid; // Menggunakan DI
     if (uid == null) {
       _errorMessage = "Sesi anda telah berakhir. Silakan login kembali.";
       _safeNotifyListeners();
@@ -112,24 +144,24 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
 
     try {
       // 1. Ambil Raw Data Ajuan Bimbingan
-      final List<AjuanBimbinganModel> rawAjuans = 
-          await _ajuanService.getAjuanByMahasiswaUid(uid, mahasiswa.dosenUid!);
+      final List<AjuanBimbinganModel> rawAjuans = await _ajuanService
+          .getAjuanByMahasiswaUid(uid, mahasiswa.dosenUid!);
 
       if (rawAjuans.isEmpty) {
         _allAjuans = [];
       } else {
         // 2. Kumpulkan ID Dosen Unik
         final Set<String> dosenUids = rawAjuans.map((e) => e.dosenUid).toSet();
-        
+
         // 3. Fetch Data Dosen secara Paralel
         final List<UserModel?> fetchedDosens = await Future.wait(
-          dosenUids.map((id) => _userService.fetchUserByUid(id))
+          dosenUids.map((id) => _userService.fetchUserByUid(id)),
         );
 
         // 4. Buat Map Dosen agar akses cepat (O(1))
         final Map<String, UserModel> dosenMap = {
-          for (var dosen in fetchedDosens) 
-            if (dosen != null) dosen.uid: dosen
+          for (var dosen in fetchedDosens)
+            if (dosen != null) dosen.uid: dosen,
         };
 
         // 5. Gabungkan Data ke Helper (Wrapping)
@@ -139,18 +171,14 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
           final dosen = dosenMap[ajuan.dosenUid];
 
           if (dosen != null) {
-            combinedData.add(
-              MahasiswaAjuanHelper(
-                ajuan: ajuan, 
-                dosen: dosen,
-              )
-            );
+            combinedData.add(MahasiswaAjuanHelper(ajuan: ajuan, dosen: dosen));
           }
         }
 
         // 6. Sorting (Terbaru di atas)
-        combinedData.sort((a, b) => 
-            b.ajuan.waktuDiajukan.compareTo(a.ajuan.waktuDiajukan));
+        combinedData.sort(
+          (a, b) => b.ajuan.waktuDiajukan.compareTo(a.ajuan.waktuDiajukan),
+        );
 
         _allAjuans = combinedData;
       }
@@ -184,7 +212,7 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     required String waktuBimbingan,
     required DateTime tanggalBimbingan,
   }) async {
-    final uid = AuthUtils.currentUid;
+    final uid = _authUtils.currentUid; // Menggunakan DI
     if (uid == null) {
       _errorMessage = "Sesi berakhir.";
       _safeNotifyListeners();
@@ -195,7 +223,7 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     _safeNotifyListeners();
 
     try {
-      // 1. Ambil User Profile 
+      // 1. Ambil User Profile
       final currentUser = await _userService.fetchUserByUid(uid);
       final String? dosenUidTarget = currentUser.dosenUid;
 
@@ -204,8 +232,8 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
         throw Exception("Anda belum memiliki Dosen Pembimbing.");
       }
 
-      // 3. Generate ID Baru
-      final newId = FirebaseFirestore.instance.collection('ajuan_bimbingan').doc().id;
+      // 3. Generate ID Baru (Menggunakan ID Generator yang dapat di-mock)
+      final newId = _idGenerator();
 
       // 4. Buat Model
       final newAjuan = AjuanBimbinganModel(
@@ -229,7 +257,8 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
       await _notifService.sendNotification(
         recipientUid: dosenUidTarget,
         title: "Ajuan Bimbingan Baru",
-        body: "${currentUser.name} mengajukan bimbingan untuk tanggal $dateStr.",
+        body:
+            "${currentUser.name} mengajukan bimbingan untuk tanggal $dateStr.",
         type: "ajuan_masuk",
         relatedId: newId,
       );
@@ -237,7 +266,6 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
       // 6. Reload Data
       await loadAjuanData();
       return true;
-
     } catch (e) {
       _errorMessage = "Gagal mengirim ajuan: $e";
       _safeNotifyListeners();
@@ -253,23 +281,22 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
   // =================================================================
   // NEW: FETCH SINGLE DETAIL (Untuk Notifikasi)
   // =================================================================
-  
+
   /// Mengambil data lengkap (Ajuan + Dosen) berdasarkan ID Ajuan.
   Future<MahasiswaAjuanHelper?> getAjuanDetail(String ajuanUid) async {
     try {
       // 1. Ambil data Ajuan by ID
-      final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(ajuanUid);
-      
+      final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(
+        ajuanUid,
+      );
+
       if (ajuan == null) return null;
 
       // 2. Ambil data Dosen berdasarkan dosenUid yang ada di ajuan
       final dosen = await _userService.fetchUserByUid(ajuan.dosenUid);
 
       // 3. Return wrapper MahasiswaHelper
-      return MahasiswaAjuanHelper(
-        ajuan: ajuan,
-        dosen: dosen,
-      );
+      return MahasiswaAjuanHelper(ajuan: ajuan, dosen: dosen);
     } catch (e) {
       debugPrint("Error fetching detail for notification: $e");
       return null;

@@ -76,7 +76,7 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
   // =================================================================
 
   Future<void> loadLogData() async {
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) {
       _errorMessage = "Sesi anda telah berakhir. Silakan login kembali.";
       _safeNotifyListeners();
@@ -183,7 +183,7 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
     required String ringkasanBaru,
     File? lampiranBaru,
   }) async {
-    final uid = AuthUtils.currentUid; 
+    final uid = AuthUtils().currentUid; 
     _isLoading = true;
     _safeNotifyListeners();
 

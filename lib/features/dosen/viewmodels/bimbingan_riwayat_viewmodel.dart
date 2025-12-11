@@ -84,7 +84,8 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
     _errorMessage = null;
     _safeNotifyListeners();
 
-    final uid = AuthUtils.currentUid;
+    final authUtils = AuthUtils();
+    final uid = authUtils.currentUid;
     if (uid == null) {
       _errorMessage = "Sesi habis";
       _isLoading = false;

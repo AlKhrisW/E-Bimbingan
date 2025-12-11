@@ -68,7 +68,8 @@ class DosenBimbinganViewModel extends ChangeNotifier {
     _error = null;
     _safeNotifyListeners();
 
-    final uid = AuthUtils.currentUid;
+    final authUtils = AuthUtils();
+    final uid = authUtils.currentUid;
     if (uid == null) {
       _error = 'User belum login';
       _isLoading = false;

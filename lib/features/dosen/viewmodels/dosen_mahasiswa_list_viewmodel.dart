@@ -46,7 +46,7 @@ class DosenMahasiswaListViewModel extends ChangeNotifier {
   // =================================================================
 
   Future<void> loadMahasiswaBimbingan() async {
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     
     if (uid == null) {
       _errorMessage = "Tidak ada user yang login";

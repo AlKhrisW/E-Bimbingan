@@ -78,7 +78,7 @@ class MahasiswaDashboardViewModel extends ChangeNotifier {
   // =================================================================
 
   Future<void> loadDashboardData() async {
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) {
       _errorMessage = "Sesi berakhir.";
       _isLoading = false;
