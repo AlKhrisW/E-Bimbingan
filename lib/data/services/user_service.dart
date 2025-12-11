@@ -1,18 +1,19 @@
 // lib/data/services/user_service.dart
-// VERSI BASE64 - SIMPAN DI FIRESTORE (GRATIS!)
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
-import 'storage_service.dart';
+import 'storage_service.dart'; // ✅ Import ini tetap ada
 
 class UserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final StorageService _storageService = StorageService();
+  final StorageService _storageService = StorageService(); // ✅ Tetap diinisialisasi
+  
   CollectionReference get _users => _firestore.collection('users');
 
   // ========================================================================
-  // EXISTING METHODS (TIDAK BERUBAH)
+  // EXISTING METHODS (DIKEMBALIKAN SEMULA)
   // ========================================================================
+  
   Future<List<UserModel>> fetchAllUsers() async {
     final snapshot = await _users.get();
     return snapshot.docs
@@ -31,11 +32,7 @@ class UserService {
     await _users.doc(user.uid).update(user.toMap());
   }
 
-  // Partial update: only update provided fields for the user document
-  Future<void> updateUserMetadataPartial(
-    String uid,
-    Map<String, dynamic> data,
-  ) async {
+  Future<void> updateUserMetadataPartial(String uid, Map<String, dynamic> data) async {
     if (data.isEmpty) return;
     await _users.doc(uid).update(data);
   }
@@ -52,7 +49,6 @@ class UserService {
     }
   }
 
-  // Ambil daftar mahasiswa yang terdaftar pada dosen tertentu (menggunakan field `dosen_uid`)
   Future<List<UserModel>> fetchMahasiswaByDosenUid(String dosenUid) async {
     try {
       final snapshot = await _users
@@ -73,11 +69,13 @@ class UserService {
   }
 
   // ========================================================================
-  // PHOTO PROFILE METHODS (BASE64 VERSION) — TETAP SAMA
+  // PHOTO PROFILE METHODS (DIKEMBALIKAN SEMULA)
   // ========================================================================
+  
   Future<bool> updateProfilePhoto(String uid, File imageFile) async {
     try {
       print('Starting photo update for UID: $uid');
+      // Menggunakan method dari StorageService yang Anda upload
       if (!_storageService.isImageFile(imageFile)) {
         throw 'File harus berupa gambar (jpg, png, gif, webp)';
       }
@@ -133,11 +131,6 @@ class UserService {
       }
       final data = doc.data() as Map<String, dynamic>?;
       final photoBase64 = data?['photo_base64'] as String?;
-      if (photoBase64 != null && photoBase64.isNotEmpty) {
-        print('Photo Base64 found for $uid');
-      } else {
-        print('No photo for $uid');
-      }
       return photoBase64;
     } catch (e) {
       print('Error getting photo: $e');
@@ -155,7 +148,6 @@ class UserService {
     }
   }
 
-  /// mengambil daftar mahasiswa yang belum memiliki dosen pembimbing
   Future<List<UserModel>> fetchMahasiswaUnassigned() async {
     try {
       final snapshot = await _users.where('role', isEqualTo: 'mahasiswa').get();
@@ -173,31 +165,19 @@ class UserService {
     }
   }
 
-  // ========================================================================
-  // MAPPING METHOD — DIPERBAIKI TOTAL! (INI YANG BIKIN JUMLAH 0)
-  // ========================================================================
-  /// melakukan batch update pada relasi dosen_uid untuk beberapa mahasiswa
   Future<void> batchUpdateDosenRelasi({
     required List<String> mahasiswaUids,
-    String? newDosenUid, // null = hapus relasi
+    String? newDosenUid, 
   }) async {
     if (mahasiswaUids.isEmpty) return;
-
     final batch = _firestore.batch();
 
     for (var uid in mahasiswaUids) {
       final docRef = _users.doc(uid);
-
       if (newDosenUid == null) {
-        // HAPUS FIELD dosen_uid dari dokumen (bukan set null!)
-        batch.update(docRef, {
-          'dosen_uid': FieldValue.delete(),
-        });
+        batch.update(docRef, {'dosen_uid': FieldValue.delete()});
       } else {
-        // TAMBAH / UBAH dosen_uid
-        batch.update(docRef, {
-          'dosen_uid': newDosenUid,
-        });
+        batch.update(docRef, {'dosen_uid': newDosenUid});
       }
     }
 
@@ -207,6 +187,38 @@ class UserService {
     } catch (e) {
       print('gagal batch update: $e');
       throw Exception('Gagal memperbarui relasi dosen: $e');
+    }
+  }
+
+  // ========================================================================
+  // 🔥 NEW METHODS: FCM TOKEN MANAGEMENT
+  // ========================================================================
+  
+  /// Menyimpan FCM Token ke dokumen user tanpa mengganggu field lain
+  Future<void> saveDeviceToken(String uid, String? token) async {
+    if (token == null) return;
+    
+    try {
+      // Menggunakan update agar tidak menimpa data yang sudah ada
+      await _users.doc(uid).update({
+        'fcm_token': token,
+        'last_token_update': FieldValue.serverTimestamp(),
+      });
+      print('[UserService] FCM Token berhasil disimpan/diupdate untuk $uid');
+    } catch (e) {
+      print('[UserService] Gagal menyimpan token: $e');
+    }
+  }
+
+  /// Menghapus FCM Token saat logout
+  Future<void> removeDeviceToken(String uid) async {
+    try {
+      await _users.doc(uid).update({
+        'fcm_token': FieldValue.delete(),
+      });
+      print('[UserService] Token dihapus untuk $uid');
+    } catch (e) {
+      print('Error removing token: $e');
     }
   }
 }

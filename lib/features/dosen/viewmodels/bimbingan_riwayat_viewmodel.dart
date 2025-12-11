@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
-import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
+import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart'; // Pastikan import model ajuan
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_mingguan.dart';
 import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
@@ -33,6 +34,29 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  void clearData() {
+    _riwayatListSource = [];
+    _activeFilter = null;
+    _selectedMahasiswa = null;
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
   // GETTERS
   // =================================================================
@@ -52,19 +76,20 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
 
   void setFilter(LogBimbinganStatus? status) {
     _activeFilter = status;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   Future<void> pilihMahasiswa(String mahasiswaUid) async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
-    final uid = AuthUtils.currentUid;
+    final authUtils = AuthUtils();
+    final uid = authUtils.currentUid;
     if (uid == null) {
       _errorMessage = "Sesi habis";
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
@@ -103,14 +128,47 @@ class DosenRiwayatBimbinganViewModel extends ChangeNotifier {
       _errorMessage = "Gagal memuat riwayat: $e";
       _riwayatListSource = [];
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
   Future<void> refresh() async {
     if (_selectedMahasiswa != null) {
       await pilihMahasiswa(_selectedMahasiswa!.uid);
+    }
+  }
+
+  // =================================================================
+  // NEW: FETCH SINGLE DETAIL (Untuk Notifikasi)
+  // =================================================================
+  
+  /// Mengambil data lengkap (Log + Mahasiswa + Ajuan) berdasarkan ID Log.
+  Future<HelperLogBimbingan?> getLogDetail(String logUid) async {
+    try {
+      // 1. Ambil data Log
+      final LogBimbinganModel? log = await _logService.getLogBimbinganByUid(logUid);
+      if (log == null) return null;
+
+      // 2. Ambil data Mahasiswa
+      final UserModel? mahasiswa = await _userService.fetchUserByUid(log.mahasiswaUid);
+      if (mahasiswa == null) return null;
+
+      // 3. Ambil data Ajuan Terkait
+      final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(log.ajuanUid);
+      if (ajuan == null) return null;
+
+      // 4. Return wrapper
+      return HelperLogBimbingan(
+        log: log,
+        mahasiswa: mahasiswa,
+        ajuan: ajuan,
+      );
+    } catch (e) {
+      debugPrint("Error fetching log detail: $e");
+      return null;
     }
   }
 }

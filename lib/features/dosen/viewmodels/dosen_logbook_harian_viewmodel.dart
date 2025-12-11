@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/models/logbook_harian_model.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_harian.dart';
 import 'package:ebimbingan/data/services/logbook_harian_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
 
@@ -16,7 +17,7 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
   // STATE
   // =================================================================
 
-  List<LogbookHarianModel> _logbookListSource = [];
+  List<HelperLogbookHarian> _logbookListSource = [];
 
   LogbookStatus? _activeFilter;
   LogbookStatus? get activeFilter => _activeFilter;
@@ -30,16 +31,39 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  void clearData() {
+    _logbookListSource = [];
+    _activeFilter = null;
+    _selectedMahasiswa = null;
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
   // GETTERS
   // =================================================================
 
-  List<LogbookHarianModel> get logbooks {
+  List<HelperLogbookHarian> get logbooks {
     if (_activeFilter == null) {
       return _logbookListSource;
     }
     return _logbookListSource
-        .where((element) => element.status == _activeFilter)
+        .where((element) => element.logbook.status == _activeFilter)
         .toList();
   }
 
@@ -49,19 +73,19 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
 
   void setFilter(LogbookStatus? status) {
     _activeFilter = status;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   Future<void> pilihMahasiswa(String mahasiswaUid) async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) {
       _errorMessage = "Sesi habis, silakan login ulang";
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
@@ -74,19 +98,58 @@ class DosenLogbookHarianViewModel extends ChangeNotifier {
         uid 
       );
 
-      _logbookListSource = data;
+        final List<HelperLogbookHarian> wrappedList = data.map((item) {
+          return HelperLogbookHarian(
+            logbook: item,
+            mahasiswa: mahasiswa,
+          );
+        }).toList();
+
+        _logbookListSource = wrappedList;
+
     } catch (e) {
       _errorMessage = "Gagal memuat logbook: $e";
       _logbookListSource = [];
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
   Future<void> refresh() async {
     if (_selectedMahasiswa != null) {
       await pilihMahasiswa(_selectedMahasiswa!.uid);
+    }
+  }
+
+  // =================================================================
+  // NEW: FETCH SINGLE DETAIL (Untuk Notifikasi)
+  // =================================================================
+  
+  /// Mengambil data lengkap (Logbook + Mahasiswa) berdasarkan ID Logbook.
+  Future<HelperLogbookHarian?> getLogbookDetail(String logbookId) async {
+    try {
+      // 1. Ambil Logbook by ID
+      // Asumsi: Service mengembalikan List, kita ambil yang pertama
+      final LogbookHarianModel? logbookItem = await _logbookHarianService.getLogbookById(logbookId);
+      
+      if (logbookItem == null) return null;
+
+      // 2. Ambil User (Mahasiswa)
+      final UserModel? mahasiswa = await _userService.fetchUserByUid(logbookItem.mahasiswaUid);
+
+      if (mahasiswa == null) return null;
+
+      // 3. Return Wrapper
+      return HelperLogbookHarian(
+        logbook: logbookItem,
+        mahasiswa: mahasiswa,
+      );
+    } catch (e) {
+      debugPrint("Error fetching logbook detail: $e");
+      return null;
     }
   }
 }

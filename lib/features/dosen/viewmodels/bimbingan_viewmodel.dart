@@ -1,18 +1,27 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+// Utils
 import 'package:ebimbingan/core/utils/auth_utils.dart';
+
+// Services
 import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
+import 'package:ebimbingan/data/services/notification_service.dart';
+
+// Models
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
-import 'package:ebimbingan/data/models/wrapper/helper_log_bimbingan.dart';
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_mingguan.dart';
 
 class DosenBimbinganViewModel extends ChangeNotifier {
   final LogBimbinganService _logService = LogBimbinganService();
   final UserService _userService = UserService();
   final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
+  final NotificationService _notifService = NotificationService();
 
   DosenBimbinganViewModel();
 
@@ -29,20 +38,42 @@ class DosenBimbinganViewModel extends ChangeNotifier {
   String? _error;
   String? get error => _error;
 
+  void clearData() {
+    _daftarLog = [];
+    _isLoading = false;
+    _error = null;
+    notifyListeners();
+  }
+
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
-  // LOAD DATA
+  // LOAD DATA UTAMA (List Pending)
   // =================================================================
 
   Future<void> _loadLogPending() async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
-    final uid = AuthUtils.currentUid;
+    final authUtils = AuthUtils();
+    final uid = authUtils.currentUid;
     if (uid == null) {
       _error = 'User belum login';
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
@@ -52,7 +83,7 @@ class DosenBimbinganViewModel extends ChangeNotifier {
       if (data.isEmpty) {
         _daftarLog = [];
         _isLoading = false;
-        notifyListeners();
+        _safeNotifyListeners();
         return;
       }
 
@@ -99,8 +130,40 @@ class DosenBimbinganViewModel extends ChangeNotifier {
     } catch (e) {
       _error = 'Gagal memuat daftar log bimbingan: $e';
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  // =================================================================
+  // NEW: FETCH SINGLE LOG DETAIL (Untuk Notifikasi)
+  // =================================================================
+  
+  /// Mengambil data lengkap (Log + Mahasiswa + Ajuan) berdasarkan ID Log.
+  Future<HelperLogBimbingan?> getLogDetail(String logUid) async {
+    try {
+      // 1. Ambil data Log
+      final LogBimbinganModel? log = await _logService.getLogBimbinganByUid(logUid);
+      if (log == null) return null;
+
+      // 2. Ambil data Mahasiswa
+      final UserModel mahasiswa = await _userService.fetchUserByUid(log.mahasiswaUid);
+
+      // 3. Ambil data Ajuan Terkait
+      final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(log.ajuanUid);
+      if (ajuan == null) return null;
+
+      // 4. Return wrapper
+      return HelperLogBimbingan(
+        log: log,
+        mahasiswa: mahasiswa,
+        ajuan: ajuan,
+      );
+    } catch (e) {
+      debugPrint("Error fetching log detail: $e");
+      return null;
     }
   }
 
@@ -110,35 +173,77 @@ class DosenBimbinganViewModel extends ChangeNotifier {
 
   Future<void> verifikasiLog(String logUid) async {
     try {
-      await _logService.updateLogBimbinganStatus(
+      // Logic pencarian data (Safe check jika item tidak ada di list)
+      HelperLogBimbingan? targetItem;
+      try {
+        targetItem = _daftarLog.firstWhere((e) => e.log.logBimbinganUid == logUid);
+      } catch (_) {
+        targetItem = await getLogDetail(logUid);
+      }
+
+      if (targetItem == null) throw Exception("Data log tidak ditemukan");
+
+      await _logService.updateStatusVerifikasi(
         logBimbinganUid: logUid,
         status: LogBimbinganStatus.approved,
-        catatanDosen: "Disetujui",
+        catatanDosen: "",
       );
-      await _loadLogPending();
+
+      await _notifService.sendNotification(
+        recipientUid: targetItem.log.mahasiswaUid,
+        title: "Log Bimbingan Diverifikasi",
+        body: "Log tanggal ${DateFormat('dd MMM').format(targetItem.log.waktuPengajuan)} telah disetujui.",
+        type: "log_status",
+        relatedId: logUid,
+      );
+
+      // Refresh list jika ada
+      if (_daftarLog.isNotEmpty) {
+        await _loadLogPending();
+      }
     } catch (e) {
       _error = 'Gagal verifikasi log: $e';
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
   Future<void> tolakLog(String logUid, String catatan) async {
     if (catatan.trim().isEmpty) {
       _error = 'Catatan penolakan wajib diisi';
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
     try {
-      await _logService.updateLogBimbinganStatus(
+      HelperLogBimbingan? targetItem;
+      try {
+        targetItem = _daftarLog.firstWhere((e) => e.log.logBimbinganUid == logUid);
+      } catch (_) {
+        targetItem = await getLogDetail(logUid);
+      }
+
+      if (targetItem == null) throw Exception("Data log tidak ditemukan");
+
+      await _logService.updateStatusVerifikasi(
         logBimbinganUid: logUid,
         status: LogBimbinganStatus.rejected,
         catatanDosen: catatan.trim(),
       );
-      await _loadLogPending();
+
+      await _notifService.sendNotification(
+        recipientUid: targetItem.log.mahasiswaUid,
+        title: "Log Bimbingan Perlu Revisi",
+        body: "Catatan Dosen: $catatan",
+        type: "log_status",
+        relatedId: logUid,
+      );
+
+      if (_daftarLog.isNotEmpty) {
+        await _loadLogPending();
+      }
     } catch (e) {
       _error = 'Gagal menolak log: $e';
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 

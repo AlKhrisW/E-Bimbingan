@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_bimbingan_card.dart'; 
 import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/widgets/dosen_halaman_kosong.dart';
+import 'package:ebimbingan/core/widgets/custom_halaman_kosong.dart';
 import 'detail_screen.dart';
 
 class DosenBimbingan extends StatefulWidget {
@@ -33,10 +33,11 @@ class _DosenBimbinganState extends State<DosenBimbingan> {
         Widget content;
         
         if (vm.daftarLog.isEmpty) {
-          content = const DosenHalamanKosong(
+          content = const CustomHalamanKosong(
             icon: Icons.inbox,
             message: 'Tidak ada log bimbingan',
             subMessage: 'Mahasiswa belum mengajukan log bimbingan.',
+            height: 0.7,
           );
         } else {
           content = ListView.separated(
@@ -50,10 +51,15 @@ class _DosenBimbinganState extends State<DosenBimbingan> {
                 name: item.mahasiswa.name,
                 judulTopik: item.ajuan.judulTopik,
                 onTap: () {
+                  final vm = context.read<DosenBimbinganViewModel>(); 
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => DosenLogbookDetail(data: item),
+                      builder: (_) => ChangeNotifierProvider.value(
+                        value: vm, 
+                        child: DosenLogbookDetail(data: item),
+                      ),
                     ),
                   );
                 },

@@ -1,21 +1,61 @@
 import 'dart:async';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart'; // Tambahkan untuk @visibleForTesting
+
+// Utils
 import 'package:ebimbingan/core/utils/auth_utils.dart';
+
+// Services
 import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
+import 'package:ebimbingan/data/services/notification_service.dart';
+
+// Models
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
-import 'package:ebimbingan/data/models/wrapper/helper_ajuan_bimbingan.dart';
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_ajuan.dart';
+
+// Definisikan tipe untuk ID generator (untuk mock ID Log Bimbingan)
+typedef String LogIdGenerator(); // 🔥 BARU
 
 class DosenAjuanViewModel extends ChangeNotifier {
-  final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
-  final LogBimbinganService _logService = LogBimbinganService();
-  final UserService _userService = UserService();
+  // --- DEPENDENCIES (Diubah menjadi final) ---
+  final AjuanBimbinganService _ajuanService;
+  final LogBimbinganService _logService;
+  final UserService _userService;
+  final NotificationService _notifService;
+  final AuthUtils _authUtils; // 🔥 BARU
+  final LogIdGenerator _logIdGenerator; // 🔥 BARU
 
-  DosenAjuanViewModel();
+  // Constructor Default (Untuk penggunaan aplikasi normal)
+  DosenAjuanViewModel()
+      : _ajuanService = AjuanBimbinganService(),
+        _logService = LogBimbinganService(),
+        _userService = UserService(),
+        _notifService = NotificationService(),
+        _authUtils = AuthUtils(), // 🔥 Inisialisasi AuthUtils default
+        _logIdGenerator = (() =>
+            FirebaseFirestore.instance.collection('log_bimbingan').doc().id);
+
+  // Constructor Internal (Untuk Unit Test) 🔥 BARU
+  @visibleForTesting
+  DosenAjuanViewModel.internal({
+    required AjuanBimbinganService ajuanService,
+    required LogBimbinganService logService,
+    required UserService userService,
+    required NotificationService notifService,
+    required AuthUtils authUtils,
+    required LogIdGenerator logIdGenerator,
+  })  : _ajuanService = ajuanService,
+        _logService = logService,
+        _userService = userService,
+        _notifService = notifService,
+        _authUtils = authUtils,
+        _logIdGenerator = logIdGenerator;
 
   // =================================================================
   // STATE
@@ -30,20 +70,42 @@ class DosenAjuanViewModel extends ChangeNotifier {
   String? _error;
   String? get error => _error;
 
+  void clearData() {
+    _daftarAjuan = [];
+    _isLoading = false;
+    _error = null;
+    notifyListeners();
+  }
+
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
-  // LOAD DATA
+  // LOAD DATA UTAMA (List Ajuan)
   // =================================================================
 
   Future<void> _loadAjuanProses() async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
-    final uid = AuthUtils.currentUid;
+    // 🔥 Gunakan AuthUtils yang diinjeksikan
+    final uid = _authUtils.currentUid;
     if (uid == null) {
       _error = 'User belum login';
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
@@ -53,12 +115,13 @@ class DosenAjuanViewModel extends ChangeNotifier {
       if (data.isEmpty) {
         _daftarAjuan = [];
         _isLoading = false;
-        notifyListeners();
+        _safeNotifyListeners();
         return;
       }
 
       final mahasiswaUids = data.map((e) => e.mahasiswaUid).toSet();
 
+      // 🔥 Gunakan UserService yang diinjeksikan
       final List<UserModel> fetchedUsers = await Future.wait(
         mahasiswaUids.map((uid) => _userService.fetchUserByUid(uid)),
       );
@@ -88,70 +151,144 @@ class DosenAjuanViewModel extends ChangeNotifier {
     } catch (e) {
       _error = 'Gagal memproses daftar ajuan: $e';
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
   // =================================================================
-  // ACTIONS
+  // FETCH SINGLE DETAIL (Untuk Notifikasi)
+  // =================================================================
+  
+  Future<AjuanWithMahasiswa?> getAjuanDetail(String ajuanUid) async {
+    try {
+      // 🔥 Gunakan AjuanService yang diinjeksikan
+      final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(ajuanUid);
+      
+      if (ajuan == null) return null;
+
+      // 🔥 Gunakan UserService yang diinjeksikan
+      final mahasiswa = await _userService.fetchUserByUid(ajuan.mahasiswaUid);
+
+      return AjuanWithMahasiswa(
+        ajuan: ajuan,
+        mahasiswa: mahasiswa,
+      );
+    } catch (e) {
+      debugPrint("Error fetching detail for notification: $e");
+      return null;
+    }
+  }
+
+  // =================================================================
+  // ACTIONS: SETUJUI & TOLAK
   // =================================================================
 
   Future<void> setujui(String ajuanUid) async {
-    final uid = AuthUtils.currentUid;
+    // 🔥 Gunakan AuthUtils yang diinjeksikan
+    final uid = _authUtils.currentUid;
     if (uid == null) return;
 
     try {
-      final itemTarget = _daftarAjuan.firstWhere(
-        (element) => element.ajuan.ajuanUid == ajuanUid,
-        orElse: () => throw Exception("Data tidak ditemukan"),
-      );
+      AjuanWithMahasiswa? itemTarget;
+      
+      try {
+        // Coba cari di list lokal dulu (jika list sudah dimuat)
+        itemTarget = _daftarAjuan.firstWhere((element) => element.ajuan.ajuanUid == ajuanUid);
+      } catch (_) {
+        // Jika tidak ada di list lokal (misal, datang dari notifikasi), fetch detailnya
+        itemTarget = await getAjuanDetail(ajuanUid);
+      }
 
-      final String newLogUid = FirebaseFirestore.instance.collection('log_bimbingan').doc().id;
+      if (itemTarget == null) throw Exception("Data ajuan tidak ditemukan");
 
-      final newLog = LogBimbinganModel(
-        logBimbinganUid: newLogUid,
-        ajuanUid: ajuanUid,
-        mahasiswaUid: itemTarget.ajuan.mahasiswaUid,
-        dosenUid: uid, 
-        ringkasanHasil: '',
-        status: LogBimbinganStatus.draft,
-        waktuPengajuan: DateTime.now(),
-        catatanDosen: null,
-        lampiranUrl: null,
-      );
+      // 🔥 Gunakan LogIdGenerator yang diinjeksikan
+      final String newLogUid = _logIdGenerator();
 
+        final newLog = LogBimbinganModel(
+          logBimbinganUid: newLogUid,
+          ajuanUid: ajuanUid,
+          mahasiswaUid: itemTarget.ajuan.mahasiswaUid,
+          dosenUid: uid, 
+          ringkasanHasil: '',
+          status: LogBimbinganStatus.draft,
+          waktuPengajuan: DateTime.now(),
+          catatanDosen: null,
+          lampiranUrl: null,
+        );
+
+      // 🔥 Gunakan AjuanService yang diinjeksikan
       await _ajuanService.updateAjuanStatus(
         ajuanUid: ajuanUid,
         status: AjuanStatus.disetujui,
       );
 
+      // 🔥 Gunakan LogService yang diinjeksikan
       await _logService.saveLogBimbingan(newLog);
-      await _loadAjuanProses();
+
+      // 🔥 Gunakan NotifService yang diinjeksikan
+      await _notifService.sendNotification(
+        recipientUid: itemTarget.ajuan.mahasiswaUid,
+        title: "Ajuan Bimbingan Disetujui",
+        body: "Dosen menyetujui jadwal untuk ${DateFormat('dd MMM').format(itemTarget.ajuan.tanggalBimbingan)}.",
+        type: "ajuan_status", 
+        relatedId: ajuanUid,
+      );
+
+      // Refresh list jika list sedang dibuka
+      if (_daftarAjuan.isNotEmpty) {
+        await _loadAjuanProses();
+      }
 
     } catch (e) {
       _error = 'Gagal menyetujui ajuan: $e';
-      notifyListeners();
+      _safeNotifyListeners();
+      rethrow; 
     }
   }
 
   Future<void> tolak(String ajuanUid, String keterangan) async {
     if (keterangan.trim().isEmpty) {
       _error = 'Keterangan penolakan wajib diisi';
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
     try {
+      AjuanWithMahasiswa? itemTarget;
+      try {
+        itemTarget = _daftarAjuan.firstWhere((element) => element.ajuan.ajuanUid == ajuanUid);
+      } catch (_) {
+        itemTarget = await getAjuanDetail(ajuanUid);
+      }
+
+      if (itemTarget == null) throw Exception("Data ajuan tidak ditemukan");
+
+      // 🔥 Gunakan AjuanService yang diinjeksikan
       await _ajuanService.updateAjuanStatus(
         ajuanUid: ajuanUid,
         status: AjuanStatus.ditolak,
         keterangan: keterangan.trim(),
       );
-      await _loadAjuanProses();
+
+      // 🔥 Gunakan NotifService yang diinjeksikan
+      await _notifService.sendNotification(
+        recipientUid: itemTarget.ajuan.mahasiswaUid,
+        title: "Ajuan Bimbingan Ditolak",
+        body: "Maaf, ajuan ditolak. Ket: $keterangan",
+        type: "ajuan_status",
+        relatedId: ajuanUid,
+      );
+
+      if (_daftarAjuan.isNotEmpty) {
+        await _loadAjuanProses();
+      }
     } catch (e) {
       _error = 'Gagal menolak ajuan: $e';
-      notifyListeners();
+      _safeNotifyListeners();
+      rethrow;
     }
   }
 

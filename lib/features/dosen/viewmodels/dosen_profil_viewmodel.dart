@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // [Wajib Import Provider]
+
+// Import ViewModel Fitur Dosen
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dashboard_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
+
+// Import standar lainnya
+import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/services/firebase_auth_service.dart';
 import 'package:ebimbingan/data/services/user_service.dart';
 import '../../auth/views/login_page.dart';
 
 class DosenProfilViewModel extends ChangeNotifier {
-  final FirebaseAuthService _authService;
-  final UserService _userService;
+  final FirebaseAuthService _authService = FirebaseAuthService();
+  final UserService _userService = UserService();
 
-  DosenProfilViewModel({
-    required FirebaseAuthService authService,
-    required UserService userService,
-  })  : _authService = authService,
-        _userService = userService;
+  DosenProfilViewModel();
 
   // =================================================================
   // STATE
@@ -23,28 +32,52 @@ class DosenProfilViewModel extends ChangeNotifier {
 
   UserModel? get dosenData => _dosenData;
   bool get isLoading => _isLoading;
-  String? get currentUserId => _authService.getCurrentUser()?.uid;
+  
+  String? get currentUserId => AuthUtils().currentUid;
+
+  void clearData() {
+    _dosenData = null;
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
 
   // =================================================================
   // LOAD DATA
   // =================================================================
 
   Future<void> loadDosenData() async {
-    final uid = currentUserId;
+    // Menggunakan AuthUtils
+    final uid = AuthUtils().currentUid;
     if (uid == null) return;
 
     _isLoading = true;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final data = await _userService.fetchUserByUid(uid);
       _dosenData = data;
     } catch (e) {
       debugPrint("Error load dosen data: $e");
+    } finally {
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   Future<void> refresh() async {
@@ -70,7 +103,7 @@ class DosenProfilViewModel extends ChangeNotifier {
     if (payload.isEmpty) return;
 
     _isLoading = true;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       await _userService.updateUserMetadataPartial(_dosenData!.uid, payload);
@@ -82,8 +115,10 @@ class DosenProfilViewModel extends ChangeNotifier {
       debugPrint('Error updateProfile: $e');
       rethrow;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -95,21 +130,35 @@ class DosenProfilViewModel extends ChangeNotifier {
   // =================================================================
 
   Future<void> logout() async {
+    clearData();
     try {
       await _authService.signOut();
     } catch (e) {
-      await Future.delayed(const Duration(milliseconds: 500));
+      debugPrint("Error signing out: $e");
     }
   }
 
   Future<void> handleLogout(BuildContext context) async {
-    // 1. Ambil Navigator SEBELUM proses async (saat context masih valid)
+    // 1. Tangkap Navigator & Provider selagi context masih mounted
     final navigator = Navigator.of(context);
+    
+    // 2. Bersihkan ViewModel lain SEBELUM logout auth
+    if (context.mounted) {
+        context.read<DosenDashboardViewModel>().clearData();
+        context.read<DosenAjuanViewModel>().clearData();
+        context.read<DosenBimbinganViewModel>().clearData();
+        context.read<DosenLogbookHarianViewModel>().clearData();
+        context.read<DosenRiwayatAjuanViewModel>().clearData();
+        context.read<DosenRiwayatBimbinganViewModel>().clearData();
+        context.read<DosenMahasiswaListViewModel>().clearData();
+    }
 
-    // 2. Proses logout
+    await Future.delayed(const Duration(milliseconds: 250));
+
+    // 3. Lakukan Logout Auth
     await logout();
 
-    // 3. Gunakan variabel 'navigator' yang sudah disimpan, BUKAN 'context' lagi
+    // 4. Navigasi ke Login Page
     navigator.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginPage()),
       (route) => false,

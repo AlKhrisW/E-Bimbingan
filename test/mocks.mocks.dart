@@ -5,19 +5,25 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i6;
 import 'dart:io' as _i8;
-import 'dart:typed_data' as _i12;
-import 'dart:ui' as _i14;
+import 'dart:typed_data' as _i18;
+import 'dart:ui' as _i20;
 
 import 'package:cloud_firestore/cloud_firestore.dart' as _i5;
+import 'package:ebimbingan/core/utils/auth_utils.dart' as _i16;
+import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart' as _i13;
+import 'package:ebimbingan/data/models/log_bimbingan_model.dart' as _i15;
 import 'package:ebimbingan/data/models/user_model.dart' as _i2;
+import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart' as _i12;
 import 'package:ebimbingan/data/services/firebase_auth_service.dart' as _i10;
 import 'package:ebimbingan/data/services/firestore_service.dart' as _i9;
+import 'package:ebimbingan/data/services/log_bimbingan_service.dart' as _i14;
+import 'package:ebimbingan/data/services/notification_service.dart' as _i11;
 import 'package:ebimbingan/data/services/user_service.dart' as _i7;
 import 'package:firebase_auth/firebase_auth.dart' as _i4;
 import 'package:firebase_core/firebase_core.dart' as _i3;
-import 'package:flutter/foundation.dart' as _i13;
+import 'package:flutter/foundation.dart' as _i19;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i11;
+import 'package:mockito/src/dummies.dart' as _i17;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -282,6 +288,24 @@ class MockUserService extends _i1.Mock implements _i7.UserService {
             returnValueForMissingStub: _i6.Future<void>.value(),
           )
           as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> saveDeviceToken(String? uid, String? token) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveDeviceToken, [uid, token]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> removeDeviceToken(String? uid) =>
+      (super.noSuchMethod(
+            Invocation.method(#removeDeviceToken, [uid]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
 }
 
 /// A class which mocks [FirestoreService].
@@ -469,6 +493,341 @@ class MockFirebaseAuthService extends _i1.Mock
             returnValueForMissingStub: _i6.Future<void>.value(),
           )
           as _i6.Future<void>);
+}
+
+/// A class which mocks [NotificationService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockNotificationService extends _i1.Mock
+    implements _i11.NotificationService {
+  MockNotificationService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i6.Future<void> initialize() =>
+      (super.noSuchMethod(
+            Invocation.method(#initialize, []),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> sendNotification({
+    required String? recipientUid,
+    required String? title,
+    required String? body,
+    required String? type,
+    required String? relatedId,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#sendNotification, [], {
+              #recipientUid: recipientUid,
+              #title: title,
+              #body: body,
+              #type: type,
+              #relatedId: relatedId,
+            }),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Stream<_i5.QuerySnapshot<Object?>> getNotificationsStream(
+    String? recipientUid,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getNotificationsStream, [recipientUid]),
+            returnValue: _i6.Stream<_i5.QuerySnapshot<Object?>>.empty(),
+          )
+          as _i6.Stream<_i5.QuerySnapshot<Object?>>);
+
+  @override
+  _i6.Future<void> markAsRead(String? docId) =>
+      (super.noSuchMethod(
+            Invocation.method(#markAsRead, [docId]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> deleteNotification(String? docId) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteNotification, [docId]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> markAllAsRead(String? recipientUid) =>
+      (super.noSuchMethod(
+            Invocation.method(#markAllAsRead, [recipientUid]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+}
+
+/// A class which mocks [AjuanBimbinganService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockAjuanBimbinganService extends _i1.Mock
+    implements _i12.AjuanBimbinganService {
+  MockAjuanBimbinganService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i6.Future<void> saveAjuan(_i13.AjuanBimbinganModel? ajuan) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveAjuan, [ajuan]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> updateAjuanStatus({
+    required String? ajuanUid,
+    required _i13.AjuanStatus? status,
+    String? keterangan,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateAjuanStatus, [], {
+              #ajuanUid: ajuanUid,
+              #status: status,
+              #keterangan: keterangan,
+            }),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Future<List<_i13.AjuanBimbinganModel>> getJadwalDosen(String? dosenUid) =>
+      (super.noSuchMethod(
+            Invocation.method(#getJadwalDosen, [dosenUid]),
+            returnValue: _i6.Future<List<_i13.AjuanBimbinganModel>>.value(
+              <_i13.AjuanBimbinganModel>[],
+            ),
+          )
+          as _i6.Future<List<_i13.AjuanBimbinganModel>>);
+
+  @override
+  _i6.Future<List<_i13.AjuanBimbinganModel>> getJadwalMahasiswa(
+    String? mahasiswaUid,
+    String? dosenUid,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getJadwalMahasiswa, [mahasiswaUid, dosenUid]),
+            returnValue: _i6.Future<List<_i13.AjuanBimbinganModel>>.value(
+              <_i13.AjuanBimbinganModel>[],
+            ),
+          )
+          as _i6.Future<List<_i13.AjuanBimbinganModel>>);
+
+  @override
+  _i6.Future<List<_i13.AjuanBimbinganModel>> getAjuanByDosenUid(
+    String? dosenUid,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getAjuanByDosenUid, [dosenUid]),
+            returnValue: _i6.Future<List<_i13.AjuanBimbinganModel>>.value(
+              <_i13.AjuanBimbinganModel>[],
+            ),
+          )
+          as _i6.Future<List<_i13.AjuanBimbinganModel>>);
+
+  @override
+  _i6.Future<List<_i13.AjuanBimbinganModel>> getAjuanByMahasiswaUid(
+    String? mahasiswaUid,
+    String? dosenUid,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getAjuanByMahasiswaUid, [
+              mahasiswaUid,
+              dosenUid,
+            ]),
+            returnValue: _i6.Future<List<_i13.AjuanBimbinganModel>>.value(
+              <_i13.AjuanBimbinganModel>[],
+            ),
+          )
+          as _i6.Future<List<_i13.AjuanBimbinganModel>>);
+
+  @override
+  _i6.Future<List<_i13.AjuanBimbinganModel>> getRiwayatSpesifik(
+    String? dosenUid,
+    String? mahasiswaUid,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getRiwayatSpesifik, [dosenUid, mahasiswaUid]),
+            returnValue: _i6.Future<List<_i13.AjuanBimbinganModel>>.value(
+              <_i13.AjuanBimbinganModel>[],
+            ),
+          )
+          as _i6.Future<List<_i13.AjuanBimbinganModel>>);
+
+  @override
+  _i6.Future<_i13.AjuanBimbinganModel?> getAjuanByUid(String? ajuanUid) =>
+      (super.noSuchMethod(
+            Invocation.method(#getAjuanByUid, [ajuanUid]),
+            returnValue: _i6.Future<_i13.AjuanBimbinganModel?>.value(),
+          )
+          as _i6.Future<_i13.AjuanBimbinganModel?>);
+
+  @override
+  _i6.Future<void> deleteAjuan(String? ajuanUid) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteAjuan, [ajuanUid]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+}
+
+/// A class which mocks [LogBimbinganService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockLogBimbinganService extends _i1.Mock
+    implements _i14.LogBimbinganService {
+  MockLogBimbinganService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i6.Future<String?> encodeImageToBase64(_i8.File? file) =>
+      (super.noSuchMethod(
+            Invocation.method(#encodeImageToBase64, [file]),
+            returnValue: _i6.Future<String?>.value(),
+          )
+          as _i6.Future<String?>);
+
+  @override
+  _i6.Future<void> saveLogBimbingan(_i15.LogBimbinganModel? log) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveLogBimbingan, [log]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> updateLogBimbinganMahasiswa({
+    required String? logBimbinganUid,
+    required String? ringkasanHasil,
+    required _i15.LogBimbinganStatus? status,
+    required DateTime? waktuPengajuan,
+    _i8.File? fileFoto,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateLogBimbinganMahasiswa, [], {
+              #logBimbinganUid: logBimbinganUid,
+              #ringkasanHasil: ringkasanHasil,
+              #status: status,
+              #waktuPengajuan: waktuPengajuan,
+              #fileFoto: fileFoto,
+            }),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> updateStatusVerifikasi({
+    required String? logBimbinganUid,
+    required _i15.LogBimbinganStatus? status,
+    String? catatanDosen,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateStatusVerifikasi, [], {
+              #logBimbinganUid: logBimbinganUid,
+              #status: status,
+              #catatanDosen: catatanDosen,
+            }),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Future<List<_i15.LogBimbinganModel>> getLogBimbinganByMahasiswaUid(
+    String? mahasiswaUid,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getLogBimbinganByMahasiswaUid, [mahasiswaUid]),
+            returnValue: _i6.Future<List<_i15.LogBimbinganModel>>.value(
+              <_i15.LogBimbinganModel>[],
+            ),
+          )
+          as _i6.Future<List<_i15.LogBimbinganModel>>);
+
+  @override
+  _i6.Future<List<_i15.LogBimbinganModel>> getPendingLogsByDosenUid(
+    String? dosenUid,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getPendingLogsByDosenUid, [dosenUid]),
+            returnValue: _i6.Future<List<_i15.LogBimbinganModel>>.value(
+              <_i15.LogBimbinganModel>[],
+            ),
+          )
+          as _i6.Future<List<_i15.LogBimbinganModel>>);
+
+  @override
+  _i6.Future<List<_i15.LogBimbinganModel>> getRiwayatSpesifik(
+    String? dosenUid,
+    String? mahasiswaUid,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getRiwayatSpesifik, [dosenUid, mahasiswaUid]),
+            returnValue: _i6.Future<List<_i15.LogBimbinganModel>>.value(
+              <_i15.LogBimbinganModel>[],
+            ),
+          )
+          as _i6.Future<List<_i15.LogBimbinganModel>>);
+
+  @override
+  _i6.Future<_i15.LogBimbinganModel?> getLogBimbinganByUid(
+    String? logBimbinganUid,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getLogBimbinganByUid, [logBimbinganUid]),
+            returnValue: _i6.Future<_i15.LogBimbinganModel?>.value(),
+          )
+          as _i6.Future<_i15.LogBimbinganModel?>);
+
+  @override
+  _i6.Future<void> deleteLogBimbingan(String? logBimbinganUid) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteLogBimbingan, [logBimbinganUid]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+}
+
+/// A class which mocks [AuthUtils].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockAuthUtils extends _i1.Mock implements _i16.AuthUtils {
+  MockAuthUtils() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  bool get isLoggedIn =>
+      (super.noSuchMethod(Invocation.getter(#isLoggedIn), returnValue: false)
+          as bool);
+
+  @override
+  void printCurrentUser() => super.noSuchMethod(
+    Invocation.method(#printCurrentUser, []),
+    returnValueForMissingStub: null,
+  );
 }
 
 /// A class which mocks [FirebaseAuth].
@@ -850,7 +1209,7 @@ class MockFirebaseAuth extends _i1.Mock implements _i4.FirebaseAuth {
       (super.noSuchMethod(
             Invocation.method(#verifyPasswordResetCode, [code]),
             returnValue: _i6.Future<String>.value(
-              _i11.dummyValue<String>(
+              _i17.dummyValue<String>(
                 this,
                 Invocation.method(#verifyPasswordResetCode, [code]),
               ),
@@ -987,7 +1346,7 @@ class MockUser extends _i1.Mock implements _i4.User {
   String get uid =>
       (super.noSuchMethod(
             Invocation.getter(#uid),
-            returnValue: _i11.dummyValue<String>(this, Invocation.getter(#uid)),
+            returnValue: _i17.dummyValue<String>(this, Invocation.getter(#uid)),
           )
           as String);
 
@@ -1273,7 +1632,7 @@ class MockFirebaseFirestore extends _i1.Mock implements _i5.FirebaseFirestore {
   String get databaseId =>
       (super.noSuchMethod(
             Invocation.getter(#databaseId),
-            returnValue: _i11.dummyValue<String>(
+            returnValue: _i17.dummyValue<String>(
               this,
               Invocation.getter(#databaseId),
             ),
@@ -1348,7 +1707,7 @@ class MockFirebaseFirestore extends _i1.Mock implements _i5.FirebaseFirestore {
           as _i6.Future<void>);
 
   @override
-  _i5.LoadBundleTask loadBundle(_i12.Uint8List? bundle) =>
+  _i5.LoadBundleTask loadBundle(_i18.Uint8List? bundle) =>
       (super.noSuchMethod(
             Invocation.method(#loadBundle, [bundle]),
             returnValue: _FakeLoadBundleTask_13(
@@ -1489,8 +1848,8 @@ class MockFirebaseFirestore extends _i1.Mock implements _i5.FirebaseFirestore {
               {#timeout: timeout, #maxAttempts: maxAttempts},
             ),
             returnValue:
-                _i11.ifNotNull(
-                  _i11.dummyValueOrNull<T>(
+                _i17.ifNotNull(
+                  _i17.dummyValueOrNull<T>(
                     this,
                     Invocation.method(
                       #runTransaction,
@@ -1553,7 +1912,7 @@ class MockCollectionReference<T extends Object?> extends _i1.Mock
   String get id =>
       (super.noSuchMethod(
             Invocation.getter(#id),
-            returnValue: _i11.dummyValue<String>(this, Invocation.getter(#id)),
+            returnValue: _i17.dummyValue<String>(this, Invocation.getter(#id)),
           )
           as String);
 
@@ -1561,7 +1920,7 @@ class MockCollectionReference<T extends Object?> extends _i1.Mock
   String get path =>
       (super.noSuchMethod(
             Invocation.getter(#path),
-            returnValue: _i11.dummyValue<String>(
+            returnValue: _i17.dummyValue<String>(
               this,
               Invocation.getter(#path),
             ),
@@ -1982,7 +2341,7 @@ class MockDocumentReference<T extends Object?> extends _i1.Mock
   String get id =>
       (super.noSuchMethod(
             Invocation.getter(#id),
-            returnValue: _i11.dummyValue<String>(this, Invocation.getter(#id)),
+            returnValue: _i17.dummyValue<String>(this, Invocation.getter(#id)),
           )
           as String);
 
@@ -2001,7 +2360,7 @@ class MockDocumentReference<T extends Object?> extends _i1.Mock
   String get path =>
       (super.noSuchMethod(
             Invocation.getter(#path),
-            returnValue: _i11.dummyValue<String>(
+            returnValue: _i17.dummyValue<String>(
               this,
               Invocation.getter(#path),
             ),
@@ -2109,7 +2468,7 @@ class MockDocumentSnapshot<T extends Object?> extends _i1.Mock
   String get id =>
       (super.noSuchMethod(
             Invocation.getter(#id),
-            returnValue: _i11.dummyValue<String>(this, Invocation.getter(#id)),
+            returnValue: _i17.dummyValue<String>(this, Invocation.getter(#id)),
           )
           as String);
 
@@ -2203,7 +2562,7 @@ class MockQueryDocumentSnapshot<T extends Object?> extends _i1.Mock
   String get id =>
       (super.noSuchMethod(
             Invocation.getter(#id),
-            returnValue: _i11.dummyValue<String>(this, Invocation.getter(#id)),
+            returnValue: _i17.dummyValue<String>(this, Invocation.getter(#id)),
           )
           as String);
 
@@ -2238,7 +2597,7 @@ class MockQueryDocumentSnapshot<T extends Object?> extends _i1.Mock
   T data() =>
       (super.noSuchMethod(
             Invocation.method(#data, []),
-            returnValue: _i11.dummyValue<T>(this, Invocation.method(#data, [])),
+            returnValue: _i17.dummyValue<T>(this, Invocation.method(#data, [])),
           )
           as T);
 
@@ -2628,7 +2987,7 @@ class MockQuery<T extends Object?> extends _i1.Mock implements _i5.Query<T> {
 /// A class which mocks [ChangeNotifier].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockChangeNotifier extends _i1.Mock implements _i13.ChangeNotifier {
+class MockChangeNotifier extends _i1.Mock implements _i19.ChangeNotifier {
   MockChangeNotifier() {
     _i1.throwOnMissingStub(this);
   }
@@ -2639,13 +2998,13 @@ class MockChangeNotifier extends _i1.Mock implements _i13.ChangeNotifier {
           as bool);
 
   @override
-  void addListener(_i14.VoidCallback? listener) => super.noSuchMethod(
+  void addListener(_i20.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#addListener, [listener]),
     returnValueForMissingStub: null,
   );
 
   @override
-  void removeListener(_i14.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(_i20.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#removeListener, [listener]),
     returnValueForMissingStub: null,
   );

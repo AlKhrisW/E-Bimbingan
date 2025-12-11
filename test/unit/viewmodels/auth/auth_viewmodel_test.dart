@@ -30,18 +30,21 @@ final tAdminModel = UserModel(
 void main() {
   late MockFirebaseAuthService mockAuthService;
   late MockFirestoreService mockFirestoreService;
+  late MockUserService mockUserService;
   late AuthViewModel viewModel;
 
   // setup: dijalankan sebelum setiap tes
   setUp(() {
     mockAuthService = MockFirebaseAuthService();
     mockFirestoreService = MockFirestoreService();
+    mockUserService = MockUserService();
 
     when(tMockUser.uid).thenReturn(tUserUid);
 
     viewModel = AuthViewModel.internal(
       authService: mockAuthService,
       firestoreService: mockFirestoreService,
+      userService: mockUserService,
     );
   });
 

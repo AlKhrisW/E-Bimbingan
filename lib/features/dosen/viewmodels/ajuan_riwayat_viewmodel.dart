@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
-import 'package:ebimbingan/data/models/wrapper/helper_ajuan_bimbingan.dart'; 
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_ajuan.dart'; 
 import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 
@@ -31,6 +31,29 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  void clearData() {
+    _riwayatListSource = [];
+    _activeFilter = null;
+    _selectedMahasiswa = null;
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
   // GETTERS
   // =================================================================
@@ -50,19 +73,19 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
 
   void setFilter(AjuanStatus? status) {
     _activeFilter = status;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   Future<void> pilihMahasiswa(String mahasiswaUid) async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
-    final uid = AuthUtils.currentUid;
+    final uid = AuthUtils().currentUid;
     if (uid == null) {
       _errorMessage = "Sesi habis, silakan login ulang";
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
 
@@ -94,14 +117,42 @@ class DosenRiwayatAjuanViewModel extends ChangeNotifier {
       _errorMessage = "Gagal memuat riwayat: $e";
       _riwayatListSource = [];
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
   Future<void> refresh() async {
     if (_selectedMahasiswa != null) {
       await pilihMahasiswa(_selectedMahasiswa!.uid);
+    }
+  }
+
+  // =================================================================
+  // NEW: FETCH SINGLE DETAIL (Untuk Notifikasi)
+  // =================================================================
+  
+  /// Mengambil data lengkap (Ajuan + Mahasiswa) berdasarkan ID.
+  Future<AjuanWithMahasiswa?> getAjuanDetail(String ajuanUid) async {
+    try {
+      // 1. Ambil data Ajuan by ID
+      final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(ajuanUid);
+      
+      if (ajuan == null) return null;
+
+      // 2. Ambil data Mahasiswa
+      final mahasiswa = await _userService.fetchUserByUid(ajuan.mahasiswaUid);
+
+      // 3. Return wrapper
+      return AjuanWithMahasiswa(
+        ajuan: ajuan,
+        mahasiswa: mahasiswa,
+      );
+    } catch (e) {
+      debugPrint("Error fetching detail for notification: $e");
+      return null;
     }
   }
 }

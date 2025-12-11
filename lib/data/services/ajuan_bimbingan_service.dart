@@ -36,6 +36,39 @@ class AjuanBimbinganService {
   // READ (FUTURE / GET)
   // =================================================================
 
+  Future<List<AjuanBimbinganModel>> getJadwalDosen(String dosenUid) async {
+    try {
+      final snapshot = await _ajuanCollection
+          .where('dosenUid', isEqualTo: dosenUid)
+          .where('status', isEqualTo: 'disetujui') // Filter KHUSUS jadwal disetujui
+          .orderBy('tanggalBimbingan', descending: false) // Urutkan dari tanggal terdekat
+          .get();
+
+      return snapshot.docs.map((doc) {
+        return AjuanBimbinganModel.fromMap(doc.data()! as Map<String, dynamic>);
+      }).toList();
+    } catch (e) {
+      throw Exception('gagal mengambil jadwal dosen: ${e.toString()}');
+    }
+  }
+  
+  Future<List<AjuanBimbinganModel>> getJadwalMahasiswa(String mahasiswaUid, String dosenUid) async {
+    try {
+      final snapshot = await _ajuanCollection
+          .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+          .where('dosenUid', isEqualTo: dosenUid)
+          .where('status', isEqualTo: 'disetujui') // Filter KHUSUS jadwal disetujui
+          .orderBy('tanggalBimbingan', descending: false) // Urutkan dari tanggal terdekat
+          .get();
+
+      return snapshot.docs.map((doc) {
+        return AjuanBimbinganModel.fromMap(doc.data()! as Map<String, dynamic>);
+      }).toList();
+    } catch (e) {
+      throw Exception('gagal mengambil jadwal dosen: ${e.toString()}');
+    }
+  }
+  
   Future<List<AjuanBimbinganModel>> getAjuanByDosenUid(String dosenUid) async {
     try {
       final snapshot = await _ajuanCollection
@@ -52,10 +85,11 @@ class AjuanBimbinganService {
     }
   }
 
-  Future<List<AjuanBimbinganModel>> getAjuanByMahasiswaUid(String mahasiswaUid) async {
+  Future<List<AjuanBimbinganModel>> getAjuanByMahasiswaUid(String mahasiswaUid, String dosenUid) async {
     try {
       final snapshot = await _ajuanCollection
           .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+          .where('dosenUid', isEqualTo: dosenUid)
           .orderBy('waktuDiajukan', descending: true)
           .get();
 

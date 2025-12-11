@@ -57,7 +57,16 @@ class _DosenProfilState extends State<DosenProfil> {
           child: ProfileCardWidget(
             name: data.name,
             onEditPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => DosenEditProfil()));
+              final vm = context.read<DosenProfilViewModel>();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ChangeNotifierProvider.value(
+                    value: vm, 
+                    child: DosenEditProfil(),
+                  ),
+                ),
+              );
             },
             fields: [
               _buildField('Email', data.email),

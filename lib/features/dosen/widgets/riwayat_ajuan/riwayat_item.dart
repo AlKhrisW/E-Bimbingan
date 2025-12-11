@@ -2,12 +2,13 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
-import 'package:ebimbingan/data/models/wrapper/helper_ajuan_bimbingan.dart';
-import 'package:ebimbingan/features/dosen/views/ajuan/riwayat/riwayat_detail_screen.dart';
+import 'package:ebimbingan/data/models/wrapper/dosen_helper_ajuan.dart';
 
 class RiwayatItem extends StatelessWidget {
   final AjuanWithMahasiswa data;
-  const RiwayatItem({super.key, required this.data});
+  final VoidCallback? onTap;
+
+  const RiwayatItem({super.key, required this.data, required this.onTap});
 
   // Helper untuk Status Warna & Text
   bool get isDisetujui => data.ajuan.status == AjuanStatus.disetujui;
@@ -44,14 +45,7 @@ class RiwayatItem extends StatelessWidget {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () {            
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DosenAjuanRiwayatDetail(data: data),
-              ),
-            );
-          },
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
