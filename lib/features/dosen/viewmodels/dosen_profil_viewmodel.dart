@@ -4,10 +4,11 @@ import 'package:provider/provider.dart'; // [Wajib Import Provider]
 // Import ViewModel Fitur Dosen
 import 'package:ebimbingan/features/dosen/viewmodels/ajuan_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dashboard_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_mahasiswa_list_viewmodel.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
 
 // Import standar lainnya
 import 'package:ebimbingan/core/utils/auth_utils.dart';
@@ -40,6 +41,20 @@ class DosenProfilViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   // =================================================================
   // LOAD DATA
   // =================================================================
@@ -50,7 +65,7 @@ class DosenProfilViewModel extends ChangeNotifier {
     if (uid == null) return;
 
     _isLoading = true;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final data = await _userService.fetchUserByUid(uid);
@@ -58,8 +73,10 @@ class DosenProfilViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint("Error load dosen data: $e");
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -86,7 +103,7 @@ class DosenProfilViewModel extends ChangeNotifier {
     if (payload.isEmpty) return;
 
     _isLoading = true;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       await _userService.updateUserMetadataPartial(_dosenData!.uid, payload);
@@ -98,8 +115,10 @@ class DosenProfilViewModel extends ChangeNotifier {
       debugPrint('Error updateProfile: $e');
       rethrow;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -115,24 +134,31 @@ class DosenProfilViewModel extends ChangeNotifier {
     try {
       await _authService.signOut();
     } catch (e) {
-      await Future.delayed(const Duration(milliseconds: 500));
+      debugPrint("Error signing out: $e");
     }
   }
 
   Future<void> handleLogout(BuildContext context) async {
-    if (context.mounted) {
-      context.read<DosenAjuanViewModel>().clearData();
-      context.read<DosenBimbinganViewModel>().clearData();
-      context.read<DosenLogbookHarianViewModel>().clearData();
-      context.read<DosenMahasiswaListViewModel>().clearData();
-      context.read<DosenRiwayatAjuanViewModel>().clearData();
-      context.read<DosenRiwayatBimbinganViewModel>().clearData();
-    }
-    
+    // 1. Tangkap Navigator & Provider selagi context masih mounted
     final navigator = Navigator.of(context);
+    
+    // 2. Bersihkan ViewModel lain SEBELUM logout auth
+    if (context.mounted) {
+        context.read<DosenDashboardViewModel>().clearData();
+        context.read<DosenAjuanViewModel>().clearData();
+        context.read<DosenBimbinganViewModel>().clearData();
+        context.read<DosenLogbookHarianViewModel>().clearData();
+        context.read<DosenRiwayatAjuanViewModel>().clearData();
+        context.read<DosenRiwayatBimbinganViewModel>().clearData();
+        context.read<DosenMahasiswaListViewModel>().clearData();
+    }
 
+    await Future.delayed(const Duration(milliseconds: 250));
+
+    // 3. Lakukan Logout Auth
     await logout();
 
+    // 4. Navigasi ke Login Page
     navigator.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginPage()),
       (route) => false,

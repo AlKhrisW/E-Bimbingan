@@ -15,7 +15,7 @@ class DosenNavigationConfig {
     NavItem(
       label: 'Beranda',
       icon: Icons.home_filled,
-      screen: DosenDashboard(user: user),
+      screen: DosenDashboard(),
     ),
     NavItem(
       label: 'Ajuan',

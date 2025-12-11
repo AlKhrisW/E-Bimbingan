@@ -26,13 +26,15 @@ import 'features/notifikasi/viewmodels/notifikasi_viewmodel.dart';
 
 // Mahasiswa Viewmodels
 import 'features/mahasiswa/viewmodels/mahasiswa_viewmodel.dart';
-import 'features/mahasiswa/viewmodels/log_mingguan_viewmodel.dart';
+import 'features/mahasiswa/viewmodels/mahasiswa_dashboard_viewmodel.dart';
 import 'features/mahasiswa/viewmodels/log_harian_viewmodel.dart';
+import 'features/mahasiswa/viewmodels/log_mingguan_viewmodel.dart';
 import 'features/mahasiswa/viewmodels/ajuan_bimbingan_viewmodel.dart';
 
 // Dosen Viewmodels
 import 'features/dosen/viewmodels/ajuan_viewmodel.dart';
 import 'features/dosen/viewmodels/bimbingan_viewmodel.dart';
+import 'features/dosen/viewmodels/dashboard_viewmodel.dart';
 import 'features/dosen/viewmodels/dosen_profil_viewmodel.dart';
 import 'features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
 import 'features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
@@ -60,26 +62,28 @@ class App extends StatelessWidget {
 
         // 2. MAHASISWA VIEWMODELS
         ChangeNotifierProvider(create: (_) => MahasiswaViewModel()),
-        ChangeNotifierProvider(create: (_) => MahasiswaLogMingguanViewModel()),
+        ChangeNotifierProvider(create: (_) => MahasiswaDashboardViewModel()),
         ChangeNotifierProvider(create: (_) => MahasiswaLogHarianViewModel()),
+        ChangeNotifierProvider(create: (_) => MahasiswaLogMingguanViewModel()),
         ChangeNotifierProvider(create: (_) => MahasiswaAjuanBimbinganViewModel()),
 
         // 3. DOSEN VIEWMODELS
+        ChangeNotifierProvider(create: (_) => DosenAjuanViewModel()),
         ChangeNotifierProvider(create: (_) => DosenProfilViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenDashboardViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenBimbinganViewModel()),
+        ChangeNotifierProvider(create: (_) => DosenRiwayatAjuanViewModel()),
         ChangeNotifierProvider(create: (_) => DosenMahasiswaListViewModel()),
         ChangeNotifierProvider(create: (_) => DosenLogbookHarianViewModel()),
-        ChangeNotifierProvider(create: (_) => DosenAjuanViewModel()),
-        ChangeNotifierProvider(create: (_) => DosenRiwayatAjuanViewModel()),
-        ChangeNotifierProvider(create: (_) => DosenBimbinganViewModel()),
         ChangeNotifierProvider(create: (_) => DosenRiwayatBimbinganViewModel()),
 
         // 4. ADMIN VIEWMODELS
         ChangeNotifierProvider(create: (_) => AdminViewModel()),
         ChangeNotifierProvider(create: (_) => AdminProfileViewModel()),
-        ChangeNotifierProvider(create: (_) => AdminDashboardViewModel()),
-        ChangeNotifierProvider(create: (_) => AdminUserManagementViewModel()),
-        ChangeNotifierProvider(create: (_) => AdminDosenListViewModel()),
         ChangeNotifierProvider(create: (_) => DetailMappingViewModel()),
+        ChangeNotifierProvider(create: (_) => AdminDashboardViewModel()),
+        ChangeNotifierProvider(create: (_) => AdminDosenListViewModel()),
+        ChangeNotifierProvider(create: (_) => AdminUserManagementViewModel()),
       ],
       child: MaterialApp(
         navigatorKey: appNavigatorKey,
@@ -91,8 +95,8 @@ class App extends StatelessWidget {
           // Mahasiswa Routes
           '/mahasiswa_detail_ajuan': (context) => const MahasiswaDetailAjuanScreen(),
           '/mahasiswa_detail_log_mingguan': (context) => const DetailLogMingguanScreen(),
-          '/mahasiswa_detail_log_harian': (context) => const MahasiswaDetailLogHarianScreen(),
           '/mahasiswa_update_log_mingguan': (context) => const UpdateLogMingguanScreen(),
+          '/mahasiswa_detail_log_harian': (context) => const MahasiswaDetailLogHarianScreen(),
 
           // Dosen Routes
           // --- AJUAN BIMBINGAN ---
