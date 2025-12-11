@@ -9,6 +9,7 @@ import 'package:ebimbingan/data/services/firebase_auth_service.dart';
 import 'package:ebimbingan/data/services/notification_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 import 'package:ebimbingan/core/utils/auth_utils.dart';
+import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 
 @GenerateMocks([
   // Services
@@ -17,6 +18,7 @@ import 'package:ebimbingan/core/utils/auth_utils.dart';
   FirebaseAuthService,
   NotificationService,
   AjuanBimbinganService,
+  LogBimbinganService,
   AuthUtils,
 
   // Firebase Auth
