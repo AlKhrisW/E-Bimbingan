@@ -33,6 +33,7 @@ class FirebaseAuthService {
     String? nim,
     String? placement,
     DateTime? startDate,
+    DateTime? endDate,
     // Field Dosen
     String? nip,
     String? jabatan,
@@ -71,6 +72,7 @@ class FirebaseAuthService {
         nim: nim,
         placement: placement,
         startDate: startDate,
+        endDate: endDate,
         nip: nip,
         jabatan: jabatan,
         programStudi: programStudi,
