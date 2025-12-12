@@ -1,4 +1,5 @@
-// file: lib/core/widgets/custom_text_area.dart (contoh path)
+// lib/core/widgets/custom_text_area.dart
+
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 
@@ -10,6 +11,9 @@ class CustomTextArea extends StatelessWidget {
   final int minLines;
   final int maxLines;
 
+ 
+  final String? errorText;
+
   const CustomTextArea({
     super.key,
     required this.controller,
@@ -18,6 +22,7 @@ class CustomTextArea extends StatelessWidget {
     this.validator,
     this.minLines = 4,
     this.maxLines = 6,
+    this.errorText, // penambahan error text untuk validator dari VM
   });
 
   @override
@@ -46,6 +51,8 @@ class CustomTextArea extends StatelessWidget {
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.all(14),
+
+            // Border normal
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: AppTheme.primaryColor),
@@ -57,6 +64,18 @@ class CustomTextArea extends StatelessWidget {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+            ),
+
+            // NEW: Error border & error text
+            errorText: errorText, // ← Ini yang ditampilkan merah dari ViewModel
+            errorStyle: const TextStyle(fontSize: 12, height: 0.8),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
             ),
           ),
         ),

@@ -119,6 +119,7 @@ class LogBimbinganService {
   // READ DATA (GETTERS)
   // =================================================================
 
+  // mengambil data log bimbingan pada role mahasiswa
   Future<List<LogBimbinganModel>> getLogBimbinganByMahasiswaUid(String mahasiswaUid) async {
     try {
       final snapshot = await _logBimbinganCollection
@@ -134,6 +135,7 @@ class LogBimbinganService {
     }
   }
 
+  // mengambil data log bimbingan berstatus pending pada role dosen
   Future<List<LogBimbinganModel>> getPendingLogsByDosenUid(String dosenUid) async {
     try {
       final snapshot = await _logBimbinganCollection
@@ -150,6 +152,7 @@ class LogBimbinganService {
     }
   }
 
+  // mengambil data log bimbingan untuk riwayat spesifik antara dosen dan mahasiswa pada role dosen
   Future<List<LogBimbinganModel>> getRiwayatSpesifik(String dosenUid, String mahasiswaUid) async {
     try {
       final snapshot = await _logBimbinganCollection
@@ -166,6 +169,7 @@ class LogBimbinganService {
     }
   }
 
+  // mengambil data log bimbingan untuk fitur notifikasi
   Future<LogBimbinganModel?> getLogBimbinganByUid(String logBimbinganUid) async {
     try {
       final doc = await _logBimbinganCollection.doc(logBimbinganUid).get();
@@ -176,6 +180,27 @@ class LogBimbinganService {
       }
     } catch (e) {
       throw Exception('Gagal mengambil detail log: $e');
+    }
+  }
+
+  /// Mencari tanggal bimbingan terakhir yang statusnya APPROVED
+  Future<DateTime?> getLastApprovedDate(String mahasiswaUid, String dosenUid) async {
+    try {
+      final snapshot = await _logBimbinganCollection
+          .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+          .where('dosenUid', isEqualTo: dosenUid)
+          .where('status', isEqualTo: 'approved')
+          .orderBy('waktuPengajuan', descending: true)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        final data = snapshot.docs.first.data() as Map<String, dynamic>;
+        return (data['waktuPengajuan'] as Timestamp).toDate();
+      }
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 

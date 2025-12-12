@@ -10,6 +10,7 @@ import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 import 'package:ebimbingan/data/services/notification_service.dart';
+import 'package:ebimbingan/data/services/logbook_harian_service.dart';
 
 // Models
 import 'package:ebimbingan/data/models/user_model.dart';
@@ -22,6 +23,7 @@ class DosenBimbinganViewModel extends ChangeNotifier {
   final UserService _userService = UserService();
   final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
   final NotificationService _notifService = NotificationService();
+  final LogbookHarianService _logbookHarianService = LogbookHarianService();
 
   DosenBimbinganViewModel();
 
@@ -87,6 +89,7 @@ class DosenBimbinganViewModel extends ChangeNotifier {
         return;
       }
 
+      // Batch fetch user & ajuan details
       final mhsUids = data.map((e) => e.mahasiswaUid).toSet();
       final ajuanUids = data.map((e) => e.ajuanUid).toSet();
 
@@ -138,24 +141,18 @@ class DosenBimbinganViewModel extends ChangeNotifier {
   }
 
   // =================================================================
-  // NEW: FETCH SINGLE LOG DETAIL (Untuk Notifikasi)
+  // FETCH SINGLE LOG DETAIL
   // =================================================================
   
-  /// Mengambil data lengkap (Log + Mahasiswa + Ajuan) berdasarkan ID Log.
   Future<HelperLogBimbingan?> getLogDetail(String logUid) async {
     try {
-      // 1. Ambil data Log
       final LogBimbinganModel? log = await _logService.getLogBimbinganByUid(logUid);
       if (log == null) return null;
 
-      // 2. Ambil data Mahasiswa
       final UserModel mahasiswa = await _userService.fetchUserByUid(log.mahasiswaUid);
-
-      // 3. Ambil data Ajuan Terkait
       final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(log.ajuanUid);
       if (ajuan == null) return null;
 
-      // 4. Return wrapper
       return HelperLogBimbingan(
         log: log,
         mahasiswa: mahasiswa,
@@ -168,12 +165,15 @@ class DosenBimbinganViewModel extends ChangeNotifier {
   }
 
   // =================================================================
-  // ACTIONS
+  // ACTIONS (VERIFIKASI & TOLAK)
   // =================================================================
 
   Future<void> verifikasiLog(String logUid) async {
     try {
-      // Logic pencarian data (Safe check jika item tidak ada di list)
+      _isLoading = true;
+      _safeNotifyListeners();
+
+      // 1. Ambil data Log yang sedang diproses
       HelperLogBimbingan? targetItem;
       try {
         targetItem = _daftarLog.firstWhere((e) => e.log.logBimbinganUid == logUid);
@@ -183,26 +183,59 @@ class DosenBimbinganViewModel extends ChangeNotifier {
 
       if (targetItem == null) throw Exception("Data log tidak ditemukan");
 
+      final currentLog = targetItem.log;
+
+      // langkah verifikasi otomatis untuk log harian
+
+      // A. Cari tanggal bimbingan TERAKHIR yang sudah APPROVED
+      DateTime? lastApprovedDate = await _logService.getLastApprovedDate(
+        currentLog.mahasiswaUid, 
+        currentLog.dosenUid
+      );
+
+      // B. Tentukan Start Date
+      DateTime startDate = lastApprovedDate != null 
+          ? lastApprovedDate.add(const Duration(days: 1)) 
+          : DateTime(2020, 1, 1);
+
+      // C. Tentukan End Date (Hari bimbingan ini)
+      DateTime endDate = currentLog.waktuPengajuan;
+
+      // D. Eksekusi Batch Update
+      if (startDate.isBefore(endDate) || startDate.isAtSameMomentAs(endDate)) {
+         await _logbookHarianService.autoVerifyLogbookInRange(
+          dosenUid: currentLog.dosenUid,
+          mahasiswaUid: currentLog.mahasiswaUid,
+          startDate: startDate,
+          endDate: endDate,
+        );
+      }
+
+      // 2. Update Status Log Bimbingan
       await _logService.updateStatusVerifikasi(
         logBimbinganUid: logUid,
         status: LogBimbinganStatus.approved,
         catatanDosen: "",
       );
 
+      // 3. Kirim Notifikasi
       await _notifService.sendNotification(
-        recipientUid: targetItem.log.mahasiswaUid,
+        recipientUid: currentLog.mahasiswaUid,
         title: "Log Bimbingan Diverifikasi",
-        body: "Log tanggal ${DateFormat('dd MMM').format(targetItem.log.waktuPengajuan)} telah disetujui.",
+        body: "Log tanggal ${DateFormat('dd MMM').format(currentLog.waktuPengajuan)} dan logbook harian terkait telah disetujui.",
         type: "log_status",
         relatedId: logUid,
       );
 
-      // Refresh list jika ada
+      // 4. Refresh list jika perlu
       if (_daftarLog.isNotEmpty) {
         await _loadLogPending();
       }
+
     } catch (e) {
       _error = 'Gagal verifikasi log: $e';
+    } finally {
+      _isLoading = false; 
       _safeNotifyListeners();
     }
   }
@@ -215,6 +248,9 @@ class DosenBimbinganViewModel extends ChangeNotifier {
     }
 
     try {
+      _isLoading = true;
+      _safeNotifyListeners();
+
       HelperLogBimbingan? targetItem;
       try {
         targetItem = _daftarLog.firstWhere((e) => e.log.logBimbinganUid == logUid);
@@ -243,6 +279,8 @@ class DosenBimbinganViewModel extends ChangeNotifier {
       }
     } catch (e) {
       _error = 'Gagal menolak log: $e';
+    } finally {
+      _isLoading = false;
       _safeNotifyListeners();
     }
   }
