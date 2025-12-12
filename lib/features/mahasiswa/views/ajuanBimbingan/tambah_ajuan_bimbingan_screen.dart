@@ -1,14 +1,11 @@
+// File: features/mahasiswa/screens/mahasiswa_tambah_ajuan_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
-// Core & Themes
 import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
 import 'package:ebimbingan/core/widgets/custom_form_text_area.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
-
-// ViewModel
 import '../../viewmodels/ajuan_bimbingan_viewmodel.dart';
 import '../../widgets/success_screen.dart';
 
@@ -16,19 +13,17 @@ class MahasiswaTambahAjuanScreen extends StatefulWidget {
   const MahasiswaTambahAjuanScreen({super.key});
 
   @override
-  State<MahasiswaTambahAjuanScreen> createState() => _MahasiswaTambahAjuanScreenState();
+  State<MahasiswaTambahAjuanScreen> createState() =>
+      _MahasiswaTambahAjuanScreenState();
 }
 
-class _MahasiswaTambahAjuanScreenState extends State<MahasiswaTambahAjuanScreen> {
+class _MahasiswaTambahAjuanScreenState
+    extends State<MahasiswaTambahAjuanScreen> {
   final _formKey = GlobalKey<FormState>();
-
-  // Controllers
   late TextEditingController _topikController;
   late TextEditingController _metodeController;
-
-  // State
   DateTime _pickedTanggal = DateTime.now();
-  TimeOfDay _pickedTime = const TimeOfDay(hour: 09, minute: 00); // Default jam 9 pagi
+  TimeOfDay _pickedTime = const TimeOfDay(hour: 9, minute: 0);
   String _dosenName = "Memuat...";
 
   @override
@@ -36,15 +31,15 @@ class _MahasiswaTambahAjuanScreenState extends State<MahasiswaTambahAjuanScreen>
     super.initState();
     _topikController = TextEditingController();
     _metodeController = TextEditingController();
-    
-    // Load nama dosen via ViewModel
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchDosenInfo();
     });
   }
 
   Future<void> _fetchDosenInfo() async {
-    final name = await context.read<MahasiswaAjuanBimbinganViewModel>().getDosenNameForCurrentUser();
+    final name = await context
+        .read<MahasiswaAjuanBimbinganViewModel>()
+        .getDosenNameForCurrentUser();
     if (mounted) {
       setState(() => _dosenName = name);
     }
@@ -61,8 +56,10 @@ class _MahasiswaTambahAjuanScreenState extends State<MahasiswaTambahAjuanScreen>
   Future<void> _pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _pickedTanggal,
-      firstDate: DateTime.now(),
+      initialDate: _pickedTanggal.isBefore(DateTime.now())
+          ? DateTime.now()
+          : _pickedTanggal,
+      firstDate: DateTime.now().subtract(const Duration(days: 1)),
       lastDate: DateTime(2100),
       builder: (context, child) {
         return Theme(
@@ -73,7 +70,6 @@ class _MahasiswaTambahAjuanScreenState extends State<MahasiswaTambahAjuanScreen>
         );
       },
     );
-
     if (picked != null) {
       setState(() => _pickedTanggal = picked);
     }
@@ -93,7 +89,6 @@ class _MahasiswaTambahAjuanScreenState extends State<MahasiswaTambahAjuanScreen>
         );
       },
     );
-
     if (picked != null) {
       setState(() => _pickedTime = picked);
     }
@@ -101,9 +96,12 @@ class _MahasiswaTambahAjuanScreenState extends State<MahasiswaTambahAjuanScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Format Display
-    final dateDisplay = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(_pickedTanggal);
-    final timeDisplay = "${_pickedTime.hour.toString().padLeft(2, '0')} : ${_pickedTime.minute.toString().padLeft(2, '0')}";
+    final dateDisplay = DateFormat(
+      'EEEE, dd MMMM yyyy',
+      'id_ID',
+    ).format(_pickedTanggal);
+    final timeDisplay =
+        "${_pickedTime.hour.toString().padLeft(2, '0')}:${_pickedTime.minute.toString().padLeft(2, '0')}";
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -117,144 +115,101 @@ class _MahasiswaTambahAjuanScreenState extends State<MahasiswaTambahAjuanScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- BAGIAN 1: INFO TUJUAN ---
-                  BuildField(
-                    label: "Dosen Pembimbing",
-                    value: _dosenName,
-                  ),
-
+                  // === DOSEN PEMBIMBING ===
+                  BuildField(label: "Dosen Pembimbing", value: _dosenName),
                   const SizedBox(height: 16),
 
-                  // --- BAGIAN 2: WAKTU & TANGGAL ---
+                  // === TANGGAL & JAM ===
                   Row(
                     children: [
-                      // Kolom Tanggal
-                      Expanded(
-                        flex: 3,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Tanggal",
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(height: 6),
-                            InkWell(
-                              onTap: _pickDate,
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.grey.shade400),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.calendar_month, color: Colors.grey, size: 20),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        dateDisplay, 
-                                        style: const TextStyle(fontSize: 13),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
+                      Expanded(flex: 3, child: _buildDatePicker(dateDisplay)),
                       const SizedBox(width: 12),
-                      
-                      // Kolom Jam
-                      Expanded(
-                        flex: 2,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Jam",
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(height: 6),
-                            InkWell(
-                              onTap: _pickTime,
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.grey.shade400),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.access_time, color: Colors.grey, size: 20),
-                                    const SizedBox(width: 8),
-                                    Text(timeDisplay, style: const TextStyle(fontSize: 13)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      Expanded(flex: 2, child: _buildTimePicker(timeDisplay)),
                     ],
                   ),
-
                   const SizedBox(height: 16),
 
-                  // --- BAGIAN 3: INPUT DATA ---
+                  // === TOPIK BIMBINGAN ===
                   CustomTextArea(
                     controller: _topikController,
                     label: "Topik Bimbingan",
                     hint: "Contoh: Konsultasi Bab 2 tentang Metodologi",
                     minLines: 1,
                     maxLines: 2,
-                    validator: (v) => (v == null || v.isEmpty) ? "Topik wajib diisi" : null,
+                    errorText: vm.topikError,
                   ),
-
                   const SizedBox(height: 16),
 
+                  // === METODE BIMBINGAN ===
                   CustomTextArea(
                     controller: _metodeController,
                     label: "Rencana Metode Bimbingan",
                     hint: "Contoh: Tatap Muka di Ruang Dosen / Google Meet",
                     minLines: 2,
                     maxLines: 3,
-                    validator: (v) => (v == null || v.isEmpty) ? "Metode wajib diisi" : null,
+                    errorText: vm.metodeError,
                   ),
 
-                  const SizedBox(height: 40),
-
-                  // --- BAGIAN 4: SUBMIT ---
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  // === ERROR UMUM ===
+                  if (vm.generalError != null) ...[
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(
+                        vm.generalError!,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                      onPressed: vm.isLoading ? null : () async {
-                        if (!_formKey.currentState!.validate()) return;
+                    ),
+                  ],
 
-                        // Konversi TimeOfDay ke String format (HH:mm)
-                        final formattedTime = "${_pickedTime.hour.toString().padLeft(2, '0')}:${_pickedTime.minute.toString().padLeft(2, '0')}";
+                  const SizedBox(
+                    height: 80,
+                  ), // Memberi ruang agar tidak tertutup tombol
+                ],
+              ),
+            ),
+          );
+        },
+      ),
 
-                        // Action ViewModel
+      // TOMBOL SUBMIT DIPINDAH KE bottomNavigationBar (sesuai main terbaru)
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Consumer<MahasiswaAjuanBimbinganViewModel>(
+          builder: (context, vm, child) {
+            return SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: vm.isLoading
+                    ? null
+                    : () async {
+                        // Optional: validasi form kalau kamu pakai validator
+                        // if (!_formKey.currentState!.validate()) return;
+
+                        final formattedTime =
+                            "${_pickedTime.hour.toString().padLeft(2, '0')}:${_pickedTime.minute.toString().padLeft(2, '0')}";
+
                         final success = await vm.submitAjuan(
-                          judulTopik: _topikController.text,
-                          metodeBimbingan: _metodeController.text,
+                          judulTopik: _topikController.text.trim(),
+                          metodeBimbingan: _metodeController.text.trim(),
                           tanggalBimbingan: _pickedTanggal,
                           waktuBimbingan: formattedTime,
                         );
 
-                        if (success && context.mounted) {
+                        if (!context.mounted) return;
+
+                        if (success) {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -263,23 +218,106 @@ class _MahasiswaTambahAjuanScreenState extends State<MahasiswaTambahAjuanScreen>
                               ),
                             ),
                           );
-                        } else if (context.mounted) {
+                        } else if (vm.errorMessage != null) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(vm.errorMessage ?? "Gagal mengirim ajuan")),
+                            SnackBar(content: Text(vm.errorMessage!)),
                           );
                         }
                       },
-                      child: vm.isLoading
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text("Kirim Ajuan", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                    ),
-                  ),
-                ],
+                child: vm.isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        "Kirim Ajuan",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
+    );
+  }
+
+  // Helper Widget: Date Picker
+  Widget _buildDatePicker(String display) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Tanggal",
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 6),
+        InkWell(
+          onTap: _pickDate,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade400),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_month, color: Colors.grey, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    display,
+                    style: const TextStyle(fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Helper Widget: Time Picker
+  Widget _buildTimePicker(String display) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Jam",
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 6),
+        InkWell(
+          onTap: _pickTime,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade400),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.access_time, color: Colors.grey, size: 20),
+                const SizedBox(width: 8),
+                Text(display, style: const TextStyle(fontSize: 13)),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

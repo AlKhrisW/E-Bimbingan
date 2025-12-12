@@ -153,47 +153,63 @@ class _MahasiswaTambahLogHarianScreenState extends State<MahasiswaTambahLogHaria
                   const SizedBox(height: 40),
 
                   // --- BAGIAN 4: SUBMIT ---
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: vm.isLoading ? null : () async {
-                        if (!_formKey.currentState!.validate()) return;
-                        
-                        // Action ViewModel
-                        final success = await vm.tambahLogbook(
-                          judulTopik: _judulController.text,
-                          deskripsi: _deskripsiController.text,
-                          tanggal: _pickedTanggal,
-                        );
-
-                        if (success && context.mounted) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SuccessScreen(message: "Logbook Berhasil Disimpan"),
-                            ),
-                          );
-                        } else if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(vm.errorMessage ?? "Gagal menyimpan")),
-                          );
-                        }
-                      },
-                      child: vm.isLoading
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text("Simpan Logbook", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                    ),
-                  ),
                 ],
               ),
             ),
           );
         },
+      ),
+
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Consumer<MahasiswaLogHarianViewModel>(
+          builder: (context, vm, _) {
+            return SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: vm.isLoading ? null : () async {
+                  if (!_formKey.currentState!.validate()) return;
+
+                  // Action ViewModel
+                  final success = await vm.tambahLogbook(
+                    judulTopik: _judulController.text,
+                    deskripsi: _deskripsiController.text,
+                    tanggal: _pickedTanggal,
+                  );
+
+                  if (success && context.mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SuccessScreen(message: "Logbook Berhasil Disimpan"),
+                      ),
+                    );
+                  } else if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(vm.errorMessage ?? "Gagal menyimpan")),
+                    );
+                  }
+                },
+                child: vm.isLoading
+                    ? const SizedBox(
+                        height: 20, 
+                        width: 20, 
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Text(
+                        "Simpan Logbook", 
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
