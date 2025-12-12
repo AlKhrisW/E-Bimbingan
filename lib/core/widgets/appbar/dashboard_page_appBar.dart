@@ -6,6 +6,7 @@ class DashboardPageAppBar extends StatelessWidget implements PreferredSizeWidget
   final String placement;
   final String? photoUrl;
   final VoidCallback onNotificationTap;
+  final int notificationCount;
 
   const DashboardPageAppBar({
     super.key,
@@ -13,6 +14,7 @@ class DashboardPageAppBar extends StatelessWidget implements PreferredSizeWidget
     required this.placement,
     this.photoUrl,
     required this.onNotificationTap,
+    this.notificationCount = 0,
   });
 
   @override
@@ -76,8 +78,17 @@ class DashboardPageAppBar extends StatelessWidget implements PreferredSizeWidget
 
           // Notification button
           IconButton(
-            icon: const Icon(Icons.notifications_none),
-            color: Colors.grey.shade900,
+            icon: Badge(
+              isLabelVisible: notificationCount > 0, 
+              label: Text(
+                '$notificationCount',
+                style: const TextStyle(color: Colors.white),
+              ),
+              child: Icon(
+                Icons.notifications_none,
+                color: Colors.grey.shade900,
+              ),
+            ),
             onPressed: onNotificationTap,
           ),
         ],

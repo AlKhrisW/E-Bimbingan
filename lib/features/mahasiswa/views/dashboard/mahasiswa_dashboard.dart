@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:ebimbingan/core/widgets/appbar/dashboard_page_appBar.dart';
+import 'package:ebimbingan/core/widgets/appbar/dashboard_page_appbar.dart';
 import 'package:ebimbingan/features/notifikasi/views/notifikasi_screen.dart';
 
 // ViewModel & Widget Components

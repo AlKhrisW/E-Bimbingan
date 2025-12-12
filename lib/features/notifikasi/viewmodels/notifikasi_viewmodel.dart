@@ -34,6 +34,20 @@ class NotificationViewModel extends ChangeNotifier {
     return _notifService.getNotificationsStream(uid);
   }
 
+  /// Stream khusus untuk menghitung jumlah notifikasi yang belum dibaca (badge)
+  Stream<int> get unreadCountStream {
+    return notificationStream.map((snapshot) {
+      int count = 0;
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        if (data['is_read'] == false) {
+          count++;
+        }
+      }
+      return count;
+    });
+  }
+
   // =================================================================
   // BASIC ACTIONS
   // =================================================================
@@ -54,7 +68,7 @@ class NotificationViewModel extends ChangeNotifier {
   }
 
   // =================================================================
-  // SMART NAVIGATION LOGIC (PERBAIKAN UTAMA)
+  // SMART NAVIGATION LOGIC
   // =================================================================
 
   Future<void> handleNotificationTap(BuildContext context, NotificationModel notif) async {
