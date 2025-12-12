@@ -6,7 +6,7 @@ class LogbookHarianService {
       FirebaseFirestore.instance.collection('logbook_harian');
 
   // ----------------------------------------------------------------------
-  // create & update (c/u)
+  // create
   // ----------------------------------------------------------------------
 
   /// menyimpan logbook harian baru atau memperbarui yang sudah ada
@@ -15,6 +15,50 @@ class LogbookHarianService {
       await _logbookHarianCollection.doc(logbook.logbookHarianUid).set(logbook.toMap());
     } catch (e) {
       throw Exception('gagal menyimpan logbook harian: ${e.toString()}');
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // update - AUTO VERIFICATION
+  // ----------------------------------------------------------------------
+
+  /// Memvalidasi semua logbook harian DRAFT dalam rentang tanggal tertentu
+  Future<int> autoVerifyLogbookInRange({
+    required String mahasiswaUid,
+    required String dosenUid,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    try {
+      // 1. Normalisasi tanggal agar mencakup jam 00:00 sampai 23:59
+      final startTimestamp = Timestamp.fromDate(
+          DateTime(startDate.year, startDate.month, startDate.day));
+      final endTimestamp = Timestamp.fromDate(
+          DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59));
+
+      // 2. Query Logbook yang masih DRAFT dalam range
+      final snapshot = await _logbookHarianCollection
+          .where('dosenUid', isEqualTo: dosenUid)
+          .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+          .where('status', isEqualTo: 'draft') 
+          .where('tanggal', isGreaterThanOrEqualTo: startTimestamp)
+          .where('tanggal', isLessThanOrEqualTo: endTimestamp)
+          .get();
+
+      if (snapshot.docs.isEmpty) return 0;
+
+      // 3. Ambil List UID
+      List<String> logbookUids = snapshot.docs.map((doc) => doc.id).toList();
+
+      // 4. Batch Update
+      await batchUpdateStatus(
+        logbookUids: logbookUids, 
+        newStatus: LogbookStatus.verified
+      );
+
+      return logbookUids.length;
+    } catch (e) {
+      throw Exception('Gagal auto-verify logbook harian: ${e.toString()}');
     }
   }
 
