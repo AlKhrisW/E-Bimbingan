@@ -4,7 +4,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 
 class FirestoreService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
+
+  FirestoreService() : _firestore = FirebaseFirestore.instance;
+
+  FirestoreService.withInstance(this._firestore);
 
   // Mendapatkan metadata pengguna (role, nama, dll.) setelah login
   Future<UserModel> getUserData(String uid) async {
