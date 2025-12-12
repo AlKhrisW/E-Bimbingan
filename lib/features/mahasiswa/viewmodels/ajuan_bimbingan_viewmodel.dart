@@ -1,39 +1,34 @@
+// File: features/mahasiswa/viewmodels/mahasiswa_ajuan_bimbingan_viewmodel.dart
+
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart'; // Tambahkan untuk @visibleForTesting
 
-// Utils
 import 'package:ebimbingan/core/utils/auth_utils.dart';
-
-// Models
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/wrapper/mahasiswa_helper_ajuan.dart';
 
-// Services
 import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/notification_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
 
-// Definisikan tipe untuk ID generator
 typedef String IdGenerator();
 
 class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
-  // Field Services diubah menjadi final
+  // Services (final – dependency injection)
   final AjuanBimbinganService _ajuanService;
   final NotificationService _notifService;
   final UserService _userService;
   final AuthUtils _authUtils;
   final IdGenerator _idGenerator;
 
-  // Constructor Default (untuk kode aplikasi normal)
+  // Constructor Default
   MahasiswaAjuanBimbinganViewModel()
     : _ajuanService = AjuanBimbinganService(),
       _notifService = NotificationService(),
       _userService = UserService(),
       _authUtils = AuthUtils(),
-      // Default ID generator menggunakan Firebase
       _idGenerator = (() =>
           FirebaseFirestore.instance.collection('ajuan_bimbingan').doc().id);
 
@@ -44,7 +39,7 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     required NotificationService notifService,
     required UserService userService,
     required AuthUtils authUtils,
-    required IdGenerator idGenerator, // DI untuk ID generator
+    required IdGenerator idGenerator,
   }) : _ajuanService = ajuanService,
        _notifService = notifService,
        _userService = userService,
@@ -54,26 +49,26 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
   // =================================================================
   // STATE
   // =================================================================
-
   List<MahasiswaAjuanHelper> _allAjuans = [];
 
-  // State filter untuk widget Filter
   AjuanStatus? _activeFilter;
   AjuanStatus? get activeFilter => _activeFilter;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  // Error lama (untuk SnackBar / fallback)
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  void clearData() {
-    _allAjuans = [];
-    _activeFilter = null;
-    _isLoading = false;
-    _errorMessage = null;
-    notifyListeners();
-  }
+  // NEW: Error khusus per field (untuk ditampilkan merah di atas field)
+  String? _topikError;
+  String? _metodeError;
+  String? _generalError;
+
+  String? get topikError => _topikError;
+  String? get metodeError => _metodeError;
+  String? get generalError => _generalError;
 
   bool _isDisposed = false;
 
@@ -84,19 +79,25 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
   }
 
   void _safeNotifyListeners() {
-    if (!_isDisposed) {
-      notifyListeners();
-    }
+    if (!_isDisposed) notifyListeners();
+  }
+
+  void clearData() {
+    _allAjuans = [];
+    _activeFilter = null;
+    _isLoading = false;
+    _errorMessage = null;
+    _topikError = null;
+    _metodeError = null;
+    _generalError = null;
+    notifyListeners();
   }
 
   // =================================================================
   // GETTERS (Filtered List)
   // =================================================================
-
   List<MahasiswaAjuanHelper> get filteredAjuans {
-    if (_activeFilter == null) {
-      return _allAjuans;
-    }
+    if (_activeFilter == null) return _allAjuans;
     return _allAjuans
         .where((item) => item.ajuan.status == _activeFilter)
         .toList();
@@ -105,18 +106,15 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
   // =================================================================
   // HELPER: GET DOSEN NAME
   // =================================================================
-
   Future<String> getDosenNameForCurrentUser() async {
-    final uid = _authUtils.currentUid; // Menggunakan DI
+    final uid = _authUtils.currentUid;
     if (uid == null) return "Sesi berakhir";
 
     try {
       final mahasiswa = await _userService.fetchUserByUid(uid);
-
       if (mahasiswa.dosenUid == null || mahasiswa.dosenUid!.isEmpty) {
         return "Belum memiliki Dosen Pembimbing";
       }
-
       final dosen = await _userService.fetchUserByUid(mahasiswa.dosenUid!);
       return dosen.name;
     } catch (e) {
@@ -125,11 +123,10 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
   }
 
   // =================================================================
-  // LOAD DATA (Batch Fetching Pattern)
+  // LOAD DATA
   // =================================================================
-
   Future<void> loadAjuanData() async {
-    final uid = _authUtils.currentUid; // Menggunakan DI
+    final uid = _authUtils.currentUid;
     if (uid == null) {
       _errorMessage = "Sesi anda telah berakhir. Silakan login kembali.";
       _safeNotifyListeners();
@@ -137,49 +134,39 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     }
 
     final mahasiswa = await _userService.fetchUserByUid(uid);
-
     _isLoading = true;
     _errorMessage = null;
     _safeNotifyListeners();
 
     try {
-      // 1. Ambil Raw Data Ajuan Bimbingan
       final List<AjuanBimbinganModel> rawAjuans = await _ajuanService
           .getAjuanByMahasiswaUid(uid, mahasiswa.dosenUid!);
 
       if (rawAjuans.isEmpty) {
         _allAjuans = [];
       } else {
-        // 2. Kumpulkan ID Dosen Unik
         final Set<String> dosenUids = rawAjuans.map((e) => e.dosenUid).toSet();
 
-        // 3. Fetch Data Dosen secara Paralel
         final List<UserModel?> fetchedDosens = await Future.wait(
           dosenUids.map((id) => _userService.fetchUserByUid(id)),
         );
 
-        // 4. Buat Map Dosen agar akses cepat (O(1))
         final Map<String, UserModel> dosenMap = {
           for (var dosen in fetchedDosens)
             if (dosen != null) dosen.uid: dosen,
         };
 
-        // 5. Gabungkan Data ke Helper (Wrapping)
         final List<MahasiswaAjuanHelper> combinedData = [];
-
         for (var ajuan in rawAjuans) {
           final dosen = dosenMap[ajuan.dosenUid];
-
           if (dosen != null) {
             combinedData.add(MahasiswaAjuanHelper(ajuan: ajuan, dosen: dosen));
           }
         }
 
-        // 6. Sorting (Terbaru di atas)
         combinedData.sort(
           (a, b) => b.ajuan.waktuDiajukan.compareTo(a.ajuan.waktuDiajukan),
         );
-
         _allAjuans = combinedData;
       }
     } catch (e) {
@@ -198,23 +185,58 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     _safeNotifyListeners();
   }
 
-  Future<void> refresh() async {
-    await loadAjuanData();
-  }
+  Future<void> refresh() async => await loadAjuanData();
 
   // =================================================================
-  // ACTION: SUBMIT AJUAN
+  // SUBMIT AJUAN – DENGAN VALIDASI PER FIELD
   // =================================================================
-
   Future<bool> submitAjuan({
     required String judulTopik,
     required String metodeBimbingan,
     required String waktuBimbingan,
     required DateTime tanggalBimbingan,
   }) async {
-    final uid = _authUtils.currentUid; // Menggunakan DI
+    // Reset semua error dulu
+    _errorMessage = null;
+    _topikError = null;
+    _metodeError = null;
+    _generalError = null;
+
+    final uid = _authUtils.currentUid;
     if (uid == null) {
-      _errorMessage = "Sesi berakhir.";
+      _errorMessage = "Sesi berakhir. Silakan login kembali.";
+      _generalError = _errorMessage;
+      _safeNotifyListeners();
+      return false;
+    }
+
+    final String topikClean = judulTopik.trim();
+    final String metodeClean = metodeBimbingan.trim();
+
+    // Validasi Topik
+    if (topikClean.isEmpty) {
+      _topikError = "Topik wajib diisi.";
+    } else if (topikClean.length < 5) {
+      _topikError = "Topik minimal 5 karakter.";
+    } else if (topikClean.length > 255) {
+      _topikError = "Topik maksimal 255 karakter.";
+    } else if (!RegExp(r"^[a-zA-Z0-9\s.,\-/():]+$").hasMatch(topikClean)) {
+      _topikError =
+          "Topik mengandung karakter tidak diizinkan. Hanya huruf, angka, spasi, dan tanda baca umum (.,-/) yang diperbolehkan.";
+    }
+
+    // Validasi Metode
+    if (metodeClean.isEmpty) {
+      _metodeError = "Metode wajib diisi.";
+    } else if (metodeClean.length > 100) {
+      _metodeError = "Metode maksimal 100 karakter.";
+    } else if (!RegExp(r"^[a-zA-Z0-9\s.,\-/()]+$").hasMatch(metodeClean)) {
+      _metodeError = "Metode mengandung karakter tidak diizinkan.";
+    }
+
+    // Jika ada error di field → stop proses dan tampilkan error merah
+    if (_topikError != null || _metodeError != null) {
+      _isLoading = false;
       _safeNotifyListeners();
       return false;
     }
@@ -223,25 +245,24 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     _safeNotifyListeners();
 
     try {
-      // 1. Ambil User Profile
       final currentUser = await _userService.fetchUserByUid(uid);
       final String? dosenUidTarget = currentUser.dosenUid;
 
-      // 2. Validasi Dosen
       if (dosenUidTarget == null || dosenUidTarget.isEmpty) {
-        throw Exception("Anda belum memiliki Dosen Pembimbing.");
+        _generalError = "Anda belum memiliki Dosen Pembimbing.";
+        _isLoading = false;
+        _safeNotifyListeners();
+        return false;
       }
 
-      // 3. Generate ID Baru (Menggunakan ID Generator yang dapat di-mock)
       final newId = _idGenerator();
 
-      // 4. Buat Model
       final newAjuan = AjuanBimbinganModel(
         ajuanUid: newId,
         mahasiswaUid: uid,
         dosenUid: dosenUidTarget,
-        judulTopik: judulTopik,
-        metodeBimbingan: metodeBimbingan,
+        judulTopik: topikClean,
+        metodeBimbingan: metodeClean,
         waktuBimbingan: waktuBimbingan,
         tanggalBimbingan: tanggalBimbingan,
         status: AjuanStatus.proses,
@@ -249,10 +270,8 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
         keterangan: null,
       );
 
-      // 5. Simpan via Service
       await _ajuanService.saveAjuan(newAjuan);
 
-      // --- [BARU] KIRIM NOTIFIKASI KE DOSEN ---
       final dateStr = DateFormat('dd MMM').format(tanggalBimbingan);
       await _notifService.sendNotification(
         recipientUid: dosenUidTarget,
@@ -263,39 +282,30 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
         relatedId: newId,
       );
 
-      // 6. Reload Data
       await loadAjuanData();
       return true;
     } catch (e) {
       _errorMessage = "Gagal mengirim ajuan: $e";
-      _safeNotifyListeners();
+      _generalError = _errorMessage;
       return false;
     } finally {
       if (!_isDisposed) {
         _isLoading = false;
-        notifyListeners();
+        _safeNotifyListeners();
       }
     }
   }
 
   // =================================================================
-  // NEW: FETCH SINGLE DETAIL (Untuk Notifikasi)
+  // FETCH SINGLE DETAIL (untuk notifikasi)
   // =================================================================
-
-  /// Mengambil data lengkap (Ajuan + Dosen) berdasarkan ID Ajuan.
   Future<MahasiswaAjuanHelper?> getAjuanDetail(String ajuanUid) async {
     try {
-      // 1. Ambil data Ajuan by ID
       final AjuanBimbinganModel? ajuan = await _ajuanService.getAjuanByUid(
         ajuanUid,
       );
-
       if (ajuan == null) return null;
-
-      // 2. Ambil data Dosen berdasarkan dosenUid yang ada di ajuan
       final dosen = await _userService.fetchUserByUid(ajuan.dosenUid);
-
-      // 3. Return wrapper MahasiswaHelper
       return MahasiswaAjuanHelper(ajuan: ajuan, dosen: dosen);
     } catch (e) {
       debugPrint("Error fetching detail for notification: $e");

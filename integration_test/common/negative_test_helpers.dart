@@ -1,4 +1,5 @@
-// integration_test/common/negative_test_helpers.dart
+// File: integration_test/common/negative_test_helpers.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -8,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Navigasi ke halaman Tambah User dari Dashboard Admin
 Future<void> navigateToAddUser(WidgetTester tester) async {
+  // ... (kode navigateToAddUser tetap sama)
   // 1. Tap tab "Users"
   final usersTab = find.byIcon(Icons.manage_accounts_outlined);
   await tester.tap(usersTab);
@@ -19,18 +21,20 @@ Future<void> navigateToAddUser(WidgetTester tester) async {
   await tester.pumpAndSettle(const Duration(seconds: 1));
 
   // 3. Verifikasi sudah di halaman Tambah User
-  // ✅ FIX: Gunakan findsWidgets karena ada duplicate (AppBar + Body)
-  expect(find.text('Tambah User'), findsWidgets);
+  expect(
+    find.text('Tambah Pengguna Baru').or(find.text('Edit Pengguna')),
+    findsWidgets,
+  );
 }
 
 /// Navigasi ke Profile dan Logout
 Future<void> navigateToProfileAndLogout(WidgetTester tester) async {
+  // ... (kode navigateToProfileAndLogout tetap sama)
   // Cek apakah sudah di screen dengan BottomNavigationBar
   final profileTab = find.text('Akun');
 
   if (profileTab.evaluate().isEmpty) {
     // Jika tidak ada tab Akun, berarti masih di RegisterUserScreen
-    // Tap back button untuk kembali ke AdminUsersScreen
     final backButton = find.byType(BackButton);
     if (backButton.evaluate().isNotEmpty) {
       await tester.tap(backButton);
@@ -63,13 +67,13 @@ Future<void> navigateToProfileAndLogout(WidgetTester tester) async {
   // Verifikasi sudah di login page
   expect(
     find.text('Selamat Datang').or(find.text('Masuk ke akun Anda')),
-    findsWidgets, // ✅ Accept >= 1 widget
+    findsWidgets,
   );
 }
 
 /// Cleanup untuk negative test (tanpa logout penuh)
-/// Cukup kembali ke Users screen
 Future<void> cleanupNegativeTest(WidgetTester tester) async {
+  // ... (kode cleanupNegativeTest tetap sama)
   // Tap back button jika masih di RegisterUserScreen
   final backButton = find.byType(BackButton);
 
@@ -80,7 +84,6 @@ Future<void> cleanupNegativeTest(WidgetTester tester) async {
   }
 
   // TIDAK perlu logout, biarkan setUp() di test berikutnya yang handle
-  // Ini lebih cepat dan tidak menyebabkan "Cannot close sink" error
 }
 
 /// =============================================================
@@ -89,6 +92,7 @@ Future<void> cleanupNegativeTest(WidgetTester tester) async {
 
 /// Pilih Role dari Dropdown (Mahasiswa/Dosen/Admin)
 Future<void> selectRole(WidgetTester tester, String role) async {
+  // ... (kode selectRole tetap sama)
   // Tap dropdown role (cari by text Mahasiswa yang pertama)
   final roleDropdown = find.text('Mahasiswa').first;
   await tester.tap(roleDropdown);
@@ -105,6 +109,7 @@ Future<void> fillTextField(
   String label,
   String value,
 ) async {
+  // ... (kode fillTextField tetap sama)
   // Cari TextField yang ada di dalam TextFormField dengan cara mencari descendant
   final allFields = find.byType(TextFormField);
   bool found = false;
@@ -123,6 +128,7 @@ Future<void> fillTextField(
       final textFieldWidget = tester.widget<TextField>(textFieldFinder.first);
       final decoration = textFieldWidget.decoration as InputDecoration?;
 
+      // FIX: Gunakan labelText untuk mencari field, bukan Program Studi/Jurusan yang mungkin sudah jadi Dropdown
       if (decoration?.labelText == label) {
         await tester.ensureVisible(allFields.at(i));
         await tester.enterText(allFields.at(i), value);
@@ -147,6 +153,7 @@ Future<void> selectDropdown(
   String dropdownLabel,
   String itemValue,
 ) async {
+  // ... (kode selectDropdown tetap sama)
   // Scroll agar dropdown terlihat
   await tester.drag(
     find.byType(SingleChildScrollView).first,
@@ -154,11 +161,11 @@ Future<void> selectDropdown(
   );
   await tester.pumpAndSettle(const Duration(milliseconds: 500));
 
-  // Tap dropdown
+  // Tap dropdown (Cari label dropdown)
   final dropdown = find.text(dropdownLabel);
   expect(
     dropdown,
-    findsWidgets, // ✅ FIX: Ganti findsAtLeastOneWidget jadi findsWidgets
+    findsWidgets,
     reason: 'Dropdown "$dropdownLabel" tidak ditemukan',
   );
 
@@ -173,8 +180,9 @@ Future<void> selectDropdown(
 
 /// Pilih tanggal mulai untuk Mahasiswa
 Future<void> selectStartDate(WidgetTester tester) async {
+  // ... (kode selectStartDate tetap sama)
   // Cari tile "Tanggal Mulai Magang"
-  final dateTile = find.textContaining('Tanggal Mulai');
+  final dateTile = find.text('Tanggal Mulai Magang');
 
   if (dateTile.evaluate().isNotEmpty) {
     await tester.ensureVisible(dateTile.first);
@@ -191,21 +199,24 @@ Future<void> selectStartDate(WidgetTester tester) async {
 }
 
 /// Tap tombol Submit (Tambah User)
-/// Tap tombol Submit (Tambah User)
 Future<void> tapSubmitButton(WidgetTester tester) async {
-final submitButton = find.widgetWithText(ElevatedButton, 'Tambah User');
+  // ... (kode tapSubmitButton tetap sama)
+  final submitButton = find.widgetWithText(ElevatedButton, 'Tambah User');
 
-// Paksa scroll ke tombol submit
-await tester.dragUntilVisible(
-submitButton,
-find.byType(SingleChildScrollView).first, 
-const Offset(0.0, 100.0), // Scroll ke atas 100 unit untuk memastikan tombol dan error field terlihat
-);
-await tester.pumpAndSettle(const Duration(milliseconds: 500)); // Tambah pump settle singkat
+  // Paksa scroll ke tombol submit
+  await tester.dragUntilVisible(
+    submitButton,
+    find.byType(SingleChildScrollView).first,
+    const Offset(
+      0.0,
+      100.0,
+    ), // Scroll ke atas 100 unit untuk memastikan tombol dan error field terlihat
+  );
+  await tester.pumpAndSettle(const Duration(milliseconds: 500));
 
-await tester.ensureVisible(submitButton);
-await tester.tap(submitButton);
-await tester.pumpAndSettle(const Duration(seconds: 2)); // Kurangi waktu settle di sini
+  await tester.ensureVisible(submitButton);
+  await tester.tap(submitButton);
+  await tester.pumpAndSettle(const Duration(seconds: 2));
 }
 
 /// =============================================================
@@ -217,6 +228,7 @@ Future<void> verifyValidationError(
   WidgetTester tester,
   String expectedError,
 ) async {
+  // ... (kode verifyValidationError tetap sama)
   // Tunggu sebentar agar error muncul
   await tester.pumpAndSettle(const Duration(milliseconds: 500));
 
@@ -225,20 +237,8 @@ Future<void> verifyValidationError(
 
   expect(
     errorFinder,
-    findsWidgets, // ✅ FIX: Ganti findsAtLeastOneWidget jadi findsWidgets
+    findsWidgets,
     reason: 'Error message "$expectedError" tidak ditemukan',
-  );
-}
-
-/// Verifikasi masih di halaman yang sama (submit gagal)
-Future<void> verifyStillOnSamePage(
-  WidgetTester tester,
-  String pageTitle,
-) async {
-  expect(
-    find.text(pageTitle),
-    findsWidgets, // ✅ FIX: Ganti findsAtLeastOneWidget jadi findsWidgets
-    reason: 'Masih di halaman "$pageTitle" (submit gagal)',
   );
 }
 
@@ -247,23 +247,23 @@ Future<void> verifyErrorSnackBar(
   WidgetTester tester,
   String expectedMessage,
 ) async {
+  // ... (kode verifyErrorSnackBar tetap sama)
   await tester.pumpAndSettle(const Duration(seconds: 2));
 
   expect(
     find.textContaining(expectedMessage),
-    findsWidgets, // ✅ FIX: Ganti findsAtLeastOneWidget jadi findsWidgets
+    findsWidgets,
     reason: 'SnackBar error "$expectedMessage" tidak muncul',
   );
 }
 
 /// =============================================================
-/// ================ FINDER EXTENSIONS (REUSE) ==================
+/// ================ FINDER EXTENSIONS (PERBAIKAN) ==============
 /// =============================================================
 
+// DEFINISI FINDERX DIPINDAH KE SINI AGAR TIDAK ADA ERROR 'OR'
 extension FinderX on Finder {
-  Finder or(Finder other) {
-    return _OrFinder(this, other);
-  }
+  Finder or(Finder other) => _OrFinder(this, other);
 }
 
 class _OrFinder extends Finder {
