@@ -232,53 +232,61 @@ class _MahasiswaTambahAjuanScreenState extends State<MahasiswaTambahAjuanScreen>
                   const SizedBox(height: 40),
 
                   // --- BAGIAN 4: SUBMIT ---
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: vm.isLoading ? null : () async {
-                        if (!_formKey.currentState!.validate()) return;
-
-                        // Konversi TimeOfDay ke String format (HH:mm)
-                        final formattedTime = "${_pickedTime.hour.toString().padLeft(2, '0')}:${_pickedTime.minute.toString().padLeft(2, '0')}";
-
-                        // Action ViewModel
-                        final success = await vm.submitAjuan(
-                          judulTopik: _topikController.text,
-                          metodeBimbingan: _metodeController.text,
-                          tanggalBimbingan: _pickedTanggal,
-                          waktuBimbingan: formattedTime,
-                        );
-
-                        if (success && context.mounted) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SuccessScreen(
-                                message: "Ajuan Bimbingan Berhasil Dikirim",
-                              ),
-                            ),
-                          );
-                        } else if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(vm.errorMessage ?? "Gagal mengirim ajuan")),
-                          );
-                        }
-                      },
-                      child: vm.isLoading
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text("Kirim Ajuan", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                    ),
-                  ),
                 ],
               ),
             ),
           );
         },
+      ),
+
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Consumer<MahasiswaAjuanBimbinganViewModel>(
+          builder: (context, vm, child) {
+            return SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: vm.isLoading ? null : () async {
+                  if (!_formKey.currentState!.validate()) return;
+
+                 // Konversi TimeOfDay ke String format (HH:mm)
+                  final formattedTime = "${_pickedTime.hour.toString().padLeft(2, '0')}:${_pickedTime.minute.toString().padLeft(2, '0')}";
+
+                  // Action ViewModel 
+                  final success = await vm.submitAjuan(
+                    judulTopik: _topikController.text,
+                    metodeBimbingan: _metodeController.text,
+                    tanggalBimbingan: _pickedTanggal,
+                    waktuBimbingan: formattedTime,
+                  );
+
+                  if (success && context.mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SuccessScreen(
+                          message: "Ajuan Bimbingan Berhasil Dikirim",
+                        ),
+                      ),
+                    );
+                  } else if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(vm.errorMessage ?? "Gagal mengirim ajuan")),
+                    );
+                  }
+                },
+                child: vm.isLoading
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text("Kirim Ajuan", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
