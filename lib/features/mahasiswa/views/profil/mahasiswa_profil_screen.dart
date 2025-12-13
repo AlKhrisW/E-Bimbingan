@@ -1,12 +1,22 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/core/themes/app_theme.dart';
-import 'package:ebimbingan/core/widgets/appbar/profile_page_appbar.dart';
-import 'package:ebimbingan/features/mahasiswa/viewmodels/mahasiswa_viewmodel.dart';
-import 'package:ebimbingan/features/mahasiswa/views/profil/mahasiswa_edit_profil_screen.dart';
+
+// Import Model & Theme
+import '../../../../data/models/user_model.dart';
+import '../../../../core/themes/app_theme.dart';
+
+// Import Widget UI
+import '../../../../core/widgets/appbar/profile_page_appbar.dart';
 import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
-import 'package:ebimbingan/data/models/user_model.dart';
+import 'package:ebimbingan/core/widgets/accordion/custom_accordion.dart';
+
+// Import Widget Form
+import 'package:ebimbingan/core/widgets/accordion/accordion_update_password.dart';
+import 'package:ebimbingan/core/widgets/accordion/accordion_update_data_diri.dart';
+
+// Import ViewModel
+import '../../viewmodels/mahasiswa_viewmodel.dart';
 
 class MahasiswaProfilScreen extends StatefulWidget {
   const MahasiswaProfilScreen({super.key});
@@ -24,7 +34,7 @@ class _MahasiswaProfilScreenState extends State<MahasiswaProfilScreen> {
     });
   }
 
-  // Widget Header
+  // Widget Header: Avatar & Nama
   Widget _buildProfileHeader(UserModel data) {
     String initials = data.name.isNotEmpty ? data.name[0].toUpperCase() : 'M';
     if (data.name.split(' ').length > 1) {
@@ -72,38 +82,6 @@ class _MahasiswaProfilScreenState extends State<MahasiswaProfilScreen> {
     );
   }
 
-  // Widget Tombol Menu
-  Widget _buildMenuButton({
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8), 
-      child: SizedBox(
-        width: double.infinity,
-        height: 55,
-        child: ElevatedButton(
-          onPressed: onTap,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primaryColor,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            elevation: 0,
-          ),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,16 +91,18 @@ class _MahasiswaProfilScreenState extends State<MahasiswaProfilScreen> {
       ),
       body: Consumer<MahasiswaViewModel>(
         builder: (context, vm, child) {
-          if (vm.isLoading) {
+          // Loading State
+          if (vm.isLoading && vm.mahasiswaData == null) {
             return const Center(child: CircularProgressIndicator());
           }
+          
+          // Error/Empty State
           if (vm.mahasiswaData == null) {
             return const Center(child: Text('Data tidak ditemukan'));
           }
 
           final data = vm.mahasiswaData!;
           
-          // Format Tanggal
           final startDate = data.startDate != null 
               ? DateFormat('dd MMMM yyyy', 'id_ID').format(data.startDate!) 
               : '-';
@@ -134,110 +114,48 @@ class _MahasiswaProfilScreenState extends State<MahasiswaProfilScreen> {
             physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
-                // 1. Header Identitas Utama
+                // 1. HEADER (Identitas Utama)
                 _buildProfileHeader(data),
 
+                const SizedBox(height: 10),
+
+                // 2. ACCORDION 1: Data Akademik & Kontak (Read Only)
+                AccordionWrapper(
+                  title: "Detail Data Diri",
+                  children: [
+                    BuildField(label: 'Email', value: data.email),
+                    BuildField(label: 'Program Studi', value: data.programStudi ?? '-'),
+                    BuildField(label: 'Nomor Telepon', value: data.phoneNumber ?? '-'),
+                  ],
+                ),
+
+                // 3. ACCORDION 2: Informasi Magang (Read Only)
+                AccordionWrapper(
+                  title: "Informasi Magang",
+                  children: [
+                    BuildField(label: 'Lokasi Magang', value: data.placement ?? '-'),
+                    BuildField(label: 'Tanggal Mulai', value: startDate),
+                    BuildField(label: 'Tanggal Selesai', value: endDate),
+                  ],
+                ),
+
+                // 4. FORM UPDATE DATA DIRI (Nama & HP)
+                UpdateDataDiri(
+                  initialName: data.name,
+                  initialPhone: data.phoneNumber ?? '',
+                  onUpdate: (newName, newPhone) async {
+                    await vm.updateProfile(name: newName, phoneNumber: newPhone);
+                  },
+                ),
+
+                // 5. FORM GANTI PASSWORD
+                UpdatePassword(
+                  onChangePassword: (oldPass, newPass) async {
+                    await vm.changePassword(oldPass, newPass);
+                  },
+                ),
+                
                 const SizedBox(height: 20),
-
-                // Accordion 1: Data Akademik
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  child: Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: ExpansionTile(
-                        // Style saat tertutup (Collapsed)
-                        collapsedBackgroundColor: AppTheme.primaryColor,
-                        collapsedIconColor: Colors.white,
-                        collapsedTextColor: Colors.white,
-
-                        // Style saat terbuka (Expanded)
-                        backgroundColor: Colors.white,
-                        iconColor: AppTheme.primaryColor,
-                        textColor: AppTheme.primaryColor,
-
-                        // Bentuk Border
-                        collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(color: AppTheme.primaryColor, width: 1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        title: const Text(
-                          "Detail Data Diri",
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                        ),
-                        childrenPadding: const EdgeInsets.all(20),
-                        children: [
-                          BuildField(label: 'Program Studi', value: data.programStudi ?? '-'),
-                          BuildField(label: 'Email', value: data.email),
-                          BuildField(label: 'Nomor Telepon', value: data.phoneNumber ?? '-'),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Accordion 2: Info Magang
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  child: Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: ExpansionTile(
-                        // Style saat tertutup (Collapsed)
-                        collapsedBackgroundColor: AppTheme.primaryColor,
-                        collapsedIconColor: Colors.white,
-                        collapsedTextColor: Colors.white,
-
-                        // Style saat terbuka (Expanded)
-                        backgroundColor: Colors.white,
-                        iconColor: AppTheme.primaryColor,
-                        textColor: AppTheme.primaryColor,
-
-                        // Bentuk Border
-                        collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(color: AppTheme.primaryColor, width: 1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        title: const Text(
-                          "Informasi Magang",
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                        ),
-                        childrenPadding: const EdgeInsets.all(20),
-                        children: [
-                          BuildField(label: 'Lokasi Magang', value: data.placement ?? '-'),
-                          BuildField(label: 'Tanggal Mulai', value: startDate),
-                          BuildField(label: 'Tanggal Selesai', value: endDate),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // 4. Menu Actions
-                _buildMenuButton(
-                  title: "Update Data Diri",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => MahasiswaEditProfilScreen()),
-                    );
-                  },
-                ),
-
-                _buildMenuButton(
-                  title: "Ganti Password",
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Fitur Ganti Password akan segera hadir")),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 30),
               ],
             ),
           );

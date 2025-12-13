@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // Import ViewModel Fitur Mahasiswa
 import 'ajuan_bimbingan_viewmodel.dart';
@@ -17,6 +18,7 @@ import '../../auth/views/login_page.dart';
 class MahasiswaViewModel extends ChangeNotifier {
   final FirebaseAuthService _authService = FirebaseAuthService();
   final UserService _userService = UserService();
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   // =================================================================
   // STATE
@@ -56,7 +58,6 @@ class MahasiswaViewModel extends ChangeNotifier {
   // =================================================================
 
   Future<void> loadmahasiswaData() async {
-    // Menggunakan AuthUtils
     final uid = AuthUtils().currentUid;
     if (uid == null) return;
 
@@ -84,7 +85,6 @@ class MahasiswaViewModel extends ChangeNotifier {
   // UPDATE PROFILE
   // =================================================================
 
-  /// Update hanya Nama dan No HP (NIM dan Email dihapus sesuai permintaan)
   Future<void> updateProfile({
     String? name,
     String? phoneNumber,
@@ -123,9 +123,53 @@ class MahasiswaViewModel extends ChangeNotifier {
     }
   }
 
-  // Helper functions (NIM dan Email dihapus)
-  Future<void> updateName(String name) => updateProfile(name: name);
-  Future<void> updatePhone(String phone) => updateProfile(phoneNumber: phone);
+  // =================================================================
+  // GANTI PASSWORD (Dengan Re-Authentication)
+  // =================================================================
+
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null || user.email == null) {
+      throw 'Sesi kadaluarsa. Silakan login ulang.';
+    }
+
+    _isLoading = true;
+    _safeNotifyListeners();
+
+    try {
+      // 1. Buat Kredensial dari Password Lama
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: oldPassword,
+      );
+
+      // 2. Re-Authenticate (Wajib dilakukan sebelum ganti password)
+      await user.reauthenticateWithCredential(credential);
+
+      // 3. Update Password Baru
+      await user.updatePassword(newPassword);
+
+      debugPrint("Password berhasil diubah di Firebase Auth");
+    } on FirebaseAuthException catch (e) {
+      // Handle error spesifik Firebase agar pesan user-friendly
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        throw 'Password lama salah.';
+      } else if (e.code == 'weak-password') {
+        throw 'Password baru terlalu lemah (minimal 6 karakter).';
+      } else if (e.code == 'requires-recent-login') {
+        throw 'Demi keamanan, silakan logout dan login kembali sebelum mengganti password.';
+      } else {
+        throw 'Gagal mengganti password: ${e.message}';
+      }
+    } catch (e) {
+      throw 'Terjadi kesalahan: $e';
+    } finally {
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
+    }
+  }
 
   // =================================================================
   // LOGOUT

@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/core/themes/app_theme.dart';
-import 'package:ebimbingan/core/widgets/appbar/profile_page_appbar.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/dosen_profil_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/views/profile/dosen_edit_profil_screen.dart';
-import 'package:ebimbingan/core/widgets/custom_detail_field.dart'; 
-import 'package:ebimbingan/data/models/user_model.dart';
+
+// Import Model & Theme
+import '../../../../data/models/user_model.dart';
+import '../../../../core/themes/app_theme.dart';
+
+// Import Widget UI
+import '../../../../core/widgets/appbar/profile_page_appbar.dart';
+import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
+import 'package:ebimbingan/core/widgets/accordion/custom_accordion.dart';
+
+// Import Widget Form
+import 'package:ebimbingan/core/widgets/accordion/accordion_update_data_diri.dart';
+import 'package:ebimbingan/core/widgets/accordion/accordion_update_password.dart';
+
+// Import ViewModel
+import '../../viewmodels/dosen_profil_viewmodel.dart';
 
 class DosenProfil extends StatefulWidget {
   const DosenProfil({super.key});
@@ -18,14 +28,15 @@ class _DosenProfilState extends State<DosenProfil> {
   @override
   void initState() {
     super.initState();
+    // Load data dosen saat halaman dibuka
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DosenProfilViewModel>().loadDosenData();
     });
   }
 
-  // Widget Header
+  // Header Profil (Foto, Nama, NIP)
   Widget _buildProfileHeader(UserModel data) {
-    String initials = data.name.isNotEmpty ? data.name[0].toUpperCase() : 'U';
+    String initials = data.name.isNotEmpty ? data.name[0].toUpperCase() : 'D';
     if (data.name.split(' ').length > 1) {
       initials = data.name.split(' ').map((e) => e[0]).take(2).join('').toUpperCase();
     }
@@ -71,38 +82,6 @@ class _DosenProfilState extends State<DosenProfil> {
     );
   }
 
-  // Widget Tombol Menu
-  Widget _buildMenuButton({
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8), 
-      child: SizedBox(
-        width: double.infinity,
-        height: 55,
-        child: ElevatedButton(
-          onPressed: onTap,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primaryColor,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            elevation: 0,
-          ),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,9 +91,11 @@ class _DosenProfilState extends State<DosenProfil> {
       ),
       body: Consumer<DosenProfilViewModel>(
         builder: (context, vm, child) {
-          if (vm.isLoading) {
+          // Loading Awal (saat data null)
+          if (vm.isLoading && vm.dosenData == null) {
             return const Center(child: CircularProgressIndicator());
           }
+          
           if (vm.dosenData == null) {
             return const Center(child: Text('Data tidak ditemukan'));
           }
@@ -125,79 +106,40 @@ class _DosenProfilState extends State<DosenProfil> {
             physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
-                // 1. Header (Avatar & Nama)
+                // 1. HEADER
                 _buildProfileHeader(data),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
 
-                // 2. Accordion Data Diri
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  child: Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: ExpansionTile(
-                        // Style saat tertutup (Collapsed)
-                        collapsedBackgroundColor: AppTheme.primaryColor,
-                        collapsedIconColor: Colors.white,
-                        collapsedTextColor: Colors.white,
-                        
-                        // Style saat terbuka (Expanded)
-                        backgroundColor: Colors.white,
-                        iconColor: AppTheme.primaryColor,
-                        textColor: AppTheme.primaryColor,
-
-                        // Bentuk Border
-                        collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(color: AppTheme.primaryColor, width: 1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-
-                        title: const Text(
-                          "Detail Data Diri",
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                        ),
-                        
-                        childrenPadding: const EdgeInsets.all(20),
-                        children: [
-                          BuildField(label: 'Email', value: data.email),
-                          BuildField(label: 'Jabatan Fungsional', value: data.jabatan ?? '-'),
-                          BuildField(label: 'Nomor Telepon', value: data.phoneNumber ?? '-'),
-                        ],
-                      ),
-                    ),
-                  ),
+                // 2. READ-ONLY DATA (Jabatan, Email, Prodi)
+                AccordionWrapper(
+                  title: "Detail Data Diri",
+                  children: [
+                    BuildField(label: 'Email', value: data.email),
+                    BuildField(label: 'Jabatan Fungsional', value: data.jabatan ?? '-'),
+                    BuildField(label: 'Nomor Telepon', value: data.phoneNumber ?? '-'),
+                  ],
                 ),
 
-                // 3. Tombol Update Profil
-                _buildMenuButton(
-                  title: "Update Data Diri",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ChangeNotifierProvider.value(
-                          value: vm,
-                          child: DosenEditProfil(),
-                        ),
-                      ),
-                    );
+                // 3. FORM UPDATE DATA DIRI
+                UpdateDataDiri(
+                  initialName: data.name,
+                  initialPhone: data.phoneNumber ?? '',
+                  onUpdate: (newName, newPhone) async {
+                    // Integrasi ke ViewModel
+                    await vm.updateProfile(name: newName, phoneNumber: newPhone);
                   },
                 ),
 
-                // 4. Tombol Ganti Password
-                _buildMenuButton(
-                  title: "Ganti Password",
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Fitur Ganti Password akan segera hadir")),
-                    );
+                // 4. FORM GANTI PASSWORD
+                UpdatePassword(
+                  onChangePassword: (oldPass, newPass) async {
+                    // Integrasi ke ViewModel (akan melakukan cek password lama)
+                    await vm.changePassword(oldPass, newPass);
                   },
                 ),
                 
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
               ],
             ),
           );
