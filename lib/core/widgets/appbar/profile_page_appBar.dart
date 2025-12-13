@@ -18,7 +18,6 @@ class ProfilePageAppbar extends StatelessWidget implements PreferredSizeWidget {
       foregroundColor: Colors.black,
       centerTitle: true,
       elevation: 0,
-
       title: const Text(
         "Profil",
         style: TextStyle(
@@ -27,14 +26,33 @@ class ProfilePageAppbar extends StatelessWidget implements PreferredSizeWidget {
           color: Colors.black,
         ),
       ),
-
       actions: [
         IconButton(
           icon: const Icon(Icons.logout, color: AppTheme.primaryColor),
           onPressed: () {
             showLogoutBottomSheet(
               context: context,
-              onConfirm: () => onLogout(context),
+              onConfirm: () async {
+                // 1. Tampilkan Loading Full Screen
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  useSafeArea: false, 
+                  builder: (context) {
+                    return const Scaffold(
+                      backgroundColor: AppTheme.backgroundColor,
+                      body: Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                        ),
+                      ),
+                    );
+                  },
+                );
+
+                // 2. Eksekusi logika logout
+                await onLogout(context);
+              },
             );
           },
         ),
