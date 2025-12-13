@@ -44,23 +44,45 @@ class _MahasiswaAjuanBimbinganScreenState extends State<MahasiswaAjuanBimbinganS
         judul: "Riwayat Ajuan",
       ),
       
-      // TOMBOL TAMBAH (FAB) - Menggunakan CustomAddFab
+      // TOMBOL TAMBAH (FAB)
       floatingActionButton: Consumer<MahasiswaAjuanBimbinganViewModel>(
         builder: (context, vm, child) {
           return CustomAddFab(
             onPressed: () async {
-              final ajuanVm = context.read<MahasiswaAjuanBimbinganViewModel>();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChangeNotifierProvider.value(
-                    value: ajuanVm,
-                    child: MahasiswaTambahAjuanScreen(),
+              // 1. CEK DULU APAKAH BOLEH MENGAJUKAN (Validasi Log Mingguan)
+              final String? warningMessage = await vm.checkUntukAjuanBaru();
+              
+              if (!context.mounted) return;
+
+              // 2. JIKA ADA PESAN WARNING, TAMPILKAN DIALOG
+              if (warningMessage != null) {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text("Peringatan"),
+                    content: Text(warningMessage),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text("Mengerti", style: TextStyle(color: AppTheme.primaryColor)),
+                      ),
+                    ],
                   ),
-                ),
-              );
-              // Refresh data setelah kembali dari halaman tambah
-              vm.refresh();
+                );
+              } else {
+                // 3. JIKA NULL (AMAN), LANJUT KE HALAMAN TAMBAH
+                final ajuanVm = context.read<MahasiswaAjuanBimbinganViewModel>();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChangeNotifierProvider.value(
+                      value: ajuanVm,
+                      child: MahasiswaTambahAjuanScreen(),
+                    ),
+                  ),
+                );
+                vm.refresh();
+              }
             },
           );
         },

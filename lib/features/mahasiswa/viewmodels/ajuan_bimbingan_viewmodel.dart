@@ -8,10 +8,14 @@ import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/wrapper/mahasiswa_helper_ajuan.dart';
+// Tambahan Import Model Log
+import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 
 import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/notification_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
+// Tambahan Import Service Log
+import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 
 typedef String IdGenerator();
 
@@ -20,6 +24,8 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
   final AjuanBimbinganService _ajuanService;
   final NotificationService _notifService;
   final UserService _userService;
+  // Service baru untuk cek status log
+  final LogBimbinganService _logService; 
   final AuthUtils _authUtils;
   final IdGenerator _idGenerator;
 
@@ -28,6 +34,8 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     : _ajuanService = AjuanBimbinganService(),
       _notifService = NotificationService(),
       _userService = UserService(),
+      // Inisialisasi service log
+      _logService = LogBimbinganService(),
       _authUtils = AuthUtils(),
       _idGenerator = (() =>
           FirebaseFirestore.instance.collection('ajuan_bimbingan').doc().id);
@@ -38,11 +46,14 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     required AjuanBimbinganService ajuanService,
     required NotificationService notifService,
     required UserService userService,
+    // Tambahkan parameter logService
+    required LogBimbinganService logService, 
     required AuthUtils authUtils,
     required IdGenerator idGenerator,
   }) : _ajuanService = ajuanService,
        _notifService = notifService,
        _userService = userService,
+       _logService = logService,
        _authUtils = authUtils,
        _idGenerator = idGenerator;
 
@@ -101,6 +112,42 @@ class MahasiswaAjuanBimbinganViewModel extends ChangeNotifier {
     return _allAjuans
         .where((item) => item.ajuan.status == _activeFilter)
         .toList();
+  }
+  
+  // =================================================================
+  // MELAKUKAN PENGECEKAN UNTUK MEMBUAT AJUAN BARU
+  // =================================================================
+  Future<String?> checkUntukAjuanBaru() async {
+    final uid = _authUtils.currentUid;
+    if (uid == null) return "Sesi berakhir.";
+
+    _isLoading = true;
+    _safeNotifyListeners();
+
+    try {
+      // Mengambil status dari log terakhir mahasiswa
+      final lastStatus = await _logService.getLogStatusTerbaru(uid);
+
+      // Jika belum pernah membuat log sama sekali, berarti boleh lanjut
+      if (lastStatus == null) {
+        return null; 
+      }
+
+      // Jika status log terakhir BUKAN 'approved' tidak bisa buat ajuan baru
+      if (lastStatus != LogBimbinganStatus.approved) {
+        return "Anda belum bisa mengajukan bimbingan baru karena Log Mingguan terakhir statusnya belum disetujui (Approved). Harap selesaikan terlebih dahulu.";
+      }
+
+      // Jika Approved, lolos
+      return null;
+    } catch (e) {
+      return "Gagal memvalidasi status log: $e";
+    } finally {
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
+    }
   }
 
   // =================================================================
