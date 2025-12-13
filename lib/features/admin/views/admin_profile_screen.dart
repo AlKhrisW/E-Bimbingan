@@ -1,11 +1,10 @@
-// lib/features/admin/views/admin_profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/models/user_model.dart';
 import '../../../core/themes/app_theme.dart';
 import '../../../core/widgets/appbar/profile_page_appbar.dart';
-import '../../../core/widgets/custom_profile_card.dart';
+import 'package:ebimbingan/core/widgets/custom_detail_field.dart'; 
 import '../../auth/viewmodels/auth_viewmodel.dart';
 import '../../auth/views/login_page.dart';
 import '../viewmodels/admin_profile_viewmodel.dart';
@@ -30,7 +29,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     });
   }
 
-  // INI YANG SESUAI DENGAN ProfilePageAppbar → HARUS TERIMA BuildContext
+  // Fungsi Logout
   Future<void> _handleLogout(BuildContext context) async {
     try {
       await context.read<AuthViewModel>().logout();
@@ -51,27 +50,56 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     }
   }
 
-  Widget _buildField(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+  // Widget Header Minimalis
+  Widget _buildProfileHeader(UserModel data) {
+    String initials = data.name.isNotEmpty ? data.name[0].toUpperCase() : 'A';
+    if (data.name.split(' ').length > 1) {
+      initials = data.name.split(' ').map((e) => e[0]).take(2).join('').toUpperCase();
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 30),
+      color: Colors.white,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+            child: Text(
+              initials,
+              style: TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryColor,
+              ),
+            ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 16),
+          Text(
+            data.name,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
           Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.red[50],
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.red.shade100),
             ),
             child: Text(
-              value,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              "Administrator",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.red[700],
+              ),
             ),
           ),
         ],
@@ -83,49 +111,74 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
   Widget build(BuildContext context) {
     return Consumer<AdminProfileViewModel>(
       builder: (context, vm, child) {
-        // snackbar handler
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (vm.errorMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(vm.errorMessage!), backgroundColor: Colors.red),
-            );
-            vm.resetMessages();
-          }
-          if (vm.successMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(vm.successMessage!), backgroundColor: Colors.green),
-            );
-            vm.resetMessages();
-          }
-        });
-
         final user = vm.currentUser ?? widget.user;
 
         if (vm.isLoading) {
           return const Scaffold(
-            backgroundColor: AppTheme.backgroundColor,
+            backgroundColor: Colors.white,
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
         return Scaffold(
-          backgroundColor: AppTheme.backgroundColor,
+          backgroundColor: Colors.white, // Background bersih
           appBar: ProfilePageAppbar(
-            onLogout: _handleLogout, // SEKARANG SUDAH SESUAI: terima BuildContext
+            onLogout: _handleLogout,
           ),
-          body: ProfileCardWidget(
-            name: user.name,
-            avatarInitials: null, // otomatis ambil dari nama
-            onEditPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit profil admin belum tersedia')),
-              );
-            },
-            fields: [
-              _buildField('Email', user.email),
-              _buildField('Role', user.roleLabel),
-              _buildField('Nomor Telepon', user.phoneNumber ?? '-'),
-            ],
+          body: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                // 1. Header Identitas
+                _buildProfileHeader(user),
+                
+                const SizedBox(height: 20),
+
+                // 2. Accordion Data Diri
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: ExpansionTile(
+                        // Style saat tertutup (Collapsed)
+                        collapsedBackgroundColor: AppTheme.primaryColor,
+                        collapsedIconColor: Colors.white,
+                        collapsedTextColor: Colors.white,
+                        
+                        // Style saat terbuka (Expanded)
+                        backgroundColor: Colors.white,
+                        iconColor: AppTheme.primaryColor,
+                        textColor: AppTheme.primaryColor,
+
+                        // Bentuk Border Rounded
+                        collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(color: AppTheme.primaryColor, width: 1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+
+                        title: const Text(
+                          "Detail Informasi Admin",
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                        ),
+                        initiallyExpanded: true,
+                        
+                        childrenPadding: const EdgeInsets.all(20),
+                        children: [
+                          BuildField(label: 'Email', value: user.email),
+                          BuildField(label: 'Nomor Telepon', value: user.phoneNumber ?? '-'),
+                          BuildField(label: 'Status', value: 'Active'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 50),
+              ],
+            ),
           ),
         );
       },
