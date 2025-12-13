@@ -1,7 +1,6 @@
+// lib/features/admin/widgets/register_user_widgets/register_role_fields.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../../../data/models/user_model.dart';
-
 import '../admin_text_field.dart';
 import 'date_selection_tile.dart';
 import 'end_date_selection_tile.dart';
@@ -12,7 +11,6 @@ class RegisterRoleFields extends StatelessWidget {
   final String selectedRole;
   final bool isEditMode;
   final bool isDosenListLoading;
-
   // Mahasiswa fields
   final TextEditingController nimNipController;
   final TextEditingController placementController;
@@ -26,7 +24,6 @@ class RegisterRoleFields extends StatelessWidget {
   final void Function(DateTime?) onDateSelected;
   final void Function(DateTime?) onEndDateSelected;
   final void Function(UserModel?) onDosenChanged;
-
   // Dosen fields
   final List<String> jabatanOptions;
   final String? selectedJabatan;
@@ -59,20 +56,14 @@ class RegisterRoleFields extends StatelessWidget {
       return Column(
         children: [
           AdminTextField(
-            controller: nimNipController,
-            label: 'NIM',
-            icon: Icons.badge,
-            type: TextInputType.number,
-            enabled: true, // Selalu enable
-          ),
-          AdminTextField(
             controller: placementController,
             label: 'Penempatan Magang',
             icon: Icons.business,
           ),
+          const SizedBox(height: 16),
           DateSelectionTile(
             startDate: startDate,
-            controller: startDateTextController, // Diteruskan
+            controller: startDateTextController,
             isEnabled: true,
             onTap: () async {
               final DateTime? picked = await showDatePicker(
@@ -84,20 +75,22 @@ class RegisterRoleFields extends StatelessWidget {
               onDateSelected(picked);
             },
           ),
+          const SizedBox(height: 16),
           EndDateSelectionTile(
             endDate: endDate,
-            controller: endDateTextController, // Diteruskan
+            controller: endDateTextController,
             isEnabled: true,
             onTap: () async {
               final DateTime? picked = await showDatePicker(
                 context: context,
-                initialDate: endDate,
-                firstDate: DateTime(2023, 1),
+                initialDate: endDate ?? DateTime.now(),
+                firstDate: startDate ?? DateTime.now(),
                 lastDate: DateTime(2026, 12),
               );
               onEndDateSelected(picked);
             },
           ),
+          const SizedBox(height: 16),
           isDosenListLoading
               ? const Center(child: LinearProgressIndicator())
               : DosenDropdownField(
@@ -108,21 +101,10 @@ class RegisterRoleFields extends StatelessWidget {
         ],
       );
     } else if (selectedRole == 'Dosen') {
-      return Column(
-        children: [
-          AdminTextField(
-            controller: nimNipController,
-            label: 'NIP',
-            icon: Icons.badge,
-            type: TextInputType.number,
-            enabled: true, // Selalu enable
-          ),
-          JabatanDropdownField(
-            jabatanOptions: jabatanOptions,
-            selectedJabatan: selectedJabatan,
-            onChanged: onJabatanChanged,
-          ),
-        ],
+      return JabatanDropdownField(
+        jabatanOptions: jabatanOptions,
+        selectedJabatan: selectedJabatan,
+        onChanged: onJabatanChanged,
       );
     }
     return const SizedBox.shrink();
