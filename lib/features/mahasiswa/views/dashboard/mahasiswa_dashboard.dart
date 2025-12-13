@@ -6,6 +6,10 @@ import 'package:ebimbingan/features/notifikasi/views/notifikasi_screen.dart';
 
 // ViewModel & Widget Components
 import '../../widgets/jadwal_card.dart';
+// IMPORT WIDGET PROGRESS (Sesuaikan path folder Anda)
+import '../../widgets/dashboard/log_harian_card.dart';
+import '../../widgets/dashboard/log_mingguan_card.dart';
+
 import '../../viewmodels/mahasiswa_dashboard_viewmodel.dart';
 import 'package:ebimbingan/features/notifikasi/viewmodels/notifikasi_viewmodel.dart';
 
@@ -93,10 +97,12 @@ class _MahasiswaDashboardScreenState extends State<MahasiswaDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- Header Jadwal ---
-            Text(
+            // ===============================================
+            // JADWAL
+            // ===============================================
+            const Text(
               "Jadwal Bimbingan Aktif",
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 12),
@@ -105,12 +111,100 @@ class _MahasiswaDashboardScreenState extends State<MahasiswaDashboardScreen> {
               height: 170,
               child: _buildJadwalList(vm),
             ),
-            
-            // --- AREA UNTUK WIDGET LAIN ---
+
             const SizedBox(height: 24),
-            // Tambahkan widget lain di sini jika perlu...
+
+            // ===============================================
+            // PROGRESS CHART + PERIODE
+            // ===============================================
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Progress Magang",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                // --- TAMPILAN PERIODE ---
+                if (vm.currentUser?.startDate != null && vm.currentUser?.endDate != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade100),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today, size: 12, color: Colors.blue.shade800),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatPeriode(vm.currentUser!.startDate!, vm.currentUser!.endDate!),
+                          style: TextStyle(
+                            fontSize: 11, 
+                            color: Colors.blue.shade800, 
+                            fontWeight: FontWeight.w600
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Cek apakah tanggal magang valid
+            if (vm.totalDays == 0)
+              _buildEmptyState()
+            else
+              Column(
+                children: [
+                  HarianProgressCard(
+                    currentCount: vm.logbookFilled,
+                    totalTarget: vm.totalDays,
+                    progressPercentage: vm.logbookProgress,
+                  ),
+                  const SizedBox(height: 12),
+                  MingguanProgressCard(
+                    currentCount: vm.bimbinganFilled,
+                    totalTarget: vm.totalWeeks,
+                    progressPercentage: vm.bimbinganProgress,
+                  ),
+                ],
+              ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Helper untuk format tanggal singkat: "12/10/24 - 12/01/25"
+  String _formatPeriode(DateTime start, DateTime end) {
+    String f(int n) => n.toString().padLeft(2, '0');
+    String y(int year) => year.toString().substring(2); 
+    
+    return "${f(start.day)}/${f(start.month)}/${y(start.year)} - ${f(end.day)}/${f(end.month)}/${y(end.year)}";
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Row(
+        children: const [
+          Icon(Icons.info_outline, color: Colors.orange),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              "Periode magang belum diatur. Silakan hubungi admin.",
+              style: TextStyle(color: Colors.orange, fontSize: 13),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -140,7 +234,6 @@ class _MahasiswaDashboardScreenState extends State<MahasiswaDashboardScreen> {
       itemCount: vm.jadwalTampil.length,
       itemBuilder: (context, index) {
         final item = vm.jadwalTampil[index];
-        // Format tanggal sederhana
         final tgl = "${item.ajuan.tanggalBimbingan.day}-${item.ajuan.tanggalBimbingan.month}-${item.ajuan.tanggalBimbingan.year}";
 
         return JadwalCardWidget(

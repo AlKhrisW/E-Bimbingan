@@ -10,6 +10,9 @@ import 'package:ebimbingan/features/notifikasi/viewmodels/notifikasi_viewmodel.d
 import '../../viewmodels/dashboard_viewmodel.dart';
 import '../../widgets/jadwal_card.dart';
 
+// Import Widget Progress Card Baru (Sesuaikan path)
+import '../../widgets/dosen_mahasiswa_progress_card.dart'; 
+
 class DosenDashboard extends StatefulWidget {
   const DosenDashboard({super.key});
 
@@ -94,20 +97,74 @@ class _DosenDashboardState extends State<DosenDashboard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- Header Jadwal ---
+            // ===========================================
+            // SEKSI 1: JADWAL REMINDER (Horizontal)
+            // ===========================================
             _buildSectionHeader("Jadwal Membimbing", vm.jadwalTampil.length),
             
             const SizedBox(height: 12),
 
-            // --- List Jadwal Horizontal ---
             SizedBox(
               height: 170,
               child: _buildJadwalList(vm),
             ),
             
-            // --- AREA UNTUK WIDGET LAIN ---
             const SizedBox(height: 24),
-            // Tambahkan widget lain di sini jika perlu...
+
+            // ===========================================
+            // SEKSI 2: PROGRESS MAHASISWA (Vertical)
+            // ===========================================
+            _buildSectionHeader("Mahasiswa Bimbingan", vm.studentProgressList.length),
+            
+            const SizedBox(height: 12),
+
+            if (vm.studentProgressList.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: const Text(
+                  "Belum ada mahasiswa bimbingan yang terhubung.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
+              )
+            else
+              // ListView Vertical di dalam SingleChildScrollView
+              ListView.builder(
+                shrinkWrap: true, // PENTING: Agar tidak scroll sendiri, ikut parent
+                physics: const NeverScrollableScrollPhysics(), // Scroll pakai parent
+                itemCount: vm.studentProgressList.length,
+                itemBuilder: (context, index) {
+                  final data = vm.studentProgressList[index];
+                  
+                  // Format periode
+                  String period = "Periode belum diatur";
+                  if (data.mahasiswa.startDate != null && data.mahasiswa.endDate != null) {
+                    final start = data.mahasiswa.startDate!;
+                    final end = data.mahasiswa.endDate!;
+                    period = "${start.day}/${start.month}/${start.year} - ${end.day}/${end.month}/${end.year}";
+                  }
+
+                  return DosenMahasiswaProgressCard(
+                    studentName: data.mahasiswa.name,
+                    placement: data.mahasiswa.placement ?? "-",
+                    period: period,
+                    logbookCurrent: data.logbookFilled,
+                    logbookTarget: data.totalDays,
+                    logbookPercent: data.logbookPercent,
+                    bimbinganCurrent: data.bimbinganFilled,
+                    bimbinganTarget: data.totalWeeks,
+                    bimbinganPercent: data.bimbinganPercent,
+                  );
+                },
+              ),
+
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -130,7 +187,7 @@ class _DosenDashboardState extends State<DosenDashboard> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              "$count Sesi",
+              "$count Data",
               style: TextStyle(
                 fontSize: 12, 
                 fontWeight: FontWeight.bold,
@@ -167,7 +224,6 @@ class _DosenDashboardState extends State<DosenDashboard> {
       itemCount: vm.jadwalTampil.length,
       itemBuilder: (context, index) {
         final item = vm.jadwalTampil[index];
-        // Format tanggal sederhana
         final tgl = "${item.ajuan.tanggalBimbingan.day}-${item.ajuan.tanggalBimbingan.month}-${item.ajuan.tanggalBimbingan.year}";
 
         return DosenJadwalCard(
