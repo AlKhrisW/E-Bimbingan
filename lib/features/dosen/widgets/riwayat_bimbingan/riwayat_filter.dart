@@ -12,12 +12,11 @@ class RiwayatFilter extends StatelessWidget {
       builder: (context, vm, _) {
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
               // Bubble: SEMUA
               _buildFilterChip(
-                context, 
                 label: 'Semua', 
                 isSelected: vm.activeFilter == null,
                 onSelected: () => vm.setFilter(null),
@@ -27,7 +26,6 @@ class RiwayatFilter extends StatelessWidget {
 
               // Bubble: DISETUJUI
               _buildFilterChip(
-                context, 
                 label: 'Disetujui', 
                 isSelected: vm.activeFilter == LogBimbinganStatus.approved,
                 color: Colors.green,
@@ -38,7 +36,6 @@ class RiwayatFilter extends StatelessWidget {
 
               // Bubble: DITOLAK
               _buildFilterChip(
-                context, 
                 label: 'Ditolak', 
                 isSelected: vm.activeFilter == LogBimbinganStatus.rejected,
                 color: Colors.red,
@@ -51,19 +48,19 @@ class RiwayatFilter extends StatelessWidget {
     );
   }
 
-  Widget _buildFilterChip(
-    BuildContext context, {
+  Widget _buildFilterChip({
     required String label,
     required bool isSelected,
     required VoidCallback onSelected,
-    Color color = Colors.blue, // Default color
+    Color color = Colors.blue,
   }) {
     return ChoiceChip(
       label: Text(
         label,
         style: TextStyle(
           color: isSelected ? Colors.white : Colors.black87,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          fontSize: 13,
         ),
       ),
       selected: isSelected,
@@ -72,6 +69,7 @@ class RiwayatFilter extends StatelessWidget {
       backgroundColor: Colors.grey[200],
       side: BorderSide.none,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      showCheckmark: false,
     );
   }
 }

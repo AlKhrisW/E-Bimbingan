@@ -12,12 +12,11 @@ class LogbookFilter extends StatelessWidget {
       builder: (context, vm, _) {
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
               // Bubble: SEMUA
               _buildFilterChip(
-                context, 
                 label: 'Semua', 
                 isSelected: vm.activeFilter == null,
                 onSelected: () => vm.setFilter(null),
@@ -27,7 +26,6 @@ class LogbookFilter extends StatelessWidget {
 
               // Bubble: TERVAlIDASI
               _buildFilterChip(
-                context, 
                 label: 'Tervalidasi', 
                 isSelected: vm.activeFilter == LogbookStatus.verified,
                 color: Colors.green,
@@ -38,7 +36,6 @@ class LogbookFilter extends StatelessWidget {
 
               // Bubble: PENDING
               _buildFilterChip(
-                context, 
                 label: 'Pending', 
                 isSelected: vm.activeFilter == LogbookStatus.draft,
                 color: Colors.orange,
@@ -51,8 +48,7 @@ class LogbookFilter extends StatelessWidget {
     );
   }
 
-  Widget _buildFilterChip(
-    BuildContext context, {
+  Widget _buildFilterChip({
     required String label,
     required bool isSelected,
     required VoidCallback onSelected,
@@ -63,7 +59,8 @@ class LogbookFilter extends StatelessWidget {
         label,
         style: TextStyle(
           color: isSelected ? Colors.white : Colors.black87,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          fontSize: 13,
         ),
       ),
       selected: isSelected,
@@ -72,6 +69,7 @@ class LogbookFilter extends StatelessWidget {
       backgroundColor: Colors.grey[200],
       side: BorderSide.none,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      showCheckmark: false,
     );
   }
 }
