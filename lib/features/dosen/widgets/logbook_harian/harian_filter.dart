@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
-import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
+import 'package:ebimbingan/data/models/logbook_harian_model.dart';
+import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
 
-class RiwayatFilter extends StatelessWidget {
-  const RiwayatFilter({super.key});
+class HarianFilter extends StatelessWidget {
+  const HarianFilter({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DosenRiwayatBimbinganViewModel>(
+    return Consumer<DosenLogbookHarianViewModel>(
       builder: (context, vm, _) {
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -24,22 +24,22 @@ class RiwayatFilter extends StatelessWidget {
               
               const SizedBox(width: 8),
 
-              // Bubble: DISETUJUI
+              // Bubble: TERVAlIDASI
               _buildFilterChip(
-                label: 'Disetujui', 
-                isSelected: vm.activeFilter == LogBimbinganStatus.approved,
+                label: 'Tervalidasi', 
+                isSelected: vm.activeFilter == LogbookStatus.verified,
                 color: Colors.green,
-                onSelected: () => vm.setFilter(LogBimbinganStatus.approved),
+                onSelected: () => vm.setFilter(LogbookStatus.verified),
               ),
 
               const SizedBox(width: 8),
 
-              // Bubble: DITOLAK
+              // Bubble: PENDING
               _buildFilterChip(
-                label: 'Ditolak', 
-                isSelected: vm.activeFilter == LogBimbinganStatus.rejected,
-                color: Colors.red,
-                onSelected: () => vm.setFilter(LogBimbinganStatus.rejected),
+                label: 'Pending', 
+                isSelected: vm.activeFilter == LogbookStatus.draft,
+                color: Colors.orange,
+                onSelected: () => vm.setFilter(LogbookStatus.draft),
               ),
             ],
           ),

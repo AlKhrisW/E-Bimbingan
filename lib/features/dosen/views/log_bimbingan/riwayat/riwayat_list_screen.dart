@@ -5,8 +5,8 @@ import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart
 import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart';
 import 'package:ebimbingan/core/widgets/custom_halaman_kosong.dart';
-import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/riwayat_filter.dart';
-import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/riwayat_item.dart';
+import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/bimbingan_filter.dart';
+import 'package:ebimbingan/features/dosen/widgets/riwayat_bimbingan/bimbingan_item.dart';
 import 'riwayat_detail_screen.dart';
 
 class DosenRiwayatBimbingan extends StatefulWidget {
@@ -54,7 +54,7 @@ class _DosenRiwayatBimbinganState extends State<DosenRiwayatBimbingan> {
                   padding: EdgeInsets.all(20),
                   child: Center(child: CircularProgressIndicator()),
                 ),
-              const RiwayatFilter(),
+              const BimbinganFilter(),
               const SizedBox(height: 8),
               Expanded(
                 child: _buildListContent(vm),
@@ -94,7 +94,7 @@ class _DosenRiwayatBimbinganState extends State<DosenRiwayatBimbingan> {
         itemCount: vm.riwayatList.length,
         itemBuilder: (_, index) {
           final bimbingan = vm.riwayatList[index];
-          return RiwayatItem(
+          return BimbinganItem(
             data: bimbingan,
             onTap: () {
               final vm = context.read<DosenRiwayatBimbinganViewModel>();
