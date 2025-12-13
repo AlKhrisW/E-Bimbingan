@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 
-class MahasiswaAjuanStatus extends StatelessWidget {
+class StatusAjuan extends StatelessWidget {
   final AjuanStatus status;
 
-  const MahasiswaAjuanStatus({
+  const StatusAjuan({
     super.key,
     required this.status,
   });

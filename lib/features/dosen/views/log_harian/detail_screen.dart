@@ -1,3 +1,4 @@
+import 'package:ebimbingan/core/widgets/status_card/harian_status_badge.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -85,6 +86,12 @@ class LogbookHarianDetail extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // --- STATUS BADGE ---
+            HarianStatus(status: logbook.status),
+
+            const SizedBox(height: 20),
+
+            // --- DATA UTAMA ---
             BuildField(label: "Nama", value: mahasiswa.name),
             BuildField(label: "NIM", value: mahasiswa.nim ?? "-"),
             BuildField(label: "Program Studi", value: mahasiswa.programStudi ?? "-"),

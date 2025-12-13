@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../widgets/log_mingguan/mingguan_status_badge.dart';
+import 'package:ebimbingan/core/widgets/status_card/mingguan_status_badge.dart';
 
 // Core & Themes
 import 'package:ebimbingan/core/themes/app_theme.dart';
@@ -158,7 +158,7 @@ class _UpdateLogMingguanScreenState extends State<UpdateLogMingguanScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // --- BAGIAN 1: STATUS BADGE ---
-                  MahasiswaMingguanStatus(status: log.status),
+                  MingguanStatus(status: log.status),
             
                   const SizedBox(height: 20),
                   

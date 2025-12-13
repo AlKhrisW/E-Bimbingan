@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
 import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart';
-import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_filter.dart';
-import 'package:ebimbingan/features/dosen/widgets/logbook_harian/logbook_item.dart';
+import 'package:ebimbingan/features/dosen/widgets/logbook_harian/harian_filter.dart';
+import 'package:ebimbingan/features/dosen/widgets/logbook_harian/harian_item.dart';
 import 'package:ebimbingan/core/widgets/custom_halaman_kosong.dart';
 import 'detail_screen.dart';
 
@@ -54,7 +54,7 @@ class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
                   padding: EdgeInsets.all(20),
                   child: CircularProgressIndicator(),
                 ),
-              const LogbookFilter(),
+              const HarianFilter(),
               const SizedBox(height: 8),
               Expanded(
                 child: _buildListContent(vm),
@@ -94,7 +94,7 @@ class _DosenLogbookHarianState extends State<DosenLogbookHarian> {
         itemCount: vm.logbooks.length,
         itemBuilder: (_, index) {
           final helperItem = vm.logbooks[index];
-          return LogbookItem(
+          return HarianItem(
             logbook: helperItem.logbook, 
             onTap: () {
               final vm = context.read<DosenLogbookHarianViewModel>();

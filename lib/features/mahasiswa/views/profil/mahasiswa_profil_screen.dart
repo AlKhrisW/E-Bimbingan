@@ -1,11 +1,22 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ebimbingan/core/themes/app_theme.dart';
-import 'package:ebimbingan/core/widgets/appbar/profile_page_appBar.dart';
-import 'package:ebimbingan/core/widgets/custom_profile_card.dart';
-import 'package:ebimbingan/features/mahasiswa/viewmodels/mahasiswa_viewmodel.dart';
-import 'package:ebimbingan/features/mahasiswa/views/profil/mahasiswa_edit_profil_screen.dart';
+
+// Import Model & Theme
+import '../../../../data/models/user_model.dart';
+import '../../../../core/themes/app_theme.dart';
+
+// Import Widget UI
+import '../../../../core/widgets/appbar/profile_page_appbar.dart';
+import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
+import 'package:ebimbingan/core/widgets/accordion/custom_accordion.dart';
+
+// Import Widget Form
+import 'package:ebimbingan/core/widgets/accordion/accordion_update_password.dart';
+import 'package:ebimbingan/core/widgets/accordion/accordion_update_data_diri.dart';
+
+// Import ViewModel
+import '../../viewmodels/mahasiswa_viewmodel.dart';
 
 class MahasiswaProfilScreen extends StatefulWidget {
   const MahasiswaProfilScreen({super.key});
@@ -23,19 +34,48 @@ class _MahasiswaProfilScreenState extends State<MahasiswaProfilScreen> {
     });
   }
 
-  Widget _buildField(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+  // Widget Header: Avatar & Nama
+  Widget _buildProfileHeader(UserModel data) {
+    String initials = data.name.isNotEmpty ? data.name[0].toUpperCase() : 'M';
+    if (data.name.split(' ').length > 1) {
+      initials = data.name.split(' ').map((e) => e[0]).take(2).join('').toUpperCase();
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 30),
+      color: Colors.white,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700])),
-          const SizedBox(height: 6),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-            child: Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+            child: Text(
+              initials,
+              style: TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            data.name,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            data.nim ?? '-',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
           ),
         ],
       ),
@@ -44,34 +84,83 @@ class _MahasiswaProfilScreenState extends State<MahasiswaProfilScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<MahasiswaViewModel>(builder: (context, vm, child) {
-      if (vm.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-      if (vm.mahasiswaData == null) return const Scaffold(body: Center(child: Text('Data tidak ditemukan')));
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: ProfilePageAppbar(
+        onLogout: (ctx) => context.read<MahasiswaViewModel>().handleLogout(ctx),
+      ),
+      body: Consumer<MahasiswaViewModel>(
+        builder: (context, vm, child) {
+          // Loading State
+          if (vm.isLoading && vm.mahasiswaData == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          
+          // Error/Empty State
+          if (vm.mahasiswaData == null) {
+            return const Center(child: Text('Data tidak ditemukan'));
+          }
 
-      final data = vm.mahasiswaData!;
-      final startDate = DateFormat('dd-MM-yyyy').format(data.startDate ?? DateTime.now());
+          final data = vm.mahasiswaData!;
+          
+          final startDate = data.startDate != null 
+              ? DateFormat('dd MMMM yyyy', 'id_ID').format(data.startDate!) 
+              : '-';
+          final endDate = data.endDate != null 
+              ? DateFormat('dd MMMM yyyy', 'id_ID').format(data.endDate!) 
+              : '-';
 
-      return Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
-        appBar: ProfilePageAppbar(onLogout: vm.handleLogout),
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: ProfileCardWidget(
-            name: data.name,
-            onEditPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => MahasiswaEditProfilScreen()));
-            },
-            fields: [
-              _buildField('Email', data.email),
-              _buildField('NIM', data.nim ?? '-'),
-              _buildField('Program Studi', data.programStudi ?? '-'),
-              _buildField('Nomor Telepon', data.phoneNumber ?? '-'),
-              _buildField('Penempatan Magang', data.placement ?? '-'),
-              _buildField('Tanggal Mulai', startDate),
-            ],
-          ),
-        ),
-      );
-    });
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                // 1. HEADER (Identitas Utama)
+                _buildProfileHeader(data),
+
+                const SizedBox(height: 10),
+
+                // 2. ACCORDION 1: Data Akademik & Kontak (Read Only)
+                AccordionWrapper(
+                  title: "Detail Data Diri",
+                  children: [
+                    BuildField(label: 'Email', value: data.email),
+                    BuildField(label: 'Program Studi', value: data.programStudi ?? '-'),
+                    BuildField(label: 'Nomor Telepon', value: data.phoneNumber ?? '-'),
+                  ],
+                ),
+
+                // 3. ACCORDION 2: Informasi Magang (Read Only)
+                AccordionWrapper(
+                  title: "Informasi Magang",
+                  children: [
+                    BuildField(label: 'Lokasi Magang', value: data.placement ?? '-'),
+                    BuildField(label: 'Tanggal Mulai', value: startDate),
+                    BuildField(label: 'Tanggal Selesai', value: endDate),
+                  ],
+                ),
+
+                // 4. FORM UPDATE DATA DIRI (Nama & HP)
+                UpdateDataDiri(
+                  initialName: data.name,
+                  initialPhone: data.phoneNumber ?? '',
+                  onUpdate: (newName, newPhone) async {
+                    await vm.updateProfile(name: newName, phoneNumber: newPhone);
+                  },
+                ),
+
+                // 5. FORM GANTI PASSWORD
+                UpdatePassword(
+                  onChangePassword: (oldPass, newPass) async {
+                    await vm.changePassword(oldPass, newPass);
+                  },
+                ),
+                
+                const SizedBox(height: 20),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 }

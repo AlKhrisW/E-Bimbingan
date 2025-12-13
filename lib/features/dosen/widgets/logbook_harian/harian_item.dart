@@ -1,35 +1,37 @@
-import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:ebimbingan/data/models/logbook_harian_model.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
-import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
-import 'package:ebimbingan/data/models/wrapper/dosen_helper_mingguan.dart';
 
-class RiwayatItem extends StatelessWidget {
-  final HelperLogBimbingan data;
+class HarianItem extends StatelessWidget {
+  final LogbookHarianModel logbook;
   final VoidCallback? onTap;
 
-  const RiwayatItem({super.key, required this.data, this.onTap});
-
-  // Helper untuk Status Warna & Text
-  bool get isDisetujui => data.log.status == LogBimbinganStatus.approved;
-  bool get isDitolak => data.log.status == LogBimbinganStatus.rejected;
+  const HarianItem({super.key, required this.logbook, required this.onTap});
+  bool get isVerified => logbook.status == LogbookStatus.verified;
 
   Color get statusColor {
-    if (isDisetujui) return Colors.green;
-    if (isDitolak) return Colors.red;
-    return Colors.orange;
+    if (isVerified) {
+      return Colors.green;
+    } else {
+      return Colors.orangeAccent;
+    }
   }
 
   String get statusText {
-    if (isDisetujui) return "Disetujui";
-    if (isDitolak) return "Ditolak";
-    return "Proses";
+    if (isVerified) {
+      return "Tervalidasi";
+    } else {
+      return "Pending";
+    }
   }
 
   IconData get statusIcon {
-    if (isDisetujui) return Icons.check_circle;
-    if (isDitolak) return Icons.cancel;
-    return Icons.access_time_filled;
+    if (isVerified) {
+      return Icons.check_circle;
+    } else {
+      return Icons.schedule; 
+    }
   }
 
   @override
@@ -50,7 +52,7 @@ class RiwayatItem extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Icon Status
+                // Icon Status dalam lingkaran transparan
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -63,7 +65,7 @@ class RiwayatItem extends StatelessWidget {
                     size: 24,
                   ),
                 ),
-                
+
                 const SizedBox(width: 16),
 
                 // Konten Teks
@@ -72,7 +74,7 @@ class RiwayatItem extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        data.ajuan.judulTopik,
+                        logbook.judulTopik,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
@@ -82,13 +84,15 @@ class RiwayatItem extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        DateFormat('dd MMM yyyy • HH:mm', 'id_ID').format(data.log.waktuPengajuan),
+                        DateFormat('dd MMMM yyyy', 'id_ID').format(logbook.tanggal),
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 13,
                         ),
                       ),
+
                       const SizedBox(height: 4),
+
                       // Badge Status Kecil
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

@@ -1,3 +1,4 @@
+import 'package:ebimbingan/core/widgets/custom_badge_count.dart';
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 
@@ -6,6 +7,7 @@ class DashboardPageAppBar extends StatelessWidget implements PreferredSizeWidget
   final String placement;
   final String? photoUrl;
   final VoidCallback onNotificationTap;
+  final int notificationCount;
 
   const DashboardPageAppBar({
     super.key,
@@ -13,6 +15,7 @@ class DashboardPageAppBar extends StatelessWidget implements PreferredSizeWidget
     required this.placement,
     this.photoUrl,
     required this.onNotificationTap,
+    this.notificationCount = 0,
   });
 
   @override
@@ -76,9 +79,21 @@ class DashboardPageAppBar extends StatelessWidget implements PreferredSizeWidget
 
           // Notification button
           IconButton(
-            icon: const Icon(Icons.notifications_none),
-            color: Colors.grey.shade900,
             onPressed: onNotificationTap,
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(Icons.notifications_none, color: Colors.grey.shade900),
+                
+                Positioned(
+                  right: -7,
+                  top: -7,
+                  child: CountBadge(
+                    count: notificationCount,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

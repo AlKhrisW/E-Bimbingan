@@ -119,6 +119,18 @@ class LogBimbinganService {
   // READ DATA (GETTERS)
   // =================================================================
 
+  Stream<QuerySnapshot> getMingguanCountByMahasiswa(String mahasiswaUid) {
+    return _logBimbinganCollection
+        .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot> getMingguanCountByDosen(String dosenUid) {
+    return _logBimbinganCollection
+        .where('dosenUid', isEqualTo: dosenUid)
+        .snapshots();
+  }
+
   // mengambil data log bimbingan pada role mahasiswa
   Future<List<LogBimbinganModel>> getLogBimbinganByMahasiswaUid(String mahasiswaUid) async {
     try {
@@ -197,6 +209,28 @@ class LogBimbinganService {
       if (snapshot.docs.isNotEmpty) {
         final data = snapshot.docs.first.data() as Map<String, dynamic>;
         return (data['waktuPengajuan'] as Timestamp).toDate();
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  // mengambil status log bimbingan terbaru
+  Future<LogBimbinganStatus?> getLogStatusTerbaru(String mahasiswaUid) async {
+    try {
+      final snapshot = await _logBimbinganCollection
+          .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+          .orderBy('waktuPengajuan', descending: true)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        final data = snapshot.docs.first.data() as Map<String, dynamic>;
+        return LogBimbinganStatus.values.firstWhere(
+          (e) => e.toString().split('.').last == data['status'],
+          orElse: () => LogBimbinganStatus.draft,
+        );
       }
       return null;
     } catch (e) {
