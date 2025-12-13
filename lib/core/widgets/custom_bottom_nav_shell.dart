@@ -1,9 +1,8 @@
 // lib/core/widgets/custom_bottom_nav_shell.dart
-
 import 'package:flutter/material.dart';
 import '../themes/app_theme.dart';
 
-// Definisi Item Navigasi Universal (Fixes "NavItem isn't defined")
+// Definisi Item Navigasi Universal
 class NavItem {
   final String label;
   final IconData icon;
@@ -57,7 +56,10 @@ class _CustomBottomNavShellState extends State<CustomBottomNavShell> {
         unselectedItemColor: Colors.grey.shade500,
         backgroundColor: Colors.white,
         items: widget.navItems
-            .map((e) => BottomNavigationBarItem(icon: Icon(e.icon), label: e.label))
+            .map(
+              (e) =>
+                  BottomNavigationBarItem(icon: Icon(e.icon), label: e.label),
+            )
             .toList(),
       ),
     );
