@@ -44,7 +44,7 @@ import 'features/dosen/viewmodels/dosen_logbook_harian_viewmodel.dart';
 // Admin Viewmodels
 import 'features/admin/viewmodels/admin_viewmodel.dart';
 import 'features/admin/viewmodels/admin_profile_viewmodel.dart';
-import 'features/admin/viewmodels/admin_dashboard_viewmodel.dart';
+import 'features/admin/viewmodels/dashboard/admin_dashboard_viewmodel.dart';
 import 'features/admin/viewmodels/admin_user_management_viewmodel.dart';
 import 'features/admin/viewmodels/mapping/admin_dosen_list_vm.dart';
 import 'features/admin/viewmodels/mapping/detail_mapping_vm.dart';

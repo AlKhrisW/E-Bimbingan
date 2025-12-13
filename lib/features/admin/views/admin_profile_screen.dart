@@ -3,15 +3,20 @@ import 'package:provider/provider.dart';
 
 import '../../../data/models/user_model.dart';
 import '../../../core/themes/app_theme.dart';
-import '../../../core/widgets/appbar/profile_page_appbar.dart';
-import 'package:ebimbingan/core/widgets/custom_detail_field.dart'; 
+import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
+
 import '../../auth/viewmodels/auth_viewmodel.dart';
 import '../../auth/views/login_page.dart';
 import '../viewmodels/admin_profile_viewmodel.dart';
+import '../widgets/admin_profile_page_appbar.dart';
 
 class AdminProfileScreen extends StatefulWidget {
   final UserModel user;
-  const AdminProfileScreen({super.key, required this.user});
+
+  const AdminProfileScreen({
+    super.key,
+    required this.user,
+  });
 
   @override
   State<AdminProfileScreen> createState() => _AdminProfileScreenState();
@@ -29,32 +34,72 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     });
   }
 
-  // Fungsi Logout
   Future<void> _handleLogout(BuildContext context) async {
     try {
       await context.read<AuthViewModel>().logout();
       if (!mounted) return;
 
-      Navigator.of(context).pushAndRemoveUntil(
+      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginPage()),
         (route) => false,
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal logout: $e'),
-          backgroundColor: Colors.red,
+
+      final overlay = Overlay.of(context, rootOverlay: true);
+      late final OverlayEntry entry;
+
+      entry = OverlayEntry(
+        builder: (context) => Positioned(
+          top: MediaQuery.of(context).padding.top + 20,
+          left: 20,
+          right: 20,
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.error_outline, color: Colors.white),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Gagal logout. Silakan coba lagi.',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       );
+
+      overlay.insert(entry);
+      Future.delayed(const Duration(seconds: 3), entry.remove);
     }
   }
 
-  // Widget Header Minimalis
-  Widget _buildProfileHeader(UserModel data) {
-    String initials = data.name.isNotEmpty ? data.name[0].toUpperCase() : 'A';
-    if (data.name.split(' ').length > 1) {
-      initials = data.name.split(' ').map((e) => e[0]).take(2).join('').toUpperCase();
+  Widget _buildProfileHeader(UserModel user) {
+    String initials = user.name.isNotEmpty ? user.name[0].toUpperCase() : 'A';
+
+    final parts = user.name.split(' ');
+    if (parts.length > 1) {
+      initials = parts.take(2).map((e) => e[0]).join().toUpperCase();
     }
 
     return Container(
@@ -77,7 +122,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            data.name,
+            user.name,
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -94,7 +139,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
               border: Border.all(color: Colors.red.shade100),
             ),
             child: Text(
-              "Administrator",
+              'Administrator',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -110,7 +155,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Consumer<AdminProfileViewModel>(
-      builder: (context, vm, child) {
+      builder: (context, vm, _) {
         final user = vm.currentUser ?? widget.user;
 
         if (vm.isLoading) {
@@ -121,61 +166,64 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
         }
 
         return Scaffold(
-          backgroundColor: Colors.white, // Background bersih
-          appBar: ProfilePageAppbar(
+          backgroundColor: Colors.white,
+          appBar: AdminProfilePageAppbar(
             onLogout: _handleLogout,
           ),
           body: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
-                // 1. Header Identitas
                 _buildProfileHeader(user),
-                
                 const SizedBox(height: 20),
-
-                // 2. Accordion Data Diri
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    data: Theme.of(context).copyWith(
+                      dividerColor: Colors.transparent,
+                    ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: ExpansionTile(
-                        // Style saat tertutup (Collapsed)
                         collapsedBackgroundColor: AppTheme.primaryColor,
                         collapsedIconColor: Colors.white,
                         collapsedTextColor: Colors.white,
-                        
-                        // Style saat terbuka (Expanded)
                         backgroundColor: Colors.white,
                         iconColor: AppTheme.primaryColor,
                         textColor: AppTheme.primaryColor,
-
-                        // Bentuk Border Rounded
-                        collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+                        collapsedShape:
+                            const RoundedRectangleBorder(side: BorderSide.none),
                         shape: RoundedRectangleBorder(
-                          side: BorderSide(color: AppTheme.primaryColor, width: 1),
+                          side: BorderSide(
+                            color: AppTheme.primaryColor,
+                            width: 1,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
-
                         title: const Text(
-                          "Detail Informasi Admin",
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                          'Detail Informasi Admin',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
                         ),
                         initiallyExpanded: true,
-                        
                         childrenPadding: const EdgeInsets.all(20),
                         children: [
                           BuildField(label: 'Email', value: user.email),
-                          BuildField(label: 'Nomor Telepon', value: user.phoneNumber ?? '-'),
-                          BuildField(label: 'Status', value: 'Active'),
+                          BuildField(
+                            label: 'Nomor Telepon',
+                            value: user.phoneNumber ?? '-',
+                          ),
+                          const BuildField(
+                            label: 'Status',
+                            value: 'Active',
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 50),
               ],
             ),
