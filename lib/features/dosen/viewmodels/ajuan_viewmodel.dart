@@ -92,6 +92,37 @@ class DosenAjuanViewModel extends ChangeNotifier {
   }
 
   // =================================================================
+  // GETTERS MINGGUAN COUNT
+  // =================================================================
+  
+  Stream<QuerySnapshot> get ajuanStream {
+    final uid = AuthUtils().currentUid;
+    if (uid == null) {
+      return const Stream.empty();
+    }
+    return _ajuanService.getMingguanCountByDosen(uid);
+  }
+
+  /// Stream khusus untuk menghitung jumlah ajuan yang belum diverifikasi (badge)
+  Stream<int> get unreadCountStream {
+    return ajuanStream.map((snapshot) {
+      int count = 0;
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        
+        // Cek field 'status' sebagai String
+        final String? status = data['status']; 
+        
+        // Hitung jika statusnya 'proses'
+        if (status == 'proses') {
+          count++;
+        }
+      }
+      return count;
+    });
+  }
+
+  // =================================================================
   // LOAD DATA UTAMA (List Ajuan)
   // =================================================================
 

@@ -22,7 +22,7 @@ class NotificationService {
   // 1. INITIALIZATION
   // ========================================================================
   Future<void> initialize() async {
-    // Request Permission (Hanya untuk keperluan token FCM, tidak ada pop-up lokal)
+    // Request Permission
     await _messaging.requestPermission(alert: true, badge: true, sound: true);
 
     // Listen Token Refresh

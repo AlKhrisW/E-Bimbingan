@@ -119,6 +119,18 @@ class LogBimbinganService {
   // READ DATA (GETTERS)
   // =================================================================
 
+  Stream<QuerySnapshot> getMingguanCountByMahasiswa(String mahasiswaUid) {
+    return _logBimbinganCollection
+        .where('mahasiswaUid', isEqualTo: mahasiswaUid)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot> getMingguanCountByDosen(String dosenUid) {
+    return _logBimbinganCollection
+        .where('dosenUid', isEqualTo: dosenUid)
+        .snapshots();
+  }
+
   // mengambil data log bimbingan pada role mahasiswa
   Future<List<LogBimbinganModel>> getLogBimbinganByMahasiswaUid(String mahasiswaUid) async {
     try {

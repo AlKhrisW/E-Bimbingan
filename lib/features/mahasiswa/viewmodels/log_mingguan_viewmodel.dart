@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 // Utils
@@ -58,6 +59,37 @@ class MahasiswaLogMingguanViewModel extends ChangeNotifier {
     if (!_isDisposed) {
       notifyListeners();
     }
+  }
+
+  // =================================================================
+  // GETTERS MINGGUAN COUNT
+  // =================================================================
+  
+  Stream<QuerySnapshot> get mingguanStream {
+    final uid = AuthUtils().currentUid;
+    if (uid == null) {
+      return const Stream.empty();
+    }
+    return _logService.getMingguanCountByMahasiswa(uid);
+  }
+
+  /// Stream khusus untuk menghitung jumlah notifikasi yang belum dibaca (badge)
+  Stream<int> get unreadCountStream {
+    return mingguanStream.map((snapshot) {
+      int count = 0;
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        
+        // Cek field 'status' sebagai String
+        final String? status = data['status']; 
+        
+        // Hitung jika statusnya 'draft' atau 'rejected' (perlu revisi)
+        if (status == 'draft' || status == 'rejected') {
+          count++;
+        }
+      }
+      return count;
+    });
   }
 
   // =================================================================

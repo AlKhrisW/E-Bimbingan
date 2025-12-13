@@ -1,3 +1,4 @@
+import 'package:ebimbingan/core/widgets/custom_badge_count.dart';
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
 
@@ -78,18 +79,21 @@ class DashboardPageAppBar extends StatelessWidget implements PreferredSizeWidget
 
           // Notification button
           IconButton(
-            icon: Badge(
-              isLabelVisible: notificationCount > 0, 
-              label: Text(
-                '$notificationCount',
-                style: const TextStyle(color: Colors.white),
-              ),
-              child: Icon(
-                Icons.notifications_none,
-                color: Colors.grey.shade900,
-              ),
-            ),
             onPressed: onNotificationTap,
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(Icons.notifications_none, color: Colors.grey.shade900),
+                
+                Positioned(
+                  right: -7,
+                  top: -7,
+                  child: CountBadge(
+                    count: notificationCount,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -8,12 +8,14 @@ class NavItem {
   final String label;
   final IconData icon;
   final Widget screen;
+  final Widget? badge;
   final VoidCallback? onTap; // untuk modal/slider
 
   NavItem({
     required this.label,
     required this.icon,
     required this.screen,
+    this.badge,
     this.onTap,
   });
 }
@@ -56,9 +58,24 @@ class _CustomBottomNavShellState extends State<CustomBottomNavShell> {
         selectedItemColor: AppTheme.primaryColor,
         unselectedItemColor: Colors.grey.shade500,
         backgroundColor: Colors.white,
-        items: widget.navItems
-            .map((e) => BottomNavigationBarItem(icon: Icon(e.icon), label: e.label))
-            .toList(),
+        items: widget.navItems.map((e) {
+          return BottomNavigationBarItem(
+            icon: e.badge != null
+                ? Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Icon(e.icon),
+                      Positioned(
+                        right: -7,
+                        top: -7,
+                        child: e.badge!,
+                      ),
+                    ],
+                  )
+                : Icon(e.icon),
+            label: e.label,
+          );
+        }).toList(),
       ),
     );
   }

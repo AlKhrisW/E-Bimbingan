@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -59,6 +60,37 @@ class DosenBimbinganViewModel extends ChangeNotifier {
     if (!_isDisposed) {
       notifyListeners();
     }
+  }
+
+  // =================================================================
+  // GETTERS MINGGUAN COUNT
+  // =================================================================
+  
+  Stream<QuerySnapshot> get mingguanStream {
+    final uid = AuthUtils().currentUid;
+    if (uid == null) {
+      return const Stream.empty();
+    }
+    return _logService.getMingguanCountByDosen(uid);
+  }
+
+  /// Stream khusus untuk menghitung jumlah bimbingan yang belum diverifikasi (badge)
+  Stream<int> get unreadCountStream {
+    return mingguanStream.map((snapshot) {
+      int count = 0;
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        
+        // Cek field 'status' sebagai String
+        final String? status = data['status']; 
+        
+        // Hitung jika statusnya 'pending'
+        if (status == 'pending') {
+          count++;
+        }
+      }
+      return count;
+    });
   }
 
   // =================================================================
