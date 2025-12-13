@@ -1,12 +1,12 @@
-import 'package:ebimbingan/features/dosen/widgets/dosen_header_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ebimbingan/core/widgets/custom_halaman_kosong.dart';
+import 'package:ebimbingan/features/dosen/widgets/dosen_header_card.dart';
+import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart';
+import 'package:ebimbingan/features/dosen/widgets/riwayat_ajuan/ajuan_item.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/ajuan_riwayat_viewmodel.dart';
-import 'package:ebimbingan/features/dosen/widgets/dosen_error_state.dart';
-import 'package:ebimbingan/core/widgets/custom_halaman_kosong.dart';
-import 'package:ebimbingan/features/dosen/widgets/riwayat_ajuan/riwayat_filter.dart';
-import 'package:ebimbingan/features/dosen/widgets/riwayat_ajuan/riwayat_item.dart';
+import 'package:ebimbingan/features/dosen/widgets/riwayat_ajuan/ajuan_filter.dart';
 import 'riwayat_detail_screen.dart';
 
 class DosenRiwayatAjuan extends StatefulWidget {
@@ -54,7 +54,7 @@ class _DosenRiwayatAjuanState extends State<DosenRiwayatAjuan> {
                   padding: EdgeInsets.all(20),
                   child: Center(child: CircularProgressIndicator()),
                 ),
-              const RiwayatFilter(),
+              const AjuanFilter(),
               const SizedBox(height: 8),
               Expanded(
                 child: _buildListContent(vm),
@@ -94,7 +94,7 @@ class _DosenRiwayatAjuanState extends State<DosenRiwayatAjuan> {
         itemCount: vm.riwayatList.length,
         itemBuilder: (_, index) {
           final ajuan = vm.riwayatList[index];
-          return RiwayatItem(
+          return AjuanItem(
             data: ajuan,
             onTap: () {
               final vm = context.read<DosenRiwayatAjuanViewModel>();

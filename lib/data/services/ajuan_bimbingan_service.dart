@@ -36,6 +36,14 @@ class AjuanBimbinganService {
   // READ (FUTURE / GET)
   // =================================================================
 
+  // mengambil jumlah ajuan untuk badge
+  Stream<QuerySnapshot> getMingguanCountByDosen(String dosenUid) {
+    return _ajuanCollection
+        .where('dosenUid', isEqualTo: dosenUid)
+        .snapshots();
+  }
+
+
   Future<List<AjuanBimbinganModel>> getJadwalDosen(String dosenUid) async {
     try {
       final snapshot = await _ajuanCollection

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:ebimbingan/data/models/logbook_harian_model.dart';
 
-class MahasiswaHarianStatus extends StatelessWidget {
+class HarianStatus extends StatelessWidget {
   final LogbookStatus status;
 
-  const MahasiswaHarianStatus({
+  const HarianStatus({
     super.key,
     required this.status,
   });

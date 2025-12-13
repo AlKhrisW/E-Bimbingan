@@ -2,10 +2,10 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ebimbingan/core/themes/app_theme.dart';
-import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
 import 'package:ebimbingan/core/widgets/custom_image_preview.dart';
 import 'package:ebimbingan/data/models/wrapper/dosen_helper_mingguan.dart';
+import 'package:ebimbingan/core/widgets/status_card/mingguan_status_badge.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 import 'package:ebimbingan/features/dosen/viewmodels/bimbingan_riwayat_viewmodel.dart';
 
@@ -73,27 +73,6 @@ class DosenRiwayatBimbinganDetail extends StatelessWidget {
 
   /// WIDGET TERPISAH: UI UTAMA
   Widget _buildMainContent(HelperLogBimbingan contentData) {
-    // Pindahkan logika status ke sini menggunakan contentData lokal
-    bool isDisetujui = contentData.log.status == LogBimbinganStatus.approved;
-    bool isDitolak = contentData.log.status == LogBimbinganStatus.rejected;
-
-    Color statusColor;
-    if (isDisetujui) {
-      statusColor = Colors.green;
-    } else if (isDitolak) {
-      statusColor = Colors.red;
-    } else {
-      statusColor = Colors.orange;
-    }
-
-    String statusText;
-    if (isDisetujui) {
-      statusText = "Disetujui";
-    } else if (isDitolak) {
-      statusText = "Ditolak";
-    } else {
-      statusText = "Proses";
-    }
 
     final tanggalPengajuan = DateFormat('EEEE, dd MMMM yyyy HH:mm', 'id_ID')
         .format(contentData.log.waktuPengajuan);
@@ -109,6 +88,12 @@ class DosenRiwayatBimbinganDetail extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // --- STATUS BADGE ---
+            MingguanStatus(status: contentData.log.status),
+
+            const SizedBox(height: 20),
+
+            // --- DATA UTAMA ---
             BuildField(label: "Nama", value: contentData.mahasiswa.name),
             BuildField(label: "Tempat Penempatan", value: contentData.mahasiswa.placement ?? "-"),
             BuildField(label: "Topik Kegiatan", value: contentData.ajuan.judulTopik),
@@ -133,28 +118,7 @@ class DosenRiwayatBimbinganDetail extends StatelessWidget {
             
             ImagePreviewWidget(base64Image: contentData.log.lampiranUrl),
 
-            const SizedBox(height: 20),
-
-            Align(
-              alignment: Alignment.center,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  statusText.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
-                  ),
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 40), 
+            const SizedBox(height: 30), 
           ],
         ),
       ),

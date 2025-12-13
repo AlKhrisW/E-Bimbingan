@@ -4,7 +4,7 @@ import 'package:provider/provider.dart'; // Import Provider
 
 // Themes & Widgets
 import 'package:ebimbingan/core/themes/app_theme.dart';
-import '../../widgets/log_mingguan/mingguan_status_badge.dart';
+import 'package:ebimbingan/core/widgets/status_card/mingguan_status_badge.dart';
 import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
 import 'package:ebimbingan/core/widgets/custom_image_preview.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
@@ -91,7 +91,7 @@ class DetailLogMingguanScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // --- STATUS BADGE ---
-            MahasiswaMingguanStatus(status: log.status),
+            MingguanStatus(status: log.status),
             
             const SizedBox(height: 20),
 

@@ -8,14 +8,20 @@ import 'package:ebimbingan/core/utils/auth_utils.dart';
 import 'package:ebimbingan/data/models/user_model.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/wrapper/mahasiswa_helper_dashboard.dart';
+import 'package:ebimbingan/data/models/logbook_harian_model.dart';
+import 'package:ebimbingan/data/models/log_bimbingan_model.dart';
 
 // Services
 import 'package:ebimbingan/data/services/user_service.dart';
 import 'package:ebimbingan/data/services/ajuan_bimbingan_service.dart';
+import 'package:ebimbingan/data/services/logbook_harian_service.dart';
+import 'package:ebimbingan/data/services/log_bimbingan_service.dart';
 
 class MahasiswaDashboardViewModel extends ChangeNotifier {
   final UserService _userService = UserService();
   final AjuanBimbinganService _ajuanService = AjuanBimbinganService();
+  final LogbookHarianService _logbookService = LogbookHarianService();
+  final LogBimbinganService _logBimbinganService = LogBimbinganService();
   
   // =================================================================
   // STATE
@@ -34,11 +40,35 @@ class MahasiswaDashboardViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   Timer? _timer;
-  
   final int _defaultDurationMinutes = 60;
+
+  // --- STATE PROGRESS ---
+  int _totalDaysInternship = 0;
+  int _totalWeeksInternship = 0;
+  int _logbookFilledCount = 0;
+  int _bimbinganFilledCount = 0;
+
+  int get totalDays => _totalDaysInternship;
+  int get totalWeeks => _totalWeeksInternship;
+  int get logbookFilled => _logbookFilledCount;
+  int get bimbinganFilled => _bimbinganFilledCount;
+
+  double get logbookProgress {
+    if (_totalDaysInternship == 0) return 0.0;
+    double progress = _logbookFilledCount / _totalDaysInternship;
+    return progress > 1.0 ? 1.0 : progress; 
+  }
+
+  double get bimbinganProgress {
+    if (_totalWeeksInternship == 0) return 0.0;
+    double progress = _bimbinganFilledCount / _totalWeeksInternship;
+    return progress > 1.0 ? 1.0 : progress;
+  }
 
    void clearData() {
       _jadwalList = [];
+      _logbookFilledCount = 0;
+      _bimbinganFilledCount = 0;
       _timer?.cancel();
       _timer = null;
       _isLoading = false;
@@ -52,7 +82,6 @@ class MahasiswaDashboardViewModel extends ChangeNotifier {
 
   void init() {
     loadDashboardData();
-    // Timer berjalan setiap 1 menit untuk cek waktu (agar card hilang real-time saat lewat jam)
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       _filterJadwalTime(); 
     });
@@ -93,6 +122,11 @@ class MahasiswaDashboardViewModel extends ChangeNotifier {
       if (_isDisposed) return;
       _currentUser = await _userService.fetchUserByUid(uid);
 
+      // --- LOGIC PROGRESS ---
+      _calculateInternshipTargets();
+      await _fetchProgressCounts(uid);
+
+      // --- LOGIC JADWAL ---
       if (_currentUser?.dosenUid == null || _currentUser!.dosenUid!.isEmpty) {
         _jadwalList = [];
       } else {
@@ -114,6 +148,50 @@ class MahasiswaDashboardViewModel extends ChangeNotifier {
         _isLoading = false;
         notifyListeners();
       }
+    }
+  }
+
+  // 1. Hitung Target Hari & Minggu dari UserModel
+  void _calculateInternshipTargets() {
+    if (_currentUser?.startDate == null || _currentUser?.endDate == null) {
+      _totalDaysInternship = 0;
+      _totalWeeksInternship = 0;
+      return;
+    }
+
+    final start = _currentUser!.startDate!;
+    final end = _currentUser!.endDate!;
+    
+    // Selisih hari (+1 agar inklusif)
+    final diffDays = end.difference(start).inDays + 1;
+    
+    _totalDaysInternship = diffDays > 0 ? diffDays : 0;
+    _totalWeeksInternship = (_totalDaysInternship / 7).truncate();
+  }
+
+  // 2. Ambil Jumlah Data Real (HANYA YANG APPROVED/VERIFIED)
+  Future<void> _fetchProgressCounts(String uid) async {
+    try {
+      // Ambil semua data mentah
+      final List<LogbookHarianModel> allLogbooks = 
+          await _logbookService.getLogbookByMahasiswaUid(uid);
+      
+      final List<LogBimbinganModel> allBimbingans = 
+          await _logBimbinganService.getLogBimbinganByMahasiswaUid(uid);
+      
+      // Logbook Harian -> Harus 'verified'
+      _logbookFilledCount = allLogbooks
+          .where((log) => log.status == LogbookStatus.verified)
+          .length;
+
+      // Log Bimbingan -> Harus 'approved'
+      _bimbinganFilledCount = allBimbingans
+          .where((log) => log.status == LogBimbinganStatus.approved)
+          .length;
+
+    } catch (e) {
+      debugPrint("Gagal hitung progress: $e");
+      // Tidak throw error agar dashboard tetap jalan
     }
   }
 
@@ -173,7 +251,6 @@ class MahasiswaDashboardViewModel extends ChangeNotifier {
     final now = DateTime.now();
 
     var filtered = list.where((helper) {
-      // Cek Waktu (Card akan hilang jika waktu sekarang > waktu selesai)
       DateTime? waktuSelesai = _hitungEstimasiSelesai(
         helper.ajuan.tanggalBimbingan, 
         helper.ajuan.waktuBimbingan
@@ -205,7 +282,6 @@ class MahasiswaDashboardViewModel extends ChangeNotifier {
       final menit = int.parse(parts[1]);
 
       final waktuMulai = DateTime(tanggal.year, tanggal.month, tanggal.day, jam, menit);
-      // Tambah durasi default agar card tidak langsung hilang saat jam mulai
       return waktuMulai.add(Duration(minutes: _defaultDurationMinutes));
     } catch (e) {
       return null;

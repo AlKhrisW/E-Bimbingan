@@ -4,7 +4,7 @@ import 'package:provider/provider.dart'; // Import Provider
 
 // Themes & Widgets Universal
 import 'package:ebimbingan/core/themes/app_theme.dart';
-import '../../widgets/log_harian/harian_status_badge.dart';
+import 'package:ebimbingan/core/widgets/status_card/harian_status_badge.dart';
 import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 
@@ -93,7 +93,7 @@ class MahasiswaDetailLogHarianScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // --- STATUS BADGE ---
-            MahasiswaHarianStatus(status: log.status),
+            HarianStatus(status: log.status),
             
             const SizedBox(height: 20),
 

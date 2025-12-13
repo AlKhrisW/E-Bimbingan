@@ -8,7 +8,7 @@ import 'package:ebimbingan/core/widgets/custom_detail_field.dart';
 import 'package:ebimbingan/core/widgets/appbar/custom_universal_back_appBar.dart';
 
 // Widget Spesifik
-import '../../widgets/ajuan_bimbingan/ajuan_status_badge.dart';
+import 'package:ebimbingan/core/widgets/status_card/ajuan_status_badge.dart';
 
 // Models
 import 'package:ebimbingan/data/models/wrapper/mahasiswa_helper_ajuan.dart';
@@ -96,7 +96,7 @@ class MahasiswaDetailAjuanScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // --- STATUS BADGE ---
-            MahasiswaAjuanStatus(status: ajuan.status),
+            StatusAjuan(status: ajuan.status),
             
             const SizedBox(height: 20),
 

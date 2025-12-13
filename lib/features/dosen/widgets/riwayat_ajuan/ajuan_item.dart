@@ -4,12 +4,11 @@ import 'package:ebimbingan/core/themes/app_theme.dart';
 import 'package:ebimbingan/data/models/ajuan_bimbingan_model.dart';
 import 'package:ebimbingan/data/models/wrapper/dosen_helper_ajuan.dart';
 
-class RiwayatItem extends StatelessWidget {
+class AjuanItem extends StatelessWidget {
   final AjuanWithMahasiswa data;
   final VoidCallback? onTap;
 
-  const RiwayatItem({super.key, required this.data, required this.onTap});
-
+  const AjuanItem({super.key, required this.data, required this.onTap});
   // Helper untuk Status Warna & Text
   bool get isDisetujui => data.ajuan.status == AjuanStatus.disetujui;
   bool get isDitolak => data.ajuan.status == AjuanStatus.ditolak;
