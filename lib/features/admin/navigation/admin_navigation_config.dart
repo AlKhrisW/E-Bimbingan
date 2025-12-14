@@ -1,33 +1,36 @@
-// lib/features/admin/admin_navbar_config.dart
-
+// lib/features/admin/navigation/admin_navigation_config.dart
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/custom_bottom_nav_shell.dart';
-
-import '../views/admin_dashboard.dart';
+import '../views/dashboard/admin_dashboard_screen.dart';
 import '../views/admin_users_screen.dart';
-import '../views/mapping/admin_mapping_screen.dart';     // DIPERBAIKI: ke folder mapping
+import '../views/mapping/admin_mapping_screen.dart';
 import '../views/admin_profile_screen.dart';
-
 import '../../../../data/models/user_model.dart';
 
-List<NavItem> buildAdminNavItems(UserModel user) {
+// Tambahkan parameter callback untuk navigasi antar-tab
+List<NavItem> buildAdminNavItems(
+    UserModel user, Function(int) onNavigateToTab) {
   return [
-    NavItem(
+    NavItem( // Index 0
       label: 'Beranda',
       icon: Icons.home_filled,
-      screen: AdminDashboard(user: user),
+      // Berikan callback ke Dashboard
+      screen: AdminDashboardScreen(
+        user: user,
+        onNavigateToTab: onNavigateToTab, 
+      ),
     ),
-    NavItem(
+    NavItem( // Index 1
       label: 'Users',
       icon: Icons.manage_accounts_outlined,
       screen: AdminUsersScreen(user: user),
     ),
-    NavItem(
+    NavItem( // Index 2
       label: 'Mapping',
       icon: Icons.map_outlined,
-      screen: const AdminMappingScreen(), // tidak perlu pass user kalau tidak dipakai
+      screen: const AdminMappingScreen(),
     ),
-    NavItem(
+    NavItem( // Index 3
       label: 'Akun',
       icon: Icons.person_outline,
       screen: AdminProfileScreen(user: user),
