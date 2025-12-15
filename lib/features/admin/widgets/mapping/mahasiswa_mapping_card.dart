@@ -1,9 +1,12 @@
 // lib/features/admin/widgets/mapping/mahasiswa_mapping_card.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../../../data/models/user_model.dart';
 import '../../../../core/themes/app_theme.dart';
+import '../../../../../core/widgets/confirm_delete_dialog.dart'; // Import dialog universal
 import '../../viewmodels/mapping/detail_mapping_vm.dart';
 
 class MahasiswaMappingCard extends StatelessWidget {
@@ -19,122 +22,87 @@ class MahasiswaMappingCard extends StatelessWidget {
   });
 
   Future<void> _confirmRemove(BuildContext context) async {
-    final viewModel = Provider.of<DetailMappingViewModel>(context, listen: false);
-    final bool? result = await showDialog<bool>(
+    final viewModel = Provider.of<DetailMappingViewModel>(
+      context,
+      listen: false,
+    );
+
+    final confirmed = await ConfirmDeleteDialog.show(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Hapus Relasi Bimbingan'),
-          content: Text(
-            'Yakin ingin menghapus ${mahasiswa.name} dari bimbingan ${dosen.name}?',
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Hapus', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
+      itemName: mahasiswa.name,
+      customMessage:
+          'Mahasiswa ini akan dihapus dari bimbingan ${dosen.name}. Relasi bimbingan akan hilang permanen.',
+      onConfirmed: () async {
+        return await viewModel.removeMapping(mahasiswa.uid, dosen.uid);
       },
     );
 
-    if (result == true) {
-      final success = await viewModel.removeMapping(mahasiswa.uid, dosen.uid);
-      if (!context.mounted) return;
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(viewModel.successMessage ?? 'Berhasil dihapus'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        onRefresh();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(viewModel.errorMessage ?? 'Gagal menghapus'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    // Jika user mengonfirmasi hapus
+    if (confirmed == true && context.mounted) {
+      // SnackBar (success/error) sudah otomatis ditampilkan oleh ConfirmDeleteDialog
+      // Kita cukup refresh list
+      onRefresh();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey.shade200, width: 1),
-        ),
-        child: Row(
-          children: [
-            // Avatar
-            CircleAvatar(
-              radius: 22,
-              backgroundColor: AppTheme.secondaryColor.withOpacity(0.2),
-              child: Icon(
-                Icons.school,
-                color: AppTheme.secondaryColor,
-                size: 24,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200, width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          leading: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppTheme.primaryColor, width: 2),
+              color: AppTheme.primaryColor.withOpacity(0.1),
+            ),
+            child: const Icon(
+              Icons.school_rounded, // icon toga
+              color: AppTheme.primaryColor,
+              size: 28,
+            ),
+          ),
+          title: Text(
+            mahasiswa.name,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16.5,
+              color: Colors.black87,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              '${mahasiswa.nim ?? 'N/A'} • ${mahasiswa.programStudi ?? 'Tidak ada prodi'}',
+              style: TextStyle(
+                fontSize: 13.5,
+                color: Colors.grey.shade600,
               ),
             ),
-            const SizedBox(width: 16),
-
-            // Info mahasiswa
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    mahasiswa.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${mahasiswa.nim ?? 'N/A'} • ${mahasiswa.programStudi ?? 'N/A'}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
+          ),
+          trailing: IconButton(
+            icon: Icon(
+              Icons.delete_outline_rounded,
+              color: AppTheme.errorColor ?? Colors.red.shade600,
+              size: 26,
             ),
-
-            // TOMBOL HAPUS — INI YANG DIPERBAIKI
-            ElevatedButton(
-              onPressed: () => _confirmRemove(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade500,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                minimumSize: const Size(80, 38), // INI YANG MENYELAMATKAN
-              ),
-              child: const Text(
-                'Hapus',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ],
+            onPressed: () => _confirmRemove(context),
+            tooltip: 'Hapus dari bimbingan',
+          ),
         ),
       ),
     );

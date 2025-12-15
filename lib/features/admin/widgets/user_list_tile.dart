@@ -11,13 +11,13 @@ import '../views/user_detail_screen.dart';
 class UserListTile extends StatelessWidget {
   final UserModel user;
   final VoidCallback onRefresh;
-  final VoidCallback? onDelete; // Sekarang nullable!
+  final VoidCallback? onDelete;
 
   const UserListTile({
     super.key,
     required this.user,
     required this.onRefresh,
-    this.onDelete, // Tidak required lagi
+    this.onDelete,
   });
 
   String _getUserSubtitle(UserModel user) {
@@ -57,7 +57,7 @@ class UserListTile extends StatelessWidget {
     final subtitle = _getUserSubtitle(user);
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       elevation: 4,
       color: Colors.white,
       shape: RoundedRectangleBorder(
@@ -75,7 +75,7 @@ class UserListTile extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: AppTheme.primaryColor, width: 1.5),
-              color: Colors.blue.shade50.withOpacity(0.3),
+              color: AppTheme.primaryColor.withOpacity(0.1), // lebih sesuai primary
             ),
             child: const Icon(Icons.person_outline, color: AppTheme.primaryColor, size: 28),
           ),
@@ -90,12 +90,17 @@ class UserListTile extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.edit, color: AppTheme.primaryColor),
                 onPressed: () => _navigateToEditUser(context),
+                tooltip: 'Edit user',
               ),
-              // Cek dulu apakah onDelete ada
               if (onDelete != null)
                 IconButton(
-                  icon: Icon(Icons.delete, color: AppTheme.errorColor),
-                  onPressed: onDelete, // Aman karena sudah dicek
+                  icon: Icon(
+                    Icons.delete_outline_rounded, // SAMA DENGAN MAPPING
+                    color: AppTheme.errorColor ?? Colors.red.shade600,
+                    size: 26,
+                  ),
+                  onPressed: onDelete,
+                  tooltip: 'Hapus user',
                 ),
             ],
           ),

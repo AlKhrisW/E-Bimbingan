@@ -42,12 +42,13 @@ class _DetailMappingScreenState extends State<DetailMappingScreen> {
         ),
       ),
     );
-
     if (result == true && mounted) {
       await _loadData();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_viewModel.successMessage ?? 'Mahasiswa berhasil ditambahkan'),
+          content: Text(
+            _viewModel.successMessage ?? 'Mahasiswa berhasil ditambahkan',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -74,40 +75,97 @@ class _DetailMappingScreenState extends State<DetailMappingScreen> {
           final mappedMahasiswa = vm.mappedMahasiswa;
 
           return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Dosen + Garis Biru Muda
+              // === HEADER DOSEN – SIMETRIS, KECIL, & ELEGAN ===
+              // === HEADER DOSEN – SELARAS DENGAN CARD MAHASISWA, TAPI PUNYA IDENTITAS ===
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                 child: Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  elevation: 2.5,
+                  color: Colors.white,
+                  surfaceTintColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: AppTheme.primaryColor.withOpacity(0.3),
+                      width: 1.2,
+                    ), // aksen identitas
+                  ),
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 18,
+                    ),
                     child: Row(
                       children: [
-                        CircleAvatar(
-                          radius: 30,
-                          backgroundColor: AppTheme.primaryColor,
-                          child: const Icon(Icons.person, color: Colors.white),
+                        // Avatar dosen
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppTheme.primaryColor,
+                              width: 2,
+                            ),
+                            color: AppTheme.primaryColor.withOpacity(0.1),
+                          ),
+                          child: const Icon(
+                            Icons.person_outline_rounded,
+                            color: AppTheme.primaryColor,
+                            size: 26,
+                          ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 14),
+
+                        // Info dosen
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(widget.dosen.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                              Text('Dosen • ${widget.dosen.jabatan ?? 'Tidak ada jabatan'}',
-                                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                              Text(
+                                widget.dosen.name,
+                                style: const TextStyle(
+                                  fontSize: 16.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                'Dosen • ${widget.dosen.jabatan ?? 'Tidak ada jabatan'}',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
                             ],
                           ),
                         ),
+
+                        // Jumlah mahasiswa – tetap informatif tapi tidak mendominasi
                         Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.group, color: AppTheme.primaryColor),
-                            const SizedBox(height: 4),
-                            Text('${mappedMahasiswa.length}',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                            Text(
+                              '${mappedMahasiswa.length}',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            Text(
+                              'Mahasiswa',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -116,68 +174,81 @@ class _DetailMappingScreenState extends State<DetailMappingScreen> {
                 ),
               ),
 
-              // GARIS BIRU MUDA DI BAWAH CARD DOSEN
-              Container(
-                height: 6,
-                color: AppTheme.primaryColor.withOpacity(0.15), // biru muda transparan
-              ),
-
-              // Judul List
+              // === JUDUL LIST ===
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 10,
+                ),
                 child: Text(
-                  'Mahasiswa Bimbingan (${mappedMahasiswa.length})',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade800),
+                  'Daftar Mahasiswa Bimbingan',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade800,
+                  ),
                 ),
               ),
 
-              // List Mahasiswa
+              // === LIST MAHASISWA ===
               Expanded(
                 child: vm.isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : mappedMahasiswa.isEmpty
-                        ? Center(
-                            child: Text(
-                              '${widget.dosen.name} belum membimbing mahasiswa.',
-                              style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.people_outline_rounded,
+                              size: 64,
+                              color: Colors.grey.shade400,
                             ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: mappedMahasiswa.length,
-                            itemBuilder: (context, index) {
-                              final mahasiswa = mappedMahasiswa[index];
-                              return MahasiswaMappingCard(
-                                mahasiswa: mahasiswa,
-                                dosen: widget.dosen,
-                                onRefresh: _loadData,
-                              );
-                            },
-                          ),
+                            const SizedBox(height: 16),
+                            Text(
+                              '${widget.dosen.name} belum memiliki mahasiswa bimbingan.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15.5,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: mappedMahasiswa.length,
+                        itemBuilder: (context, index) {
+                          final mahasiswa = mappedMahasiswa[index];
+                          return MahasiswaMappingCard(
+                            mahasiswa: mahasiswa,
+                            dosen: widget.dosen,
+                            onRefresh: _loadData,
+                          );
+                        },
+                      ),
               ),
             ],
           );
         },
       ),
 
-      // FAB dengan ikon + putih
       floatingActionButton: Consumer<DetailMappingViewModel>(
         builder: (context, vm, child) {
           return FloatingActionButton(
             onPressed: vm.isLoading ? null : _navigateToAddMapping,
             backgroundColor: AppTheme.primaryColor,
-            elevation: 6,
             child: vm.isLoading
                 ? const SizedBox(
                     width: 24,
                     height: 24,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                    ),
                   )
-                : const Icon(
-                    Icons.add,
-                    color: Colors.white, // PASTI PUTIH SEKARANG
-                    size: 32,
-                  ),
+                : const Icon(Icons.add, color: Colors.white, size: 32),
           );
         },
       ),

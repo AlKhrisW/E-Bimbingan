@@ -2,10 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../../core/themes/app_theme.dart';
 import '../../viewmodels/mapping/admin_dosen_list_vm.dart';
 import '../../viewmodels/mapping/detail_mapping_vm.dart';
 import '../../widgets/mapping/dosen_mapping_card.dart';
+// import 'detail_mapping_screen.dart';
 
 class AdminMappingScreen extends StatefulWidget {
   const AdminMappingScreen({super.key});
@@ -24,10 +26,6 @@ class _AdminMappingScreenState extends State<AdminMappingScreen> {
     Future.microtask(() => _dosenListVm.loadDosenList());
   }
 
-  int _getMahasiswaCount(String dosenUid) {
-    return 0;
-  }
-
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -38,18 +36,17 @@ class _AdminMappingScreenState extends State<AdminMappingScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
-            'Mapping Bimbingan', // ubah teks sesuai keinginan
+            'Mapping Bimbingan',
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
           ),
-          centerTitle: true,                    // JUDUL DI TENGAH
+          centerTitle: true,
           backgroundColor: Colors.white,
           elevation: 0,
-          automaticallyImplyLeading: false,     // HILANGKAN TOMBOL BACK SECARA OTOMATIS
-          // leading dihapus total → tidak ada tombol back sama sekali
+          automaticallyImplyLeading: false, // Tidak ada tombol back otomatis
         ),
         body: Column(
           children: [
-            // search bar
+            // Search Bar
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Consumer<AdminDosenListViewModel>(
@@ -57,8 +54,14 @@ class _AdminMappingScreenState extends State<AdminMappingScreen> {
                   return TextField(
                     decoration: InputDecoration(
                       hintText: 'Cari Dosen...',
-                      prefixIcon: const Icon(Icons.search, color: AppTheme.primaryColor),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppTheme.primaryColor,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
                       filled: true,
                       fillColor: Colors.grey.shade100,
                       contentPadding: const EdgeInsets.symmetric(vertical: 10),
@@ -69,28 +72,35 @@ class _AdminMappingScreenState extends State<AdminMappingScreen> {
               ),
             ),
 
-            // daftar dosen
+            // Daftar Dosen
             Expanded(
               child: Consumer<AdminDosenListViewModel>(
                 builder: (context, vm, child) {
                   if (vm.isLoading) {
                     return const Center(child: CircularProgressIndicator());
                   }
+
                   if (vm.errorMessage != null) {
-                    return Center(child: Text('error: ${vm.errorMessage}'));
+                    return Center(
+                      child: Text(
+                        'Error: ${vm.errorMessage}',
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    );
                   }
+
                   if (vm.filteredDosenList.isEmpty) {
-                    return const Center(child: Text('tidak ada data dosen ditemukan.'));
+                    return const Center(
+                      child: Text('Tidak ada data dosen ditemukan.'),
+                    );
                   }
+
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     itemCount: vm.filteredDosenList.length,
                     itemBuilder: (context, index) {
                       final dosen = vm.filteredDosenList[index];
-                      return DosenMappingCard(
-                        dosen: dosen,
-                        mahasiswaCount: 0,
-                      );
+                      return DosenMappingCard(dosen: dosen);
                     },
                   );
                 },

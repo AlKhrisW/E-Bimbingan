@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '/../../data/models/user_model.dart';
 import '/../../core/themes/app_theme.dart';
-import '/../../core/widgets/appbar/dashboard_page_appBar.dart';
+import '../../widgets/dashboard/admin_dashboard_widget.dart';
 import '../../viewmodels/dashboard/admin_dashboard_viewmodel.dart';
 import '../../widgets/dashboard/summary_card_widget.dart';
 import '../../widgets/dashboard/quick_action_button_widget.dart';
@@ -40,11 +40,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      appBar: DashboardPageAppBar(
+      appBar: AdminDashboardAppBar(
         name: widget.user.name,
         placement: widget.user.role == 'admin' ? 'Super Admin' : 'Admin',
         photoUrl: null,
-        onNotificationTap: () {},
       ),
       body: Consumer<AdminDashboardViewModel>(
         builder: (context, vm, child) {
