@@ -2,14 +2,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../../core/themes/app_theme.dart';
-import '../../../../../core/widgets/custom_button_back.dart'; // pastikan path benar
+import '../../../../../core/widgets/custom_button_back.dart';
 import '../../../../../data/models/user_model.dart';
-import '../../widgets/mapping/mahasiswa_selection_tile.dart';
 import '../../viewmodels/mapping/detail_mapping_vm.dart';
 
 class AddMappingModal extends StatefulWidget {
   final UserModel dosen;
+
   const AddMappingModal({super.key, required this.dosen});
 
   @override
@@ -52,7 +53,9 @@ class _AddMappingModalState extends State<AddMappingModal> {
   Future<void> _submitMapping() async {
     if (_selectedMahasiswaUids.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pilih minimal satu mahasiswa untuk mapping.')),
+        const SnackBar(
+          content: Text('Pilih minimal satu mahasiswa untuk mapping.'),
+        ),
       );
       return;
     }
@@ -66,7 +69,9 @@ class _AddMappingModalState extends State<AddMappingModal> {
       Navigator.of(context).pop(true);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_viewModel.errorMessage ?? 'Gagal menyimpan data.')),
+        SnackBar(
+          content: Text(_viewModel.errorMessage ?? 'Gagal menyimpan data.'),
+        ),
       );
     }
   }
@@ -79,7 +84,10 @@ class _AddMappingModalState extends State<AddMappingModal> {
           appBar: AppBar(
             title: const Text(
               'Tambah Mapping',
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             centerTitle: true,
             backgroundColor: Colors.white,
@@ -89,34 +97,84 @@ class _AddMappingModalState extends State<AddMappingModal> {
           ),
           body: Column(
             children: [
-              // Kartu dosen
+              // === CARD DOSEN – SPACING LEBIH NYAMAN & PROPORSIONAL ===
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  20,
+                ), // lebih lega ke bawah
                 child: Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  elevation: 2.5,
+                  color: Colors.white,
+                  surfaceTintColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: AppTheme.primaryColor.withOpacity(0.3),
+                      width: 1.2,
+                    ),
+                  ),
                   child: Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 18,
+                    ),
                     child: Row(
                       children: [
-                        const CircleAvatar(
-                          radius: 25,
-                          backgroundColor: AppTheme.primaryColor,
-                          child: Icon(Icons.person, color: Colors.white),
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppTheme.primaryColor,
+                              width: 2,
+                            ),
+                            color: AppTheme.primaryColor.withOpacity(0.1),
+                          ),
+                          child: const Icon(
+                            Icons.person_outline_rounded,
+                            color: AppTheme.primaryColor,
+                            size: 26,
+                          ),
                         ),
-                        const SizedBox(width: 15),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.dosen.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              'dosen - ${widget.dosen.jabatan ?? 'n/a'}',
-                              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                            ),
-                          ],
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Tambahkan ke bimbingan:',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                widget.dosen.name,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Dosen • ${widget.dosen.jabatan ?? 'Tidak ada jabatan'}',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -124,15 +182,31 @@ class _AddMappingModalState extends State<AddMappingModal> {
                 ),
               ),
 
-              // Search bar
+              // === SEARCH BAR ===
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'Cari Mahasiswa...',
                     prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide(
+                        color: AppTheme.primaryColor,
+                        width: 2,
+                      ),
+                    ),
                   ),
                   onChanged: (value) {
                     setState(() {
@@ -141,51 +215,140 @@ class _AddMappingModalState extends State<AddMappingModal> {
                   },
                 ),
               ),
+
               const SizedBox(height: 16),
 
-              // List mahasiswa
+              // === LIST MAHASISWA – KINI KONSISTEN DENGAN DETAIL MAPPING ===
               Expanded(
                 child: vm.isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _filteredUnassignedList.isEmpty
-                        ? Center(
-                            child: Text(
-                              _searchQuery.isEmpty
-                                  ? 'Semua mahasiswa sudah ter-mapping.'
-                                  : 'Mahasiswa tidak ditemukan.',
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: _filteredUnassignedList.length,
-                            itemBuilder: (context, index) {
-                              final mahasiswa = _filteredUnassignedList[index];
-                              final isSelected = _selectedMahasiswaUids.contains(mahasiswa.uid);
-                              return MahasiswaSelectionTile(
-                                mahasiswa: mahasiswa,
-                                isSelected: isSelected,
-                                onTap: () => _toggleSelection(mahasiswa.uid),
-                              );
-                            },
+                    ? Center(
+                        child: Text(
+                          _searchQuery.isEmpty
+                              ? 'Semua mahasiswa sudah ter-mapping.'
+                              : 'Mahasiswa tidak ditemukan.',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
                           ),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _filteredUnassignedList.length,
+                        itemBuilder: (context, index) {
+                          final mahasiswa = _filteredUnassignedList[index];
+                          final isSelected = _selectedMahasiswaUids.contains(
+                            mahasiswa.uid,
+                          );
+
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                              vertical: 8.0,
+                              horizontal: 16.0,
+                            ),
+                            elevation: 3,
+                            color: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(
+                                color: Colors.grey.shade200,
+                                width: 1,
+                              ),
+                            ),
+                            child: InkWell(
+                              onTap: () => _toggleSelection(mahasiswa.uid),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 4,
+                                  ),
+                                  leading: Container(
+                                    width: 52,
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: AppTheme.primaryColor,
+                                        width: 2,
+                                      ),
+                                      color: AppTheme.primaryColor.withOpacity(
+                                        0.1,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.school_rounded,
+                                      color: AppTheme.primaryColor,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    mahasiswa.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16.5,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  subtitle: Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      '${mahasiswa.nim ?? 'N/A'} • ${mahasiswa.programStudi ?? 'Tidak ada prodi'}',
+                                      style: TextStyle(
+                                        fontSize: 13.5,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ),
+                                  trailing: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    child: Icon(
+                                      isSelected
+                                          ? Icons.check_circle_rounded
+                                          : Icons.radio_button_unchecked,
+                                      color: isSelected
+                                          ? AppTheme.primaryColor
+                                          : Colors.grey.shade400,
+                                      size: 28,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),
-
+          // === TOMBOL SIMPAN ===
           bottomNavigationBar: Padding(
             padding: const EdgeInsets.all(16.0),
             child: SizedBox(
-              height: 50,
+              height: 56,
               child: ElevatedButton(
                 onPressed: vm.isLoading ? null : _submitMapping,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 4,
                 ),
                 child: vm.isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : Text(
                         'Simpan (${_selectedMahasiswaUids.length})',
-                        style: const TextStyle(color: Colors.white, fontSize: 18),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
               ),
             ),
