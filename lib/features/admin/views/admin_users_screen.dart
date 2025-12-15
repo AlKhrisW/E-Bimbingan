@@ -1,4 +1,5 @@
 // lib/features/admin/views/admin_users_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +13,7 @@ import 'register_user_screen.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   final UserModel user;
+
   const AdminUsersScreen({super.key, required this.user});
 
   @override
@@ -27,17 +29,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   @override
   void initState() {
     super.initState();
-
-    // ✅ PERBAIKAN: Load data user saat screen pertama kali dibuka
     Future.microtask(() {
       final vm = Provider.of<AdminUserManagementViewModel>(
         context,
         listen: false,
       );
       vm.resetMessages();
-      vm.loadAllUsers(); // ⭐ INI WAJIB ADA! Load initial data
+      vm.loadAllUsers();
     });
-
     _searchController.addListener(() => setState(() {}));
   }
 
@@ -50,7 +49,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   Widget _buildRoleFilterButton(String role) {
     final isActive = _selectedRole == role;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 6.0),
       child: GestureDetector(
         onTap: () {
           HapticFeedback.lightImpact();
@@ -67,14 +66,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(
             color: isActive ? AppTheme.primaryColor : Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: AppTheme.primaryColor.withOpacity(0.4),
+                      color: AppTheme.primaryColor.withOpacity(0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -85,7 +84,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             role,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
               color: isActive ? Colors.white : Colors.black87,
             ),
           ),
@@ -96,20 +95,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   void _navigateToRegisterUser(BuildContext context) async {
     HapticFeedback.lightImpact();
-
-    // ✅ PERBAIKAN: Tunggu result dari RegisterUserScreen
     final result = await Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => const RegisterUserScreen()));
-
-    // ✅ PERBAIKAN: Jika berhasil tambah user, refresh list
     if (result == true && mounted) {
       final vm = Provider.of<AdminUserManagementViewModel>(
         context,
         listen: false,
       );
-      await vm.loadAllUsers(); // ⭐ Refresh data setelah tambah user
-      print('✅ List user berhasil direfresh setelah tambah user baru');
+      await vm.loadAllUsers();
     }
   }
 
@@ -177,13 +171,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         elevation: 0,
       ),
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Search Bar
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -193,15 +184,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 filled: true,
                 fillColor: Colors.grey.shade50,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(50.0),
+                  borderRadius: BorderRadius.circular(50),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(50.0),
+                  borderRadius: BorderRadius.circular(50),
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(50.0),
+                  borderRadius: BorderRadius.circular(50),
                   borderSide: BorderSide(
                     color: AppTheme.primaryColor,
                     width: 2,
@@ -210,17 +201,18 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               ),
             ),
           ),
-          Center(
+
+          // Filter Bubble – Jarak diperbesar & lebih lega
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: _roles.map(_buildRoleFilterButton).toList(),
-              ),
+              child: Row(children: _roles.map(_buildRoleFilterButton).toList()),
             ),
           ),
-          const SizedBox(height: 16),
+
+          const SizedBox(height: 20), // Jarak nyaman sebelum list
+          // List Users
           Expanded(
             child: vm.isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -252,7 +244,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     },
                     child: ListView.builder(
                       key: ValueKey('filter:$_selectedRole-query:$query'),
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 0),
                       itemCount: filteredUsers.length,
                       itemBuilder: (context, index) {
                         final user = filteredUsers[index];
@@ -268,7 +260,6 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        key: const ValueKey('add_user'),
         heroTag: 'add_user',
         onPressed: () => _navigateToRegisterUser(context),
         backgroundColor: AppTheme.primaryColor,
