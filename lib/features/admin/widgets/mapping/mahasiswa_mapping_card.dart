@@ -27,7 +27,7 @@ class MahasiswaMappingCard extends StatelessWidget {
       listen: false,
     );
 
-    final confirmed = await ConfirmDeleteDialog.show(
+    final bool? confirmed = await ConfirmDeleteDialog.show(
       context: context,
       itemName: mahasiswa.name,
       customMessage:
@@ -37,10 +37,7 @@ class MahasiswaMappingCard extends StatelessWidget {
       },
     );
 
-    // Jika user mengonfirmasi hapus
     if (confirmed == true && context.mounted) {
-      // SnackBar (success/error) sudah otomatis ditampilkan oleh ConfirmDeleteDialog
-      // Kita cukup refresh list
       onRefresh();
     }
   }
@@ -88,10 +85,7 @@ class MahasiswaMappingCard extends StatelessWidget {
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               '${mahasiswa.nim ?? 'N/A'} • ${mahasiswa.programStudi ?? 'Tidak ada prodi'}',
-              style: TextStyle(
-                fontSize: 13.5,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 13.5, color: Colors.grey.shade600),
             ),
           ),
           trailing: IconButton(
