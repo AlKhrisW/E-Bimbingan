@@ -30,6 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  
+  shared_preferences: ^2.2.2
 
   # Firebase
   firebase_core: ^4.2.1
