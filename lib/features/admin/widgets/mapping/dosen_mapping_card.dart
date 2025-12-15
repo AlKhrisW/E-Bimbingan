@@ -1,126 +1,102 @@
+// lib/features/admin/widgets/mapping/dosen_mapping_card.dart
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import '../../../../../../data/models/user_model.dart';
 import '../../../../core/themes/app_theme.dart';
 import '../../views/mapping/detail_mapping_screen.dart';
 
 class DosenMappingCard extends StatelessWidget {
   final UserModel dosen;
-  final int mahasiswaCount;
 
   const DosenMappingCard({
     super.key,
     required this.dosen,
-    required this.mahasiswaCount,
   });
+
+  void _navigateToDetail(BuildContext context) {
+    HapticFeedback.lightImpact();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DetailMappingScreen(dosen: dosen),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      elevation: 5,
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      elevation: 3,
+      color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200, width: 1),
       ),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppTheme.primaryColor.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: InkWell(
+        onTap: () => _navigateToDetail(context),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            leading: Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppTheme.primaryColor, width: 2),
+                color: AppTheme.primaryColor.withOpacity(0.1),
+              ),
+              child: const Icon(
+                Icons.person_outline_rounded,
+                color: AppTheme.primaryColor,
+                size: 30,
+              ),
+            ),
+            title: Row(
               children: [
-                // Avatar dosen
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: AppTheme.primaryColor,
+                Text(
+                  dosen.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16.5,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Badge kecil untuk kesan "mapping" tanpa angka
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 36,
+                    Icons.supervisor_account_rounded,
+                    size: 16,
+                    color: AppTheme.primaryColor,
                   ),
-                ),
-                const SizedBox(width: 16),
-
-                // Info dosen
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        dosen.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: AppTheme.primaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Dosen • ${dosen.jabatan ?? 'Tidak ada jabatan'}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Jumlah mahasiswa bimbingan
-                Column(
-                  children: [
-                    Icon(
-                      Icons.group,
-                      size: 26,
-                      color: AppTheme.primaryColor,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$mahasiswaCount',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryColor,
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
-
-            const SizedBox(height: 24),
-
-            // Tombol lihat detail bimbingan
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => DetailMappingScreen(dosen: dosen),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.arrow_forward, size: 20),
-                label: const Text(
-                  'Lihat Bimbingan',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                'Dosen • ${dosen.jabatan ?? 'Tidak ada jabatan'}',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  color: Colors.grey.shade600,
                 ),
               ),
             ),
-          ],
+            trailing: const Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: AppTheme.primaryColor,
+              size: 18,
+            ),
+          ),
         ),
       ),
     );
