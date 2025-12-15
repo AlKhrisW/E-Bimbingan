@@ -7,6 +7,7 @@ import '../../../data/models/user_model.dart';
 import '../../../data/services/firebase_auth_service.dart';
 import '../../../data/services/firestore_service.dart';
 import '../../../data/services/user_service.dart';
+
 class AuthViewModel with ChangeNotifier {
   // --- dependency injection ---
   final FirebaseAuthService _authService;
@@ -18,9 +19,9 @@ class AuthViewModel with ChangeNotifier {
 
   // 1. konstruktor publik
   AuthViewModel()
-    : _authService = FirebaseAuthService(),
-      _firestoreService = FirestoreService(),
-      _userService = UserService();
+      : _authService = FirebaseAuthService(),
+        _firestoreService = FirestoreService(),
+        _userService = UserService();
 
   // 2. konstruktor internal/named (untuk unit testing)
   @visibleForTesting
@@ -28,9 +29,9 @@ class AuthViewModel with ChangeNotifier {
     required FirebaseAuthService authService,
     required FirestoreService firestoreService,
     required UserService userService,
-  }) : _authService = authService,
-       _firestoreService = firestoreService,
-       _userService = userService;
+  })  : _authService = authService,
+        _firestoreService = firestoreService,
+        _userService = userService;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -44,6 +45,32 @@ class AuthViewModel with ChangeNotifier {
     _errorMessage = message;
     notifyListeners();
   }
+
+  // --- LOGIC BARU: CEK STATUS LOGIN (AUTO LOGIN) ---
+  Future<UserModel?> checkLoginStatus() async {
+    _setLoading(true);
+    try {
+      // 1. Cek apakah ada user yang tersimpan di cache Firebase Auth
+      final currentUser = _authService.getCurrentUser();
+
+      if (currentUser != null) {
+        // 2. Jika ada, ambil data lengkapnya (Role, Nama, dll) dari Firestore
+        final userModel = await _firestoreService.getUserData(currentUser.uid);
+
+        // 3. Simpan token FCM terbaru (opsional, untuk notifikasi)
+        _saveFcmToken(currentUser.uid);
+
+        _setLoading(false);
+        return userModel; // Kembalikan data user untuk navigasi
+      }
+    } catch (e) {
+      print("Auto Login Error: $e");
+    }
+
+    _setLoading(false);
+    return null; // Tidak ada user login
+  }
+  // -------------------------------------------------
 
   // Logic Login: Mendapatkan UserModel dan menentukan tujuan (role)
   Future<UserModel?> login({
@@ -86,8 +113,8 @@ class AuthViewModel with ChangeNotifier {
     } catch (e) {
       final String errorMsg =
           e.toString().contains('Data pengguna tidak ditemukan')
-          ? 'Akun tidak terdaftar di database. Silakan hubungi Admin.'
-          : e.toString().replaceFirst('Exception: ', '');
+              ? 'Akun tidak terdaftar di database. Silakan hubungi Admin.'
+              : e.toString().replaceFirst('Exception: ', '');
 
       _setErrorMessage(errorMsg);
       print('LOGIN FAILURE: $errorMsg');
