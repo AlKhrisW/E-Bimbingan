@@ -1,6 +1,6 @@
 // integration_test/mahasiswa/ajuan_bimbingan_mahasiswa_test.dart
 
-import 'package:flutter/material.dart'; // <-- Tambahkan ini untuk Icons & AppBar
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:ebimbingan/main.dart' as app;
