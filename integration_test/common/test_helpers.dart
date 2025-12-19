@@ -94,7 +94,20 @@ Future<void> verifyAdminDashboard(WidgetTester tester) async {
 }
 
 Future<void> verifyDosenDashboard(WidgetTester tester) async {
-  expect(find.text('Dashboard Dosen'), findsWidgets);
+  // Tunggu AppBar dashboard muncul
+  await tester.pumpAndSettle(const Duration(seconds: 5));
+
+  // Verifikasi elemen yang pasti ada di DashboardPageAppBar
+  expect(find.byType(CircleAvatar), findsOneWidget); // Foto profil
+  expect(
+    find.byIcon(Icons.notifications_none),
+    findsOneWidget,
+  ); // Icon notifikasi
+
+  // Opsional: verifikasi ada teks nama (misal mengandung 👋)
+  expect(find.textContaining('👋'), findsOneWidget);
+
+  print('Dashboard Dosen berhasil diverifikasi');
 }
 
 // FUNGSI LOGOUT UMUM — TETAP SEPERTI VERSI LAMA KAMU (untuk Dosen/Admin)
